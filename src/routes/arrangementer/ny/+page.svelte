@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { ArrowLeft } from 'lucide-svelte';
 
 	let { form } = $props();
 </script>
@@ -7,6 +8,10 @@
 <svelte:head>
 	<title>Nytt arrangement - Beer Counter</title>
 </svelte:head>
+
+<a href="/" class="my-4 flex items-center gap-4 text-2xl font-light hover:underline">
+	<ArrowLeft class="h-6 w-6" /> Tilbake hjem
+</a>
 
 <h1 class="mb-8 text-5xl">Lag nytt arrangement</h1>
 

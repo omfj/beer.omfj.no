@@ -38,7 +38,7 @@
 	{/if}
 </div>
 
-<ul>
+<ul class="flex flex-col gap-5">
 	{#each sortedAttendees as attendee}
 		{@const isUser = attendee.user.id === user.id}
 		<li
