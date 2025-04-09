@@ -15,16 +15,18 @@
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run",
 		"db:push": "drizzle-kit push",
-		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "wrangler d1 migrations apply beer-counter-db",
+		"db:migrate:local": "pnpm db:migrate -- --local",
+		"db:migrate:remote": "pnpm db:migrate -- --remote",
 		"deploy": "pnpm run build && wrangler deploy",
-		"cf-typegen": "wrangler types && mv worker-configuration.d.ts src/"
+		"typegen": "wrangler types && mv worker-configuration.d.ts src/"
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^4.20250409.0",
 		"@eslint/compat": "^1.2.5",
 		"@eslint/js": "^9.18.0",
-		"@sveltejs/adapter-auto": "^4.0.0",
 		"@sveltejs/adapter-cloudflare": "^7.0.1",
 		"@sveltejs/kit": "^2.16.0",
 		"@sveltejs/vite-plugin-svelte": "^5.0.0",
@@ -50,11 +52,12 @@
 		"wrangler": "^4.9.1"
 	},
 	"dependencies": {
-		"@libsql/client": "^0.14.0",
-		"@node-rs/argon2": "^2.0.2",
 		"@oslojs/crypto": "^1.0.1",
 		"@oslojs/encoding": "^1.1.0",
-		"drizzle-orm": "^0.40.0"
+		"bcryptjs": "^3.0.2",
+		"drizzle-orm": "^0.40.0",
+		"lucide-svelte": "^0.487.0",
+		"nanoid": "^5.1.5"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
