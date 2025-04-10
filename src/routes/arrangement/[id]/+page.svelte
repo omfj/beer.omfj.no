@@ -39,7 +39,7 @@
 </div>
 
 <ul class="flex flex-col gap-5">
-	{#each sortedAttendees as attendee}
+	{#each sortedAttendees as attendee (attendee.userId)}
 		{@const isUser = attendee.user.id === user.id}
 		<li
 			class="bg-background-dark relative flex h-20 w-full items-center justify-center p-4 text-3xl"
