@@ -99,12 +99,13 @@
 
 <ul class="flex flex-col gap-5">
 	{#each sortedAttendees as attendee (attendee.userId)}
+		{@const userCount = attendee.user.id === user.id ? count : attendee.count}
 		<li
 			class="bg-background-dark relative flex h-20 w-full items-center justify-center p-4 text-3xl"
 			transition:fly={{ duration: 200 }}
 		>
 			<p class="line-clamp-1">
-				{attendee.user.username}: {count}
+				{attendee.user.username}: {userCount}
 			</p>
 		</li>
 	{:else}
