@@ -4,10 +4,21 @@
 	import { fly } from 'svelte/transition';
 
 	let { data } = $props();
+
 	let event = $derived(data.event);
 	let user = $derived(data.user);
 	let isAttending = $derived(event.attendees.some((attendee) => attendee.user.id === user.id));
 	let sortedAttendees = $derived(event.attendees.sort((a, b) => b.count - a.count));
+
+	let count = $state(data.event.attendees.find((attendee) => attendee.userId === user.id)!.count);
+	const increment = () => {
+		count = count + 1;
+	};
+	const decrement = () => {
+		count = Math.max(0, count - 1);
+	};
+
+	let isSaving = $state(false);
 </script>
 
 <svelte:head>
@@ -39,36 +50,62 @@
 	{/if}
 </div>
 
+<div class="my-4 flex items-center gap-4">
+	<form
+		class="flex w-full"
+		method="post"
+		action="?/count"
+		use:enhance={() => {
+			isSaving = true;
+			decrement();
+
+			return async ({ update }) => {
+				await update();
+				isSaving = false;
+			};
+		}}
+	>
+		<input type="hidden" name="action" value="decrement" />
+		<button
+			class={`bg-background-darker hover:bg-background-darkest flex h-14 w-full items-center justify-center rounded-lg transition-colors ${isSaving ? 'cursor-not-allowed opacity-55' : ''}`}
+			disabled={isSaving}
+		>
+			<Minus class="h-6 w-6" />
+		</button>
+	</form>
+	<form
+		class="flex w-full"
+		method="post"
+		action="?/count"
+		use:enhance={() => {
+			isSaving = true;
+			increment();
+
+			return async ({ update }) => {
+				await update();
+				isSaving = false;
+			};
+		}}
+	>
+		<input type="hidden" name="action" value="increment" />
+		<button
+			class={`bg-background-darker hover:bg-background-darkest flex h-14 w-full items-center justify-center rounded-lg transition-colors ${isSaving ? 'cursor-not-allowed opacity-55' : ''}`}
+			disabled={isSaving}
+		>
+			<Plus class="h-6 w-6" />
+		</button>
+	</form>
+</div>
+
 <ul class="flex flex-col gap-5">
 	{#each sortedAttendees as attendee (attendee.userId)}
-		{@const isUser = attendee.user.id === user.id}
 		<li
 			class="bg-background-dark relative flex h-20 w-full items-center justify-center p-4 text-3xl"
 			transition:fly={{ duration: 200 }}
 		>
-			{#if isUser}
-				<form method="post" action="?/count" use:enhance>
-					<input type="hidden" name="action" value="decrement" />
-					<button
-						class="bg-background-darker absolute top-1/2 left-6 flex size-10 -translate-y-1/2 items-center justify-center rounded-lg"
-					>
-						<Minus class="h-6 w-6" />
-					</button>
-				</form>
-			{/if}
 			<p class="line-clamp-1">
-				{attendee.user.username}: {attendee.count}
+				{attendee.user.username}: {count}
 			</p>
-			{#if isUser}
-				<form method="post" action="?/count" use:enhance>
-					<input type="hidden" name="action" value="increment" />
-					<button
-						class="bg-background-darker absolute top-1/2 right-6 flex size-10 -translate-y-1/2 items-center justify-center rounded-lg"
-					>
-						<Plus class="h-6 w-6" />
-					</button>
-				</form>
-			{/if}
 		</li>
 	{:else}
 		<li>
