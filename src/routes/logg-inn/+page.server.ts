@@ -77,9 +77,12 @@ export const actions: Actions = {
 			const sessionToken = sessionService.generateSessionToken();
 			const session = await sessionService.createSession(sessionToken, userId);
 			sessionService.setSessionTokenCookie(event, sessionToken, session.expiresAt);
-		} catch {
+		} catch (e) {
+			console.log('Error:', e);
+
 			return fail(500, { message: 'En feil har oppstått' });
 		}
+
 		return redirect(302, '/');
 	}
 };
