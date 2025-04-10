@@ -8,15 +8,24 @@
 	let event = $derived(data.event);
 	let user = $derived(data.user);
 	let isAttending = $derived(event.attendees.some((attendee) => attendee.user.id === user.id));
-	let sortedAttendees = $derived(event.attendees.sort((a, b) => b.count - a.count));
 
-	let count = $state(data.event.attendees.find((attendee) => attendee.userId === user.id)!.count);
+	let count = $state(
+		data.event.attendees.find((attendee) => attendee.userId === user.id)?.count ?? 0
+	);
 	const increment = () => {
 		count = count + 1;
 	};
 	const decrement = () => {
 		count = Math.max(0, count - 1);
 	};
+
+	let sortedAttendees = $derived(
+		event.attendees.sort((a, b) => {
+			const userCount = a.user.id === user.id ? count : a.count;
+			const otherCount = b.user.id === user.id ? count : b.count;
+			return otherCount - userCount;
+		})
+	);
 
 	let isSaving = $state(false);
 </script>
@@ -32,9 +41,11 @@
 <div class="mb-4">
 	<h1 class="mb-3 text-3xl font-medium">{event.name}</h1>
 
-	<p class="mb-4 text-xl font-light">
-		Her finner du informasjon om arrangementet. Trykk på knappen under for å melde deg på.
-	</p>
+	{#if isAttending}
+		<p class="mb-4 text-xl font-light">
+			Her finner du informasjon om arrangementet. Trykk på knappen under for å melde deg på.
+		</p>
+	{/if}
 	<p class="mb-4 text-xl font-light">
 		Når du er meldt på kan du begynne å registrere antall øl du har drukket.
 	</p>
