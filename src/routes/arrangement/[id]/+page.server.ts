@@ -72,7 +72,8 @@ export const actions: Actions = {
 		}
 
 		const attendee = await locals.db.query.attendees.findFirst({
-			where: (attendees, { eq }) => eq(attendees.eventId, event.id)
+			where: (attendees, { eq, and }) =>
+				and(eq(attendees.eventId, event.id), eq(attendees.userId, locals.user.id))
 		});
 
 		if (!attendee) {
