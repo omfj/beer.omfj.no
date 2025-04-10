@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { Plus, Minus, ArrowLeft } from 'lucide-svelte';
+	import { fly } from 'svelte/transition';
 
 	let { data } = $props();
 	let event = $derived(data.event);
@@ -43,6 +44,7 @@
 		{@const isUser = attendee.user.id === user.id}
 		<li
 			class="bg-background-dark relative flex h-20 w-full items-center justify-center p-4 text-3xl"
+			transition:fly={{ duration: 200 }}
 		>
 			{#if isUser}
 				<form method="post" action="?/count" use:enhance>
