@@ -7,11 +7,7 @@ export function generateUserId() {
 }
 
 export function validateUsername(username: unknown): username is string {
-	return (
-		typeof username === 'string' &&
-		username.length >= 3 &&
-		username.length <= 31
-	);
+	return typeof username === 'string';
 }
 
 export function validatePassword(password: unknown): password is string {
