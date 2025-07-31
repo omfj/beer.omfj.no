@@ -64,7 +64,7 @@ export const attendees = sqliteTable('attendee', {
 	userId: text('user_id')
 		.notNull()
 		.references(() => users.id),
-	count: integer('count').notNull().default(0),
+	imageId: text('image_id'),
 	createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
 });
 

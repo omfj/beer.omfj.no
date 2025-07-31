@@ -1,10 +1,12 @@
 @import 'tailwindcss';
 
 @theme {
-	--color-background: #70d6ff;
-	--color-background-dark: #3dc7ff;
-	--color-background-darker: #0ab8ff;
-	--color-background-darkest: #0098d6;
+	--color-background: #f8f8f7;
+	--color-background-dark: #f0f0ef;
+	--color-background-darker: #e8e8e7;
+	--color-background-darkest: #e0e0df;
+
+	--color-primary: #007bff;
 }
 
 html,

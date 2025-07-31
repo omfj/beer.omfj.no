@@ -15,6 +15,20 @@
       "when": 1744239412210,
       "tag": "0001_cold_toad",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1753975463299,
+      "tag": "0002_reflective_vanisher",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1753975831932,
+      "tag": "0003_red_silver_sable",
+      "breakpoints": true
     }
   ]
 }

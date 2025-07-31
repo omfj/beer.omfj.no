@@ -24,7 +24,6 @@
 		"typegen": "wrangler types && mv worker-configuration.d.ts src/"
 	},
 	"devDependencies": {
-		"@cloudflare/workers-types": "^4.20250409.0",
 		"@eslint/compat": "^1.2.5",
 		"@eslint/js": "^9.18.0",
 		"@sveltejs/adapter-cloudflare": "^7.0.1",
@@ -33,6 +32,7 @@
 		"@tailwindcss/vite": "^4.0.0",
 		"@testing-library/jest-dom": "^6.6.3",
 		"@testing-library/svelte": "^5.2.4",
+		"@types/node": "^24.1.0",
 		"drizzle-kit": "^0.30.2",
 		"eslint": "^9.18.0",
 		"eslint-config-prettier": "^10.0.1",
@@ -52,12 +52,14 @@
 		"wrangler": "^4.9.1"
 	},
 	"dependencies": {
+		"@lucide/svelte": "^0.535.0",
 		"@oslojs/crypto": "^1.0.1",
 		"@oslojs/encoding": "^1.1.0",
 		"bcryptjs": "^3.0.2",
+		"clsx": "^2.1.1",
 		"drizzle-orm": "^0.40.0",
-		"lucide-svelte": "^0.487.0",
-		"nanoid": "^5.1.5"
+		"nanoid": "^5.1.5",
+		"tailwind-merge": "^3.3.1"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [

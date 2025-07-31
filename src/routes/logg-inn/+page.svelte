@@ -8,15 +8,19 @@
 	<title>Logg inn - Beer Counter</title>
 </svelte:head>
 
-<h1 class="mb-8 text-5xl">Logg inn / <br />Registrer deg</h1>
+<h1 class="mb-8 text-5xl">Logg inn</h1>
 
-<form class="flex flex-col gap-4" method="post" action="?/login" use:enhance>
-	<label class="flex flex-col text-xl font-medium">
+{#if form?.message}
+	<p class="text-red-500">{form.message}</p>
+{/if}
+
+<form class="flex flex-col gap-6" method="post" action="?/login" use:enhance>
+	<label class="flex flex-col gap-1 text-xl font-medium">
 		Brukernavn
 		<input class="bg-background-dark h-14 p-4 text-3xl" name="username" required />
 	</label>
 
-	<label class="flex flex-col text-xl font-medium">
+	<label class="flex flex-col gap-1 text-xl font-medium">
 		Passord
 		<input class="bg-background-dark h-14 p-4 text-3xl" type="password" name="password" required />
 	</label>
@@ -26,10 +30,7 @@
 		>Logg inn</button
 	>
 
-	<button
-		class="bg-background-darker hover:bg-background-darkest h-14 text-xl transition-colors hover:underline"
-		formaction="?/register">Register ny bruker</button
+	<a class="text-primary text-center hover:underline" href="/registrer">
+		Har du ikke bruker? Registrer deg her.</a
 	>
 </form>
-
-<p style="color: red">{form?.message ?? ''}</p>

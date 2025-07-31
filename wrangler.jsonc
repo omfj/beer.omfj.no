@@ -23,5 +23,11 @@
 			"database_name": "beer-counter-db",
 			"database_id": "ecb89388-293a-4546-88bf-f8edf248e2bd"
 		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "BUCKET",
+			"bucket_name": "beer-bucket"
+		}
 	]
 }

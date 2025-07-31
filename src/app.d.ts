@@ -10,6 +10,7 @@ declare global {
 
 		interface Locals {
 			db: import('$lib/db').Database;
+			bucket: R2Bucket;
 
 			sessionService: import('$lib/auth').SessionService;
 

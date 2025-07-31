@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { DoorOpen } from 'lucide-svelte';
+	import { DoorOpen } from '@lucide/svelte';
 
 	let { data } = $props();
 	let events = $derived(data.events);

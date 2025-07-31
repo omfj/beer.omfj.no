@@ -5,6 +5,7 @@ import { sessionCookieName, SessionService } from '$lib/auth';
 const handleAuth: Handle = async ({ event, resolve }) => {
 	const db = createDatabase(event.platform!.env.DB);
 	event.locals.db = db;
+	event.locals.bucket = event.platform!.env.BUCKET;
 
 	const sessionService = new SessionService(db);
 	event.locals.sessionService = sessionService;
