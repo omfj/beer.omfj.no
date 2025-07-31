@@ -66,59 +66,57 @@
 			<h2 class="text-2xl font-medium">Øl-toppliste</h2>
 		</div>
 
-		<div class="bg-background-dark rounded-lg">
-			<div class="space-y-3">
-				{#each scoreboard as { user: scoreUser, count }, index (scoreUser.id)}
-					<div
-						class="flex items-center justify-between rounded p-3 transition-colors {index === 0
-							? 'bg-primary/10 border-primary/20 border'
-							: index === 1
-								? 'border border-amber-500/20 bg-amber-500/10'
-								: index === 2
-									? 'border border-orange-600/20 bg-orange-600/10'
-									: 'bg-background-darker'}"
-						transition:fly={{ duration: 200, delay: index * 50 }}
-					>
-						<div class="flex items-center gap-4">
-							<div
-								class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold {index ===
-								0
-									? 'bg-primary text-white'
-									: index === 1
-										? 'bg-amber-500 text-white'
-										: index === 2
-											? 'bg-orange-600 text-white'
-											: 'bg-background-darkest text-gray-600'}"
-							>
-								{#if index < 3}
-									{index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
-								{:else}
-									{index + 1}
-								{/if}
-							</div>
-							<div>
-								<p class="font-medium">{scoreUser.username}</p>
-								{#if scoreUser.id === user.id}
-									<p class="text-primary text-xs">Det er deg!</p>
-								{/if}
-							</div>
+		<div class="space-y-3">
+			{#each scoreboard as { user: scoreUser, count }, index (scoreUser.id)}
+				<div
+					class="flex items-center justify-between rounded p-3 transition-colors {index === 0
+						? 'bg-primary/10 border-primary/20 border'
+						: index === 1
+							? 'border border-amber-500/20 bg-amber-500/10'
+							: index === 2
+								? 'border border-orange-600/20 bg-orange-600/10'
+								: 'bg-background-darker'}"
+					transition:fly={{ duration: 200, delay: index * 50 }}
+				>
+					<div class="flex items-center gap-4">
+						<div
+							class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold {index ===
+							0
+								? 'bg-primary text-white'
+								: index === 1
+									? 'bg-amber-500 text-white'
+									: index === 2
+										? 'bg-orange-600 text-white'
+										: 'bg-background-darkest text-gray-600'}"
+						>
+							{#if index < 3}
+								{index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+							{:else}
+								{index + 1}
+							{/if}
 						</div>
-
-						<div class="flex items-center gap-2">
-							<span
-								class="text-2xl font-bold {index === 0
-									? 'text-primary'
-									: index === 1
-										? 'text-amber-500'
-										: index === 2
-											? 'text-orange-600'
-											: 'text-gray-600'}">{count}</span
-							>
-							<span class="text-sm text-gray-600">øl</span>
+						<div>
+							<p class="font-medium">{scoreUser.username}</p>
+							{#if scoreUser.id === user.id}
+								<p class="text-primary text-xs">Det er deg!</p>
+							{/if}
 						</div>
 					</div>
-				{/each}
-			</div>
+
+					<div class="flex items-center gap-2">
+						<span
+							class="text-2xl font-bold {index === 0
+								? 'text-primary'
+								: index === 1
+									? 'text-amber-500'
+									: index === 2
+										? 'text-orange-600'
+										: 'text-gray-600'}">{count}</span
+						>
+						<span class="text-sm text-gray-600">øl</span>
+					</div>
+				</div>
+			{/each}
 		</div>
 	</div>
 
