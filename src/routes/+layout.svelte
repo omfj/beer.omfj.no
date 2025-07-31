@@ -1,7 +1,10 @@
 <script lang="ts">
-	import { writable } from 'svelte/store';
 	import '../app.css';
+
+	import { writable } from 'svelte/store';
+	import NProgress from 'nprogress';
 	import { setUserContext } from '$lib/context/user';
+	import { afterNavigate, beforeNavigate } from '$app/navigation';
 
 	const { data, children } = $props();
 
@@ -10,6 +13,19 @@
 		user.set(data.user);
 	});
 	setUserContext(user);
+
+	NProgress.configure({
+		showSpinner: false,
+		minimum: 0.16
+	});
+
+	beforeNavigate(async () => {
+		NProgress.start();
+	});
+
+	afterNavigate(async () => {
+		NProgress.done();
+	});
 </script>
 
 <div class="mx-auto w-full max-w-2xl p-8">
