@@ -17,7 +17,8 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 				},
 				orderBy: (attendees, { desc }) => [desc(attendees.createdAt)]
 			}
-		}
+		},
+		orderBy: (events, { desc }) => [desc(events.createdAt)]
 	});
 
 	if (!event) {
