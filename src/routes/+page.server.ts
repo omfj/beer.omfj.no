@@ -6,7 +6,15 @@ export const load: PageServerLoad = async ({ locals }) => {
 		redirect(302, '/logg-inn');
 	}
 
-	const events = await locals.db.query.events.findMany();
+	const eventIds = await locals.db.query.attendees
+		.findMany({
+			where: (attendee, { eq }) => eq(attendee.userId, locals.user.id)
+		})
+		.then((attendees) => attendees.map((attendee) => attendee.eventId));
+
+	const events = await locals.db.query.events.findMany({
+		where: (event, { inArray }) => inArray(event.id, eventIds)
+	});
 
 	return { events };
 };
