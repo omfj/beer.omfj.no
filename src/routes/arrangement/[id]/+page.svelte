@@ -29,6 +29,18 @@
 		// Convert to array and sort by count (highest first)
 		return Array.from(userCounts.values()).sort((a, b) => b.count - a.count);
 	});
+
+	// Pagination state
+	let scoreboardLimit = $state(10);
+	let imagesLimit = $state(10);
+
+	const loadMoreScoreboard = () => {
+		scoreboardLimit += 10;
+	};
+
+	const loadMoreImages = () => {
+		imagesLimit += 10;
+	};
 </script>
 
 <svelte:head>
@@ -67,7 +79,7 @@
 		</div>
 
 		<div class="space-y-3">
-			{#each scoreboard as { user: scoreUser, count }, index (scoreUser.id)}
+			{#each scoreboard.slice(0, scoreboardLimit) as { user: scoreUser, count }, index (scoreUser.id)}
 				<div
 					class="flex items-center justify-between rounded p-3 transition-colors {index === 0
 						? 'bg-primary/10 border-primary/20 border'
@@ -116,6 +128,15 @@
 					</div>
 				</div>
 			{/each}
+			
+			{#if scoreboard.length > scoreboardLimit}
+				<button
+					onclick={loadMoreScoreboard}
+					class="w-full p-3 text-center text-sm text-gray-600 hover:bg-background-darker rounded transition-colors"
+				>
+					Vis 10 flere deltakere ({scoreboard.length - scoreboardLimit} gjenstår)
+				</button>
+			{/if}
 		</div>
 	</div>
 
@@ -127,7 +148,7 @@
 		<h2 class="text-2xl font-medium">Registrerte enheter</h2>
 
 		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{#each beersRegistered as attendee (attendee.id)}
+			{#each beersRegistered.slice(0, imagesLimit) as attendee (attendee.id)}
 				<div class="bg-background-dark overflow-hidden rounded-lg">
 					{#if attendee.imageId}
 						<div class="aspect-square">
@@ -165,6 +186,17 @@
 				</div>
 			{/each}
 		</div>
+		
+		{#if beersRegistered.length > imagesLimit}
+			<div class="mt-6 text-center">
+				<button
+					onclick={loadMoreImages}
+					class="bg-background-dark hover:bg-background-darker px-6 py-3 rounded text-sm transition-colors"
+				>
+					Vis 10 flere bilder ({beersRegistered.length - imagesLimit} gjenstår)
+				</button>
+			</div>
+		{/if}
 	</div>
 {:else}
 	<div class="bg-background-dark flex h-32 items-center justify-center rounded-lg p-4">
