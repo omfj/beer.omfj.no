@@ -128,11 +128,11 @@
 					</div>
 				</div>
 			{/each}
-			
+
 			{#if scoreboard.length > scoreboardLimit}
 				<button
 					onclick={loadMoreScoreboard}
-					class="w-full p-3 text-center text-sm text-gray-600 hover:bg-background-darker rounded transition-colors"
+					class="hover:bg-background-darker w-full rounded p-3 text-center text-sm text-gray-600 transition-colors"
 				>
 					Vis 10 flere deltakere ({scoreboard.length - scoreboardLimit} gjenstår)
 				</button>
@@ -186,12 +186,12 @@
 				</div>
 			{/each}
 		</div>
-		
+
 		{#if beersRegistered.length > imagesLimit}
 			<div class="mt-6 text-center">
 				<button
 					onclick={loadMoreImages}
-					class="bg-background-dark hover:bg-background-darker px-6 py-3 rounded text-sm transition-colors"
+					class="bg-background-dark hover:bg-background-darker rounded px-6 py-3 text-sm transition-colors"
 				>
 					Vis 10 flere bilder ({beersRegistered.length - imagesLimit} gjenstår)
 				</button>

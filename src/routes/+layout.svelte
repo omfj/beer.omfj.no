@@ -28,6 +28,9 @@
 	});
 </script>
 
+<div class="bg-red-600 p-1 text-center text-sm font-semibold text-white">
+	<p>Husk å drikke vann! 😄</p>
+</div>
 <div class="mx-auto w-full max-w-2xl p-8">
 	{@render children()}
 </div>
