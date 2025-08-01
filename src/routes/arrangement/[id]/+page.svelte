@@ -42,17 +42,17 @@
 <div class="mb-4">
 	<h1 class="mb-3 text-3xl font-medium">{event.name}</h1>
 
-	<p class="mb-4 text-xl font-light">Registrer øl for å bli med på arrangementet!</p>
+	<p class="mb-4 text-xl font-light">Registrer en enhet for å bli med på arrangementet!</p>
 
 	{#if beersRegistered.length > 0}
-		<p class="text-lg text-gray-600">{beersRegistered.length} øl registrert totalt</p>
+		<p class="text-lg text-gray-600">{beersRegistered.length} enheter registrert totalt</p>
 	{/if}
 </div>
 
 <div class="my-4 flex items-center gap-4">
 	<a
 		class="bg-background-dark hover:bg-background-darker flex h-14 w-full items-center justify-center text-center text-lg"
-		href="/arrangement/{data.event.id}/registrer">Registrer ny øl</a
+		href="/arrangement/{data.event.id}/registrer">Registrer ny enhet</a
 	>
 </div>
 
@@ -63,7 +63,7 @@
 	<div class="mb-8 space-y-4">
 		<div class="flex items-center gap-3">
 			<Trophy class="text-primary h-6 w-6" />
-			<h2 class="text-2xl font-medium">Øl-toppliste</h2>
+			<h2 class="text-2xl font-medium">Toppliste</h2>
 		</div>
 
 		<div class="space-y-3">
@@ -113,7 +113,6 @@
 										? 'text-orange-600'
 										: 'text-gray-600'}">{count}</span
 						>
-						<span class="text-sm text-gray-600">øl</span>
 					</div>
 				</div>
 			{/each}
@@ -125,14 +124,11 @@
 
 {#if beersRegistered.length > 0}
 	<div class="space-y-4">
-		<h2 class="text-2xl font-medium">Registrerte øl</h2>
+		<h2 class="text-2xl font-medium">Registrerte enheter</h2>
 
 		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 			{#each beersRegistered as attendee (attendee.id)}
-				<div
-					class="bg-background-dark overflow-hidden rounded-lg"
-					transition:fly={{ duration: 200 }}
-				>
+				<div class="bg-background-dark overflow-hidden rounded-lg">
 					{#if attendee.imageId}
 						<div class="aspect-square">
 							<a
@@ -140,11 +136,11 @@
 								target="_blank"
 								rel="noopener noreferrer"
 								class="block h-full w-full transition-transform hover:scale-105"
-								aria-label="Se fullstørrelse bilde av øl fra {attendee.user.username}"
+								aria-label="Se fullstørrelse bilde fra {attendee.user.username}"
 							>
 								<img
 									src="/api/image/{attendee.imageId}"
-									alt="Øl fra {attendee.user.username}"
+									alt="Enhet fra {attendee.user.username}"
 									class="h-full w-full cursor-pointer object-cover"
 									loading="lazy"
 								/>
@@ -172,6 +168,6 @@
 	</div>
 {:else}
 	<div class="bg-background-dark flex h-32 items-center justify-center rounded-lg p-4">
-		<p class="text-lg text-gray-600">Ingen øl registrert ennå</p>
+		<p class="text-lg text-gray-600">Ingen enheter registrert ennå</p>
 	</div>
 {/if}
