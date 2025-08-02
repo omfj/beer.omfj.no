@@ -52,7 +52,10 @@ export const events = sqliteTable('event', {
 	id: text().primaryKey(),
 	name: text().notNull(),
 	color: text().notNull(),
-	createdAt: integer({ mode: 'timestamp' }).notNull()
+	createdAt: integer({ mode: 'timestamp' }).notNull(),
+	createdBy: text().references(() => users.id, {
+		onDelete: 'set null'
+	})
 });
 
 export const eventsRelations = relations(events, ({ many }) => ({

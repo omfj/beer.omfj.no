@@ -28,7 +28,8 @@ export const actions: Actions = {
 				id: crypto.randomUUID(),
 				name,
 				color: generateSoftColor(),
-				createdAt: new Date()
+				createdAt: new Date(),
+				createdBy: locals.user.id
 			})
 			.returning();
 

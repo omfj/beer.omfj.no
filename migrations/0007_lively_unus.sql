@@ -1,0 +1,1 @@
+ALTER TABLE `event` ADD `created_by` text REFERENCES user(id);

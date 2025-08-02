@@ -14,13 +14,17 @@ export const load: PageServerLoad = async ({ locals }) => {
 		})
 		.then((attendees) => attendees.map((attendee) => attendee.eventId));
 
-	const events = await locals.db.query.events.findMany({
+	const joinedEvents = await locals.db.query.events.findMany({
 		where: (event, { inArray }) => inArray(event.id, eventIds)
+	});
+
+	const yourEvents = await locals.db.query.events.findMany({
+		where: (event, { eq }) => eq(event.createdBy, locals.user.id)
 	});
 
 	const showTermsPopup = !locals.user.hasAgreedToTerms;
 
-	return { events, showTermsPopup };
+	return { joinedEvents, yourEvents, showTermsPopup };
 };
 
 export const actions: Actions = {

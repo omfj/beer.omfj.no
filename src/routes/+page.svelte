@@ -4,7 +4,8 @@
 	import Button from '$lib/components/button.svelte';
 
 	let { data } = $props();
-	let events = $derived(data.events);
+	let joinedEvents = $derived(data.joinedEvents);
+	let yourEvents = $derived(data.yourEvents);
 </script>
 
 <svelte:head>
@@ -36,22 +37,47 @@
 	</div>
 </div>
 
-<ul class="flex flex-col gap-5">
-	{#each events as event}
-		<li>
-			<a
-				class="bg-background-dark hover:bg-background-darker flex h-20 items-center justify-center p-4 text-3xl transition-colors hover:underline"
-				href={`/arrangement/${event.id}`}>{event.name}</a
-			>
-		</li>
-	{:else}
-		<li>
-			<p class="bg-background-dark flex items-center justify-center h-20 p-4 transition-colors">
-				Ingen arrangementer tilgjengelig
-			</p>
-		</li>
-	{/each}
-</ul>
+<section>
+	<h2 class="mb-2 text-xl font-medium">Dine arrangementer</h2>
+
+	<ul class="flex flex-col gap-5">
+		{#each joinedEvents as event}
+			<li>
+				<a
+					class="bg-background-dark hover:bg-background-darker flex h-20 items-center justify-center p-4 text-3xl transition-colors hover:underline"
+					href="/arrangement/{event.id}">{event.name}</a
+				>
+			</li>
+		{:else}
+			<li>
+				<p class="bg-background-dark flex items-center justify-center h-20 p-4 transition-colors">
+					Ingen arrangementer tilgjengelig
+				</p>
+			</li>
+		{/each}
+	</ul>
+</section>
+
+<section class="mt-8">
+	<h2 class="mb-2 text-xl font-medium">Arrangementer du har laget</h2>
+
+	<ul class="flex flex-col gap-5">
+		{#each yourEvents as event}
+			<li>
+				<a
+					class="bg-background-dark hover:bg-background-darker flex h-20 items-center justify-center p-4 text-3xl transition-colors hover:underline"
+					href="/arrangement/{event.id}">{event.name}</a
+				>
+			</li>
+		{:else}
+			<li>
+				<p class="bg-background-dark flex items-center justify-center h-20 p-4 transition-colors">
+					Ingen arrangementer tilgjengelig
+				</p>
+			</li>
+		{/each}
+	</ul>
+</section>
 
 {#if data.showTermsPopup}
 	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
