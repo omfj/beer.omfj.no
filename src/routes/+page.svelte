@@ -51,7 +51,7 @@
 		{:else}
 			<li>
 				<p class="bg-background-dark flex items-center justify-center h-20 p-4 transition-colors">
-					Ingen arrangementer tilgjengelig
+					Du har ikke meldt deg på noen arrangementer enda.
 				</p>
 			</li>
 		{/each}
@@ -72,7 +72,7 @@
 		{:else}
 			<li>
 				<p class="bg-background-dark flex items-center justify-center h-20 p-4 transition-colors">
-					Ingen arrangementer tilgjengelig
+					Du har enda ikke laget noen arrangementer
 				</p>
 			</li>
 		{/each}

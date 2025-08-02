@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowLeft, CircleAlert, Trophy } from '@lucide/svelte';
+	import { ArrowLeft, CircleAlert, Trophy, Share } from '@lucide/svelte';
 	import { fly } from 'svelte/transition';
 
 	let { data } = $props();
@@ -51,6 +51,32 @@
 	const loadMoreImages = () => {
 		imagesLimit += 10;
 	};
+
+	const shareEvent = async () => {
+		const url = window.location.href;
+		const title = `${event.name} - Beer Counter`;
+		const text = `Bli med på arrangementet "${event.name}" på Beer Counter!`;
+
+		if (navigator.share) {
+			try {
+				await navigator.share({
+					title,
+					text,
+					url
+				});
+			} catch (err) {
+				// User cancelled sharing
+			}
+		} else {
+			// Fallback: copy to clipboard
+			try {
+				await navigator.clipboard.writeText(url);
+				alert('Lenke kopiert til utklippstavlen!');
+			} catch (err) {
+				alert(`Del denne lenken: ${url}`);
+			}
+		}
+	};
 </script>
 
 <svelte:head>
@@ -71,11 +97,19 @@
 	{/if}
 </div>
 
-<div class="my-4 flex items-center gap-4">
+<div class="my-4 flex flex-col gap-4 sm:flex-row">
 	<a
-		class="bg-background-dark hover:bg-background-darker flex h-14 w-full items-center justify-center text-center text-lg"
+		class="bg-background-dark hover:bg-background-darker flex h-14 flex-1 items-center justify-center text-center text-lg"
 		href="/arrangement/{data.event.id}/registrer">Registrer ny enhet</a
 	>
+	
+	<button
+		onclick={shareEvent}
+		class="bg-background-dark hover:bg-background-darker flex h-14 items-center justify-center gap-3 px-6 text-lg transition-colors"
+	>
+		<Share class="h-5 w-5" />
+		Del arrangement
+	</button>
 </div>
 
 <div class="bg-background-darkest my-4 h-0.5"></div>
