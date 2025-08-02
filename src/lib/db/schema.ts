@@ -5,7 +5,9 @@ export const users = sqliteTable('user', {
 	id: text().primaryKey(),
 	username: text().notNull().unique(),
 	type: text(),
-	hasAgreedToTerms: integer({ mode: 'boolean' }).notNull().default(false)
+	hasAgreedToTerms: integer({ mode: 'boolean' }).notNull().default(false),
+	// Users with null are created before 2. aug 2025
+	createdAt: integer({ mode: 'timestamp' }).$defaultFn(() => new Date())
 });
 
 export const usersRelations = relations(users, ({ one, many }) => ({
