@@ -1,26 +1,36 @@
 <script lang="ts">
-	import { ArrowLeft, Trophy } from '@lucide/svelte';
+	import { ArrowLeft, CircleAlert, Trophy } from '@lucide/svelte';
 	import { fly } from 'svelte/transition';
 
 	let { data } = $props();
 
 	let event = $derived(data.event);
+	let attendees = $derived(data.attendees);
 	let user = $derived(data.user);
-
-	// Filter attendees who have registered beers (have imageId)
-	let beersRegistered = $derived(event.attendees.filter((attendee) => attendee.imageId));
 
 	// Create scoreboard: count beers per user
 	let scoreboard = $derived.by(() => {
-		const userCounts = new Map<string, { user: any; count: number }>();
+		const userCounts = new Map<
+			string,
+			{
+				user: {
+					id: string;
+					username: string;
+				};
+				count: number;
+			}
+		>();
 
-		beersRegistered.toReversed().forEach((attendee) => {
-			const userId = attendee.user.id;
+		attendees.toReversed().forEach((attendee) => {
+			const userId = attendee.userId;
 			if (userCounts.has(userId)) {
 				userCounts.get(userId)!.count++;
 			} else {
 				userCounts.set(userId, {
-					user: attendee.user,
+					user: {
+						id: attendee.userId,
+						username: attendee.username
+					},
 					count: 1
 				});
 			}
@@ -56,8 +66,8 @@
 
 	<p class="mb-4 text-xl font-light">Registrer en enhet for å bli med på arrangementet!</p>
 
-	{#if beersRegistered.length > 0}
-		<p class="text-lg text-gray-600">{beersRegistered.length} enheter registrert totalt</p>
+	{#if attendees.length > 0}
+		<p class="text-lg text-gray-600">{attendees.length} enheter registrert totalt</p>
 	{/if}
 </div>
 
@@ -143,12 +153,12 @@
 	<div class="bg-background-darkest my-4 h-0.5"></div>
 {/if}
 
-{#if beersRegistered.length > 0}
+{#if attendees.length > 0}
 	<div class="space-y-4">
 		<h2 class="text-2xl font-medium">Registrerte enheter</h2>
 
 		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{#each beersRegistered.slice(0, imagesLimit) as attendee (attendee.id)}
+			{#each attendees.slice(0, imagesLimit) as attendee (attendee.id)}
 				<div class="bg-background-dark overflow-hidden rounded-lg">
 					{#if attendee.imageId}
 						<div class="aspect-square">
@@ -157,22 +167,30 @@
 								target="_blank"
 								rel="noopener noreferrer"
 								class="block h-full w-full transition-transform hover:scale-105"
-								aria-label="Se fullstørrelse bilde fra {attendee.user.username}"
+								aria-label="Se fullstørrelse bilde fra {attendee.username}"
 							>
 								<img
 									src="/api/image/{attendee.imageId}"
-									alt="Enhet fra {attendee.user.username}"
+									alt="Enhet fra {attendee.username}"
 									class="h-full w-full cursor-pointer object-cover"
 									loading="lazy"
 								/>
 							</a>
+						</div>
+					{:else}
+						<div class="flex aspect-square flex-col items-center justify-center bg-gray-200">
+							<CircleAlert class="h-8 w-8 text-gray-500" />
+
+							<p class="p-4 text-center text-sm text-balance text-gray-500">
+								Bruker har ikke godkjent vilkår, og vi kan ikke vise bildet.
+							</p>
 						</div>
 					{/if}
 
 					<!-- Beer info -->
 					<div class="p-4">
 						<div class="flex items-center justify-between gap-2">
-							<p class="truncate font-medium">{attendee.user.username}</p>
+							<p class="truncate font-medium">{attendee.username}</p>
 							<p class="flex-shrink-0 text-xs whitespace-nowrap text-gray-600">
 								{attendee.createdAt.toLocaleDateString('no-NO', {
 									day: 'numeric',
@@ -187,13 +205,13 @@
 			{/each}
 		</div>
 
-		{#if beersRegistered.length > imagesLimit}
+		{#if attendees.length > imagesLimit}
 			<div class="mt-6 text-center">
 				<button
 					onclick={loadMoreImages}
 					class="bg-background-dark hover:bg-background-darker rounded px-6 py-3 text-sm transition-colors"
 				>
-					Vis 10 flere bilder ({beersRegistered.length - imagesLimit} gjenstår)
+					Vis 10 flere bilder ({attendees.length - imagesLimit} gjenstår)
 				</button>
 			</div>
 		{/if}

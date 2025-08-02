@@ -1,14 +1,23 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import Button from '$lib/components/button.svelte';
+	import Checkbox from '$lib/components/checkbox.svelte';
 
 	let { form } = $props();
 
+	let username = $state('');
 	let password = $state('');
 	let repeatPassword = $state('');
 
-	let passwordIsMatching = $derived.by(() => {
+	let isPasswordIsMatching = $derived.by(() => {
 		if (!password || !repeatPassword) return true;
 		return password === repeatPassword;
+	});
+
+	let hasAgreedToTerms = $state(false);
+
+	let isAllowedToSignUp = $derived.by(() => {
+		return !isPasswordIsMatching || !hasAgreedToTerms || !username;
 	});
 </script>
 
@@ -25,7 +34,12 @@
 <form class="flex flex-col gap-6" method="post" action="?/login" use:enhance>
 	<label class="flex flex-col gap-1 text-xl font-medium">
 		Brukernavn
-		<input class="bg-background-dark h-14 p-4 text-3xl" name="username" required />
+		<input
+			bind:value={username}
+			class="bg-background-dark h-14 p-4 text-3xl"
+			name="username"
+			required
+		/>
 	</label>
 
 	<label class="flex flex-col gap-1 text-xl font-medium">
@@ -50,13 +64,36 @@
 		/>
 	</label>
 
-	{#if !passwordIsMatching}
+	{#if !isPasswordIsMatching}
 		<p class="text-red-500">Passordene må være like.</p>
 	{/if}
 
-	<button
-		class="bg-background-darker hover:bg-background-darkest h-14 text-xl transition-colors hover:underline"
-		formaction="?/register">Register ny bruker</button
+	<div class="flex flex-col gap-2">
+		<label class="flex flex-row items-center gap-4">
+			<Checkbox
+				bind:checked={hasAgreedToTerms}
+				name="terms"
+				required
+				aria-label="Jeg godtar vilkårene"
+				aria-required="true"
+			/>
+
+			<span>
+				Jeg godtar <a class="text-primary hover:underline" href="/vilkar">vilkårene</a> for å bruke Beer
+				Counter.
+			</span>
+		</label>
+
+		<div>
+			<span class="text-sm text-gray-500">
+				Du må godta vilkårene for å opprette en konto. Dette er nødvendig for å sikre at alle
+				brukere er klar over reglene for deling av innhold.
+			</span>
+		</div>
+	</div>
+
+	<Button disabled={isAllowedToSignUp} class="hover:underline" formaction="?/register"
+		>Register ny bruker</Button
 	>
 
 	<a class="text-primary text-center hover:underline" href="/logg-inn">

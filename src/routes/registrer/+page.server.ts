@@ -17,6 +17,7 @@ export const actions: Actions = {
 		const formData = await event.request.formData();
 		const username = formData.get('username');
 		const password = formData.get('password');
+		const termsAccepted = formData.get('terms') === 'on';
 
 		if (!validateUsername(username)) {
 			return fail(400, { message: 'Ugyldig brukernavn' });
@@ -25,11 +26,15 @@ export const actions: Actions = {
 			return fail(400, { message: 'Ugyldig passord' });
 		}
 
+		if (!termsAccepted) {
+			return fail(400, { message: 'Du må godta vilkårene' });
+		}
+
 		const userId = generateUserId();
 		const passwordHash = await bcrypt.hash(password, 12);
 
 		try {
-			await db.insert(table.users).values({ id: userId, username });
+			await db.insert(table.users).values({ id: userId, username, hasAgreedToTerms: true });
 			await db.insert(table.userPasswords).values({
 				userId,
 				passwordHash

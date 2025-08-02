@@ -1,0 +1,1 @@
+ALTER TABLE `user` ADD `has_agreed_to_terms` integer DEFAULT false NOT NULL;

@@ -42,7 +42,11 @@ export class SessionService {
 		const [result] = await this.#db
 			.select({
 				// Adjust user table here to tweak returned data
-				user: { id: table.users.id, username: table.users.username },
+				user: {
+					id: table.users.id,
+					username: table.users.username,
+					hasAgreedToTerms: table.users.hasAgreedToTerms
+				},
 				session: table.sessions
 			})
 			.from(table.sessions)

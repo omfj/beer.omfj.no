@@ -1,10 +1,11 @@
 import { relations } from 'drizzle-orm';
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
 
 export const users = sqliteTable('user', {
-	id: text('id').primaryKey(),
-	username: text('username').notNull().unique(),
-	type: text('type')
+	id: text().primaryKey(),
+	username: text().notNull().unique(),
+	type: text(),
+	hasAgreedToTerms: integer({ mode: 'boolean' }).notNull().default(false)
 });
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -17,10 +18,10 @@ export const usersRelations = relations(users, ({ one, many }) => ({
 }));
 
 export const userPasswords = sqliteTable('user_password', {
-	userId: text('user_id')
+	userId: text()
 		.primaryKey()
 		.references(() => users.id, { onDelete: 'cascade' }),
-	passwordHash: text('password_hash').notNull()
+	passwordHash: text().notNull()
 });
 
 export const userPasswordsRelations = relations(userPasswords, ({ one }) => ({
@@ -31,11 +32,11 @@ export const userPasswordsRelations = relations(userPasswords, ({ one }) => ({
 }));
 
 export const sessions = sqliteTable('session', {
-	id: text('id').primaryKey(),
-	userId: text('user_id')
+	id: text().primaryKey(),
+	userId: text()
 		.notNull()
 		.references(() => users.id),
-	expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull()
+	expiresAt: integer({ mode: 'timestamp' }).notNull()
 });
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -46,27 +47,35 @@ export const sessionsRelations = relations(sessions, ({ one }) => ({
 }));
 
 export const events = sqliteTable('event', {
-	id: text('id').primaryKey(),
-	name: text('name').notNull(),
-	color: text('color').notNull(),
-	createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
+	id: text().primaryKey(),
+	name: text().notNull(),
+	color: text().notNull(),
+	createdAt: integer({ mode: 'timestamp' }).notNull()
 });
 
 export const eventsRelations = relations(events, ({ many }) => ({
 	attendees: many(attendees)
 }));
 
-export const attendees = sqliteTable('attendee', {
-	id: text('id').primaryKey(),
-	eventId: text('event_id')
-		.notNull()
-		.references(() => events.id),
-	userId: text('user_id')
-		.notNull()
-		.references(() => users.id),
-	imageId: text('image_id'),
-	createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
-});
+export const attendees = sqliteTable(
+	'attendee',
+	{
+		id: text().primaryKey(),
+		eventId: text()
+			.notNull()
+			.references(() => events.id, {
+				onDelete: 'cascade'
+			}),
+		userId: text()
+			.notNull()
+			.references(() => users.id, {
+				onDelete: 'cascade'
+			}),
+		imageId: text(),
+		createdAt: integer({ mode: 'timestamp' }).notNull()
+	},
+	(t) => [index('attendee_event_idx').on(t.eventId), index('attendee_user_idx').on(t.userId)]
+);
 
 export const attendeesRelations = relations(attendees, ({ one }) => ({
 	event: one(events, {

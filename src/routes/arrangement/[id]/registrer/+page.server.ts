@@ -2,6 +2,7 @@ import { error, redirect } from '@sveltejs/kit';
 import * as table from '$lib/db/schema';
 import { generateUserId } from '$lib/utils';
 import type { PageServerLoad, Actions } from './$types';
+import { randomUUID } from 'crypto';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const id = params.id;
@@ -49,9 +50,9 @@ export const actions: Actions = {
 
 		try {
 			// Generate unique filename
-			const timestamp = Date.now();
 			const extension = file.name.split('.').pop() || 'jpg';
-			const fileName = `beer-${eventId}-${locals.user.id}-${timestamp}.${extension}`;
+			const imageId = randomUUID();
+			const fileName = `${imageId}.${extension}`;
 
 			// Upload to R2 bucket
 			const arrayBuffer = await file.arrayBuffer();

@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'tailwindcss/preflight.css' layer(base);
 
 @theme {
 	--color-background: #f8f8f7;
@@ -7,6 +8,12 @@
 	--color-background-darkest: #e0e0df;
 
 	--color-primary: #007bff;
+	--color-primary-dark: #0056b3;
+	--color-primary-darker: #004494;
+
+	--color-danger: #dc3545;
+	--color-danger-dark: #b02a37;
+	--color-danger-darker: #8a1f2c;
 }
 
 html,

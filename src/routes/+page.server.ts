@@ -1,5 +1,7 @@
-import { redirect } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import { redirect, fail } from '@sveltejs/kit';
+import type { PageServerLoad, Actions } from './$types';
+import { users, sessions, userPasswords } from '$lib/db/schema';
+import { eq } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
@@ -16,5 +18,35 @@ export const load: PageServerLoad = async ({ locals }) => {
 		where: (event, { inArray }) => inArray(event.id, eventIds)
 	});
 
-	return { events };
+	const showTermsPopup = !locals.user.hasAgreedToTerms;
+
+	return { events, showTermsPopup };
+};
+
+export const actions: Actions = {
+	acceptTerms: async ({ locals }) => {
+		if (!locals.user) {
+			return fail(401, { message: 'Not authenticated' });
+		}
+
+		await locals.db
+			.update(users)
+			.set({ hasAgreedToTerms: true })
+			.where(eq(users.id, locals.user.id));
+
+		return { success: true };
+	},
+
+	deleteAccount: async ({ locals, cookies }) => {
+		if (!locals.user) {
+			return fail(401, { message: 'Not authenticated' });
+		}
+
+		await locals.db.delete(sessions).where(eq(sessions.userId, locals.user.id));
+		await locals.db.delete(userPasswords).where(eq(userPasswords.userId, locals.user.id));
+		await locals.db.delete(users).where(eq(users.id, locals.user.id));
+
+		cookies.delete('session', { path: '/' });
+		redirect(302, '/logg-inn');
+	}
 };
