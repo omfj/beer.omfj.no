@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { DoorOpen, TriangleAlert } from '@lucide/svelte';
+	import { ChevronRight, DoorOpen, TriangleAlert } from '@lucide/svelte';
 	import Button from '$lib/components/button.svelte';
 
 	let { data } = $props();
@@ -44,9 +44,22 @@
 		{#each joinedEvents as event}
 			<li>
 				<a
-					class="bg-background-dark hover:bg-background-darker flex h-20 items-center justify-center p-4 text-3xl transition-colors hover:underline"
-					href="/arrangement/{event.id}">{event.name}</a
+					class="bg-background-dark hover:bg-background-darker group flex h-24 items-center justify-between p-4 transition-colors"
+					href="/arrangement/{event.id}"
 				>
+					<div class="flex flex-col gap-2">
+						<span class="text-3xl group-hover:underline">{event.name}</span>
+						<ul class="text-foreground-muted flex items-center gap-4 text-xs">
+							<li>{event.distinctUsers} deltakere</li>
+							<li>{event.totalAttendees} enheter registrert</li>
+						</ul>
+					</div>
+					<div>
+						<ChevronRight
+							class="text-foreground-muted group-hover:text-primary h-6 w-6 transition-colors"
+						/>
+					</div>
+				</a>
 			</li>
 		{:else}
 			<li>

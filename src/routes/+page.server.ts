@@ -1,7 +1,7 @@
 import { redirect, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { users, sessions, userPasswords } from '$lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { users, sessions, userPasswords, events, attendees } from '$lib/db/schema';
+import { count, countDistinct, eq, inArray } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
@@ -14,13 +14,31 @@ export const load: PageServerLoad = async ({ locals }) => {
 		})
 		.then((attendees) => attendees.map((attendee) => attendee.eventId));
 
-	const joinedEvents = await locals.db.query.events.findMany({
-		where: (event, { inArray }) => inArray(event.id, eventIds)
-	});
+	const joinedEvents = await locals.db
+		.select({
+			id: events.id,
+			name: events.name,
+			totalAttendees: count(attendees.id),
+			distinctUsers: countDistinct(attendees.userId)
+		})
+		.from(events)
+		.leftJoin(attendees, eq(events.id, attendees.eventId))
+		.where(inArray(events.id, eventIds))
+		.groupBy(events.id, events.name)
+		.orderBy(events.id);
 
-	const yourEvents = await locals.db.query.events.findMany({
-		where: (event, { eq }) => eq(event.createdBy, locals.user.id)
-	});
+	const yourEvents = await locals.db
+		.select({
+			id: events.id,
+			name: events.name,
+			totalAttendees: count(attendees.id),
+			distinctUsers: countDistinct(attendees.userId)
+		})
+		.from(events)
+		.where(eq(events.createdBy, locals.user.id))
+		.leftJoin(attendees, eq(events.id, attendees.eventId))
+		.groupBy(events.id, events.name)
+		.orderBy(events.id);
 
 	const showTermsPopup = !locals.user.hasAgreedToTerms;
 

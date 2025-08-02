@@ -11,6 +11,9 @@
 	--color-primary-dark: #0056b3;
 	--color-primary-darker: #004494;
 
+	--color-foreground: #000000;
+	--color-foreground-muted: #6a7282;
+
 	--color-danger: #dc3545;
 	--color-danger-dark: #b02a37;
 	--color-danger-darker: #8a1f2c;
