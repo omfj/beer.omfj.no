@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { ChevronRight, DoorOpen, TriangleAlert } from '@lucide/svelte';
+	import { ChevronRight, TriangleAlert } from '@lucide/svelte';
 	import Button from '$lib/components/button.svelte';
+	import ButtonLink from '$lib/components/button-link.svelte';
 
 	let { data } = $props();
 	let joinedEvents = $derived(data.joinedEvents);
-	let yourEvents = $derived(data.yourEvents);
 </script>
 
 <svelte:head>
@@ -21,19 +21,7 @@
 	</p>
 
 	<div class="flex items-center justify-between">
-		<a
-			class="bg-background-darker hover:bg-background-darkest flex h-14 w-fit items-center justify-center p-4 text-lg font-medium transition-colors"
-			href="/arrangementer/ny"
-		>
-			Lag nytt arrangement
-		</a>
-
-		<form action="/logg-ut" method="post" use:enhance>
-			<button class="flex items-center gap-3 text-2xl font-light hover:underline">
-				<DoorOpen class="h-6 w-6" />
-				Logg ut
-			</button>
-		</form>
+		<ButtonLink href="/arrangementer/ny">Lag nytt arrangement</ButtonLink>
 	</div>
 </div>
 
@@ -65,27 +53,6 @@
 			<li>
 				<p class="bg-background-dark flex items-center justify-center h-20 p-4 transition-colors">
 					Du har ikke meldt deg på noen arrangementer enda.
-				</p>
-			</li>
-		{/each}
-	</ul>
-</section>
-
-<section class="mt-8">
-	<h2 class="mb-2 text-xl font-medium">Arrangementer du har laget</h2>
-
-	<ul class="flex flex-col gap-5">
-		{#each yourEvents as event}
-			<li>
-				<a
-					class="bg-background-dark hover:bg-background-darker flex h-20 items-center justify-center p-4 text-3xl transition-colors hover:underline"
-					href="/arrangement/{event.id}">{event.name}</a
-				>
-			</li>
-		{:else}
-			<li>
-				<p class="bg-background-dark flex items-center justify-center h-20 p-4 transition-colors">
-					Du har enda ikke laget noen arrangementer
 				</p>
 			</li>
 		{/each}

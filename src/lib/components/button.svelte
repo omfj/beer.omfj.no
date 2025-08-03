@@ -1,16 +1,10 @@
 <script lang="ts">
-	import { cn } from '$lib/cn';
+	import { buttonStyle, type ButtonStyleProps } from '$lib/cva';
 	import type { HTMLButtonAttributes } from 'svelte/elements';
 
-	type Props = HTMLButtonAttributes;
+	type Props = HTMLButtonAttributes & ButtonStyleProps;
 
-	let { class: className, children, ...rest }: Props = $props();
+	let { class: className, variant, size, children, ...rest }: Props = $props();
 </script>
 
-<button
-	class={cn(
-		'bg-background-darker hover:bg-background-darkest h-14 text-xl transition-colors disabled:cursor-not-allowed disabled:opacity-50',
-		className
-	)}
-	{...rest}>{@render children?.()}</button
->
+<button class={buttonStyle({ variant, size, className })} {...rest}>{@render children?.()}</button>

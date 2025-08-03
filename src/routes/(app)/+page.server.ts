@@ -27,22 +27,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.groupBy(events.id, events.name)
 		.orderBy(events.id);
 
-	const yourEvents = await locals.db
-		.select({
-			id: events.id,
-			name: events.name,
-			totalAttendees: count(attendees.id),
-			distinctUsers: countDistinct(attendees.userId)
-		})
-		.from(events)
-		.where(eq(events.createdBy, locals.user.id))
-		.leftJoin(attendees, eq(events.id, attendees.eventId))
-		.groupBy(events.id, events.name)
-		.orderBy(events.id);
-
 	const showTermsPopup = !locals.user.hasAgreedToTerms;
 
-	return { joinedEvents, yourEvents, showTermsPopup };
+	return { joinedEvents, showTermsPopup };
 };
 
 export const actions: Actions = {

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import ButtonLink from '$lib/components/button-link.svelte';
+	import Button from '$lib/components/button.svelte';
 	import { ArrowLeft, CircleAlert, Trophy, Share } from '@lucide/svelte';
 	import { fly } from 'svelte/transition';
 
@@ -98,18 +100,14 @@
 </div>
 
 <div class="my-4 flex flex-col gap-4 sm:flex-row">
-	<a
-		class="bg-background-dark hover:bg-background-darker flex h-14 flex-1 items-center justify-center text-center text-lg"
-		href="/arrangement/{data.event.id}/registrer">Registrer ny enhet</a
+	<ButtonLink class="w-full" href="/arrangement/{data.event.id}/registrer"
+		>Registrer ny enhet</ButtonLink
 	>
-	
-	<button
-		onclick={shareEvent}
-		class="bg-background-dark hover:bg-background-darker flex h-14 items-center justify-center gap-3 px-6 text-lg transition-colors"
-	>
-		<Share class="h-5 w-5" />
+
+	<Button variant="outline" class="shrink-0 gap-2" onclick={shareEvent}>
+		<Share class="size-5" />
 		Del arrangement
-	</button>
+	</Button>
 </div>
 
 <div class="bg-background-darkest my-4 h-0.5"></div>
@@ -193,7 +191,7 @@
 
 		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 			{#each attendees.slice(0, imagesLimit) as attendee (attendee.id)}
-				<div class="bg-background-dark overflow-hidden rounded-lg">
+				<div class="bg-background-dark overflow-hidden border-2">
 					{#if attendee.imageId}
 						<div class="aspect-square">
 							<a

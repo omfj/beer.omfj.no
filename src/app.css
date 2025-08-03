@@ -17,6 +17,12 @@
 	--color-danger: #dc3545;
 	--color-danger-dark: #b02a37;
 	--color-danger-darker: #8a1f2c;
+
+	--color-border: #e0e0df;
+}
+
+* {
+	@apply border-border;
 }
 
 html,
