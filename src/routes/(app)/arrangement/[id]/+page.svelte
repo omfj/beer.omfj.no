@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ButtonLink from '$lib/components/button-link.svelte';
 	import Button from '$lib/components/button.svelte';
-	import { ArrowLeft, CircleAlert, Trophy, Share } from '@lucide/svelte';
+	import { ArrowLeft, CircleAlert, Trophy, Share, QrCode } from '@lucide/svelte';
 	import { fly } from 'svelte/transition';
 
 	let { data } = $props();
@@ -99,15 +99,24 @@
 	{/if}
 </div>
 
-<div class="my-4 flex flex-col gap-4 sm:flex-row">
-	<ButtonLink class="w-full" href="/arrangement/{data.event.id}/registrer"
-		>Registrer ny enhet</ButtonLink
-	>
+<div class="my-4 flex flex-col gap-4">
+	<div>
+		<ButtonLink class="w-full" href="/arrangement/{data.event.id}/registrer"
+			>Registrer ny enhet</ButtonLink
+		>
+	</div>
 
-	<Button variant="outline" class="shrink-0 gap-2" onclick={shareEvent}>
-		<Share class="size-5" />
-		Del arrangement
-	</Button>
+	<div class="flex flex-col gap-4 sm:flex-row">
+		<ButtonLink variant="outline" class="w-full gap-2" href="/arrangement/{data.event.id}/qr">
+			<QrCode class="size-5" />
+			QR-kode
+		</ButtonLink>
+
+		<Button variant="outline" class="w-full gap-2" onclick={shareEvent}>
+			<Share class="size-5" />
+			Del arrangement
+		</Button>
+	</div>
 </div>
 
 <div class="bg-background-darkest my-4 h-0.5"></div>
