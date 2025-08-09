@@ -6,7 +6,7 @@
 	let { data } = $props();
 
 	let event = $derived(data.event);
-	let qrContainer: HTMLDivElement;
+	let qrCanvas: HTMLCanvasElement;
 	let copySuccess = $state(false);
 
 	const eventUrl = $derived.by(() => {
@@ -18,22 +18,19 @@
 	});
 
 	$effect(() => {
-		generateQRCode();
+		if (qrCanvas && eventUrl) {
+			generateQRCode();
+		}
 	});
 
 	function generateQRCode() {
-		// Clear any existing QR code
-		qrContainer.innerHTML = '';
-
 		// Create QR code using qrcode-generator library
 		const qr = qrcode(0, 'M');
 		qr.addData(eventUrl);
 		qr.make();
 
-		// Create canvas element
-		const canvas = document.createElement('canvas');
-		const ctx = canvas.getContext('2d');
-
+		// Get canvas context
+		const ctx = qrCanvas.getContext('2d');
 		if (!ctx) return;
 
 		const modules = qr.getModuleCount();
@@ -41,8 +38,8 @@
 		const margin = cellSize * 4;
 		const canvasSize = modules * cellSize + 2 * margin;
 
-		canvas.width = canvasSize;
-		canvas.height = canvasSize;
+		qrCanvas.width = canvasSize;
+		qrCanvas.height = canvasSize;
 
 		// White background
 		ctx.fillStyle = '#ffffff';
@@ -57,10 +54,6 @@
 				}
 			}
 		}
-
-		// Add canvas to container
-		canvas.className = 'mx-auto border-2';
-		qrContainer.appendChild(canvas);
 	}
 
 	const copyUrl = async () => {
@@ -72,11 +65,10 @@
 	};
 
 	const downloadQR = () => {
-		const canvas = qrContainer.querySelector('canvas');
-		if (canvas) {
+		if (qrCanvas) {
 			const link = document.createElement('a');
 			link.download = `${event.name}-qr.png`;
-			link.href = canvas.toDataURL();
+			link.href = qrCanvas.toDataURL();
 			link.click();
 		}
 	};
@@ -103,9 +95,8 @@
 <div class="mx-auto max-w-md space-y-6">
 	<!-- QR Code Container -->
 	<div>
-		<div bind:this={qrContainer} class="mb-4">
-			<!-- QR code will be inserted here -->
-			<div class="flex h-64 items-center justify-center text-gray-500">Laster QR-kode...</div>
+		<div class="mb-4 flex justify-center">
+			<canvas bind:this={qrCanvas} class="mx-auto border-2"></canvas>
 		</div>
 
 		<p class="text-sm break-all text-gray-600">{eventUrl}</p>
