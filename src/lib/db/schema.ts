@@ -62,6 +62,9 @@ export const eventsRelations = relations(events, ({ many }) => ({
 	attendees: many(attendees)
 }));
 
+// Should be renamed to registrations or something similar
+// as it is not really an attendee in the sense of a person attending an event,
+// but rather a record of a user registering a drink for an event.
 export const attendees = sqliteTable(
 	'attendee',
 	{
