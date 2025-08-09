@@ -3,14 +3,16 @@
 	import { ChevronRight, TriangleAlert } from '@lucide/svelte';
 	import Button from '$lib/components/button.svelte';
 	import ButtonLink from '$lib/components/button-link.svelte';
+	import SEO from '$lib/components/seo.svelte';
 
 	let { data } = $props();
 	let joinedEvents = $derived(data.joinedEvents);
 </script>
 
-<svelte:head>
-	<title>Beer Counter</title>
-</svelte:head>
+<SEO
+	title="Arrangementer"
+	description="Se alle dine arrangementer og opprett nye for å telle øl med venner. Konkurrer om hvem som drikker mest på fest og arrangementer."
+/>
 
 <div class="mb-8">
 	<h1 class="mb-3 text-3xl font-medium">Arrangementer</h1>

@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import SEO from '$lib/components/seo.svelte';
 
 	let { form } = $props();
 </script>
 
-<svelte:head>
-	<title>Logg inn - Beer Counter</title>
-</svelte:head>
+<SEO
+	title="Logg inn"
+	description="Logg inn på Beer Counter for å begynne å telle øl på arrangementer med venner."
+/>
 
 <h1 class="mb-8 text-5xl">Logg inn</h1>
 

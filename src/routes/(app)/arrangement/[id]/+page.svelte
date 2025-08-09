@@ -4,6 +4,7 @@
 	import { ArrowLeft, CircleAlert, Trophy, Share, QrCode, Trash2 } from '@lucide/svelte';
 	import { fly } from 'svelte/transition';
 	import { enhance } from '$app/forms';
+	import SEO from '$lib/components/seo.svelte';
 
 	let { data } = $props();
 
@@ -89,9 +90,11 @@
 	};
 </script>
 
-<svelte:head>
-	<title>{event.name} - Beer Counter</title>
-</svelte:head>
+<SEO
+	title={event.name}
+	description={`Bli med på arrangementet "${event.name}" og se hvem som har registrert flest øl! ${attendees.length} enheter registrert totalt.`}
+	type="article"
+/>
 
 <a href="/" class="my-4 flex items-center gap-4 text-2xl font-light hover:underline">
 	<ArrowLeft class="h-6 w-6" /> Tilbake hjem

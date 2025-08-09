@@ -2,8 +2,42 @@
 <html lang="no">
 	<head>
 		<meta charset="utf-8" />
-		<link rel="icon" href="%sveltekit.assets%/favicon.ico" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+		<!-- Favicons -->
+		<link rel="icon" href="%sveltekit.assets%/favicon.ico" />
+		<link rel="icon" type="image/png" sizes="16x16" href="%sveltekit.assets%/favicon-16x16.png" />
+		<link rel="icon" type="image/png" sizes="32x32" href="%sveltekit.assets%/favicon-32x32.png" />
+		<link rel="apple-touch-icon" sizes="180x180" href="%sveltekit.assets%/apple-touch-icon.png" />
+		<link rel="manifest" href="%sveltekit.assets%/site.webmanifest" />
+
+		<!-- PWA Meta Tags -->
+		<meta name="theme-color" content="#f8f8f7" />
+		<meta name="mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+		<meta name="apple-mobile-web-app-title" content="Beer Counter" />
+
+		<!-- SEO Meta Tags -->
+		<meta
+			name="description"
+			content="En enkel app for å telle og registrere øl på arrangementer med venner. Opprett arrangementer, ta bilder av øl, og konkurrer med venner om hvem som drikker mest."
+		/>
+		<meta
+			name="keywords"
+			content="øl, beer, counter, teller, arrangement, fest, party, venner, konkurranse, registrering"
+		/>
+		<meta name="author" content="Beer Counter" />
+		<meta name="robots" content="index, follow" />
+
+		<!-- Open Graph / Social Media -->
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="Beer Counter" />
+		<meta property="og:locale" content="no_NO" />
+
+		<!-- Twitter Card -->
+		<meta name="twitter:card" content="summary" />
+
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">
