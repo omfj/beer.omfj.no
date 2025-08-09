@@ -42,7 +42,10 @@
 					href="/arrangement/{event.id}"
 				>
 					<div class="flex items-center gap-4">
-						<div class="h-4 w-4 rounded-full" style="background-color: {event.color}"></div>
+						<div
+							class="h-4 w-4 shrink-0 rounded-full border"
+							style="background-color: {event.color}"
+						></div>
 						<div class="flex flex-col gap-2">
 							<span class="text-2xl group-hover:underline">{event.name}</span>
 							<ul class="text-foreground-muted flex items-center gap-4 text-xs">
