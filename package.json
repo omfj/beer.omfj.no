@@ -36,6 +36,7 @@
 		"@types/node": "^24.1.0",
 		"@types/nprogress": "^0.2.3",
 		"@vite-pwa/sveltekit": "^1.0.0",
+		"@vitejs/plugin-basic-ssl": "^2.1.0",
 		"drizzle-kit": "^0.30.2",
 		"eslint": "^9.18.0",
 		"eslint-config-prettier": "^10.0.1",
