@@ -1,8 +1,9 @@
 <script lang="ts">
 	import ButtonLink from '$lib/components/button-link.svelte';
 	import Button from '$lib/components/button.svelte';
-	import { ArrowLeft, CircleAlert, Trophy, Share, QrCode } from '@lucide/svelte';
+	import { ArrowLeft, CircleAlert, Trophy, Share, QrCode, Trash2 } from '@lucide/svelte';
 	import { fly } from 'svelte/transition';
+	import { enhance } from '$app/forms';
 
 	let { data } = $props();
 
@@ -78,6 +79,13 @@
 				alert(`Del denne lenken: ${url}`);
 			}
 		}
+	};
+
+	const handleDelete = () => {
+		const confirmed = confirm(
+			'Er du sikker på at du vil slette denne registreringen? Dette kan ikke angres.'
+		);
+		return confirmed;
 	};
 </script>
 
@@ -232,14 +240,38 @@
 					<div class="p-4">
 						<div class="flex items-center justify-between gap-2">
 							<p class="truncate font-medium">{attendee.username}</p>
-							<p class="flex-shrink-0 text-xs whitespace-nowrap text-gray-600">
-								{attendee.createdAt.toLocaleDateString('no-NO', {
-									day: 'numeric',
-									month: 'short',
-									hour: '2-digit',
-									minute: '2-digit'
-								})}
-							</p>
+							<div class="flex items-center gap-2">
+								<p class="flex-shrink-0 text-xs whitespace-nowrap text-gray-600">
+									{attendee.createdAt.toLocaleDateString('no-NO', {
+										day: 'numeric',
+										month: 'short',
+										hour: '2-digit',
+										minute: '2-digit'
+									})}
+								</p>
+								{#if attendee.userId === user.id}
+									<form
+										method="POST"
+										action="?/delete"
+										use:enhance={() => {
+											return async ({ update }) => {
+												if (handleDelete()) {
+													await update();
+												}
+											};
+										}}
+									>
+										<input type="hidden" name="attendeeId" value={attendee.id} />
+										<button
+											type="submit"
+											class="rounded p-1 text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
+											title="Slett registrering"
+										>
+											<Trash2 class="h-4 w-4" />
+										</button>
+									</form>
+								{/if}
+							</div>
 						</div>
 					</div>
 				</div>
