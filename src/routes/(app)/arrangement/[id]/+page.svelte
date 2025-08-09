@@ -67,7 +67,7 @@
 					text,
 					url
 				});
-			} catch (err) {
+			} catch {
 				// User cancelled sharing
 			}
 		} else {
@@ -75,7 +75,7 @@
 			try {
 				await navigator.clipboard.writeText(url);
 				alert('Lenke kopiert til utklippstavlen!');
-			} catch (err) {
+			} catch {
 				alert(`Del denne lenken: ${url}`);
 			}
 		}

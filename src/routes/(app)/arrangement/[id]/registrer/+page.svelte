@@ -246,7 +246,7 @@
 						<X class="h-4 w-4" />
 					</button>
 
-					{#each Array.from(files) as file}
+					{#each Array.from(files) as file (file.name)}
 						{#if file.type.startsWith('image/')}
 							<div class="space-y-4">
 								<img
@@ -322,7 +322,7 @@
 				<Loader class="h-5 w-5 animate-spin" />
 				Laster opp...
 			{:else}
-				{Boolean(files) ? 'Registrer øl' : 'Velg et bilde først'}
+				{files ? 'Registrer øl' : 'Velg et bilde først'}
 			{/if}
 		</button>
 	</div>

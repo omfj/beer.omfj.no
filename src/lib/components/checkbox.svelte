@@ -17,7 +17,7 @@
 		<div
 			class={cn('h-6 w-6 border-2 border-gray-400 transition-colors duration-200', {
 				'hover:border-background-darkest bg-white': !checked,
-				'focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2': true
+				'focus-within:ring-primary focus-within:ring-2 focus-within:ring-offset-2': true
 			})}
 		>
 			{#if checked}

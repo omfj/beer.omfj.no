@@ -18,7 +18,7 @@
 
 				<p>Dette inkluderer, men er ikke begrenset til:</p>
 
-				<ul class="ml-6 list-disc list-outside space-y-1">
+				<ul class="ml-6 list-outside list-disc space-y-1">
 					<li>Bilder av øl og andre produkter</li>
 					<li>Profilbilder og andre personlige bilder</li>
 					<li>Alle andre filer du laster opp til tjenesten</li>
@@ -34,7 +34,7 @@
 			<h2 class="mb-4 text-xl font-medium">Ansvar for innhold</h2>
 			<div class="space-y-3 text-gray-700">
 				<p>Du er ansvarlig for alt innhold du laster opp. Sørg for at:</p>
-				<ul class="ml-6 list-disc list-outside space-y-1">
+				<ul class="ml-6 list-outside list-disc space-y-1">
 					<li>Du har rett til å dele bildene du laster opp</li>
 					<li>Innholdet ikke bryter norsk lov</li>
 					<li>Bildene er passende for deling med andre brukere</li>

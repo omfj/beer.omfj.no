@@ -35,7 +35,7 @@
 	<h2 class="mb-2 text-xl font-medium">Arrangementer du har laget ({createdEvents.length})</h2>
 
 	<ul class="flex flex-col gap-5">
-		{#each createdEvents as event}
+		{#each createdEvents as event (event.id)}
 			<li>
 				<a
 					class="bg-background-dark hover:bg-background-darker group flex h-24 items-center justify-between p-4 transition-colors"

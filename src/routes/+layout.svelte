@@ -5,6 +5,9 @@
 	import NProgress from 'nprogress';
 	import { setUserContext } from '$lib/context/user';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
+	import { pwaInfo } from 'virtual:pwa-info';
+
+	let webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
 
 	const { data, children } = $props();
 
@@ -27,6 +30,10 @@
 		NProgress.done();
 	});
 </script>
+
+<svelte:head>
+	{@html webManifestLink}
+</svelte:head>
 
 <div class="mx-auto w-full max-w-2xl p-8">
 	{@render children()}
