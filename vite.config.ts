@@ -36,7 +36,7 @@ export default defineConfig({
 					{
 						src: 'favicon-32x32.png',
 						sizes: '32x32',
-					type: 'image/png'
+						type: 'image/png'
 					},
 					{
 						src: 'apple-touch-icon.png',

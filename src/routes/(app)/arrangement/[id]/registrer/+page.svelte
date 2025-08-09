@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { ArrowLeft, Camera, Upload, X, Loader, SwitchCamera } from '@lucide/svelte';
+	import Select from '$lib/components/select.svelte';
+	import { calculateDrinkPoints } from '$lib/scoring';
 
 	let { data } = $props();
 	let files = $state<FileList | null>(null);
@@ -13,6 +15,51 @@
 	let showCamera = $state(false);
 	let facingMode = $state<'user' | 'environment'>('environment');
 	let hasMultipleCameras = $state(false);
+	let selectedDrinkType = $state<string>('');
+	let selectedDrinkSize = $state<string>('');
+
+	// Computed available sizes based on selected drink type
+	let availableSizes = $derived.by(() => {
+		if (!selectedDrinkType) return [];
+		return data.drinkTypeSizes
+			.filter((combo) => combo.drinkTypeId === selectedDrinkType)
+			.map((combo) => data.drinkSizes.find((size) => size.id === combo.drinkSizeId)!)
+			.sort((a, b) => {
+				if (!a || !b) return 0;
+				return a.volumeML - b.volumeML;
+			});
+	});
+
+	// Reset size when drink type changes
+	$effect(() => {
+		if (selectedDrinkType) {
+			if (
+				availableSizes.length > 0 &&
+				!availableSizes
+					.filter((size) => size !== undefined)
+					.some((size) => size.id === selectedDrinkSize)
+			) {
+				selectedDrinkSize = '';
+			}
+		}
+	});
+
+	// Calculate preview points based on selected type and size
+	let previewPoints = $derived.by(() => {
+		if (!selectedDrinkType && !selectedDrinkSize) {
+			return 0.5; // Show default when nothing selected
+		}
+
+		if (!selectedDrinkType || !selectedDrinkSize) {
+			return 0.5; // Show default when only one selected
+		}
+
+		const selectedTypeData = data.drinkTypes.find((type) => type.id === selectedDrinkType);
+		const selectedSize = availableSizes.find((size) => size?.id === selectedDrinkSize);
+		if (!selectedTypeData || !selectedSize) return 0.5;
+
+		return calculateDrinkPoints(selectedSize.volumeML, selectedTypeData.abv);
+	});
 
 	// Reactive effect to set up video stream when elements are ready
 	$effect(() => {
@@ -154,7 +201,7 @@
 </script>
 
 <svelte:head>
-	<title>Registrer øl - {data.event.name} - Beer Counter</title>
+	<title>Registrer drink - {data.event.name} - Beer Counter</title>
 </svelte:head>
 
 <a
@@ -165,8 +212,8 @@
 </a>
 
 <div class="mb-8">
-	<h1 class="mb-3 text-3xl font-medium">Registrer ny øl</h1>
-	<p class="text-xl font-light">Last opp et bilde av ølen din.</p>
+	<h1 class="mb-3 text-3xl font-medium">Registrer ny drink</h1>
+	<p class="text-xl font-light">Velg type, størrelse og last opp et bilde.</p>
 </div>
 
 <form
@@ -181,6 +228,51 @@
 	}}
 	class="space-y-6"
 >
+	<!-- Drink Type and Size Selection -->
+	<div class="space-y-4">
+		<div>
+			<label for="drinkTypeId" class="mb-2 block text-lg font-medium"
+				>Drikketype <span class="text-sm text-gray-500">(valgfritt)</span></label
+			>
+			<Select bind:value={selectedDrinkType} id="drinkTypeId" name="drinkTypeId">
+				<option value="">Ikke oppgitt</option>
+				{#each data.drinkTypes as drinkType (drinkType.id)}
+					<option value={drinkType.id}>{drinkType.name}</option>
+				{/each}
+			</Select>
+		</div>
+
+		{#if selectedDrinkType}
+			<div>
+				<label for="drinkSizeId" class="mb-2 block text-lg font-medium"
+					>Størrelse <span class="text-sm text-gray-500">(valgfritt)</span></label
+				>
+				<Select bind:value={selectedDrinkSize} id="drinkSizeId" name="drinkSizeId">
+					<option value="">Ikke oppgitt</option>
+					{#each availableSizes as size (size.id)}
+						<option value={size.id}>{size.name} ({size.volumeML}ml)</option>
+					{/each}
+				</Select>
+			</div>
+		{/if}
+
+		<div class="bg-primary/10 border-primary/20 rounded-lg border p-4">
+			<div class="flex items-center justify-between">
+				<span class="text-lg font-medium">Forventet poengsum:</span>
+				<span class="text-primary text-2xl font-bold">{previewPoints} poeng</span>
+			</div>
+			<p class="mt-1 text-sm text-gray-600">
+				{#if !selectedDrinkType && !selectedDrinkSize}
+					Standard poeng (ingen type/størrelse valgt)
+				{:else if !selectedDrinkType || !selectedDrinkSize}
+					Standard poeng (mangler type eller størrelse)
+				{:else}
+					Basert på størrelse og type
+				{/if}
+			</p>
+		</div>
+	</div>
+
 	<!-- Hidden file input - always present for form submission -->
 	<input
 		bind:this={fileInput}
@@ -321,8 +413,10 @@
 			{#if isUploading}
 				<Loader class="h-5 w-5 animate-spin" />
 				Laster opp...
+			{:else if !files}
+				Velg et bilde først
 			{:else}
-				{files ? 'Registrer øl' : 'Velg et bilde først'}
+				Registrer drink
 			{/if}
 		</button>
 	</div>

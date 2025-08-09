@@ -1,0 +1,1 @@
+ALTER TABLE `drink_type` ADD `abv` integer;

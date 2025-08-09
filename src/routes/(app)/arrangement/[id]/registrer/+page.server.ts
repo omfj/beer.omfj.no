@@ -19,7 +19,23 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		throw error(404, 'Arrangementet ble ikke funnet');
 	}
 
-	return { event };
+	// Load drink types and sizes with their valid combinations
+	const drinkTypes = await locals.db.query.drinkTypes.findMany({
+		orderBy: (drinkTypes, { asc }) => [asc(drinkTypes.name)]
+	});
+
+	const drinkSizes = await locals.db.query.drinkSizes.findMany({
+		orderBy: (drinkSizes, { asc }) => [asc(drinkSizes.volumeML)]
+	});
+
+	const drinkTypeSizes = await locals.db.query.drinkTypeSizes.findMany();
+
+	return {
+		event,
+		drinkTypes,
+		drinkSizes,
+		drinkTypeSizes
+	};
 };
 
 export const actions: Actions = {
@@ -32,9 +48,26 @@ export const actions: Actions = {
 		const formData = await request.formData();
 
 		const file = formData.get('image') as File;
+		const drinkTypeId = formData.get('drinkTypeId') as string;
+		const drinkSizeId = formData.get('drinkSizeId') as string;
 
 		if (!file || file.size === 0) {
 			throw error(400, 'Ingen fil ble lastet opp');
+		}
+
+		// Validate that if both are provided, the combination exists
+		if (drinkTypeId && drinkSizeId) {
+			const validCombination = await locals.db.query.drinkTypeSizes.findFirst({
+				where: (drinkTypeSizes, { and, eq }) =>
+					and(
+						eq(drinkTypeSizes.drinkTypeId, drinkTypeId),
+						eq(drinkTypeSizes.drinkSizeId, drinkSizeId)
+					)
+			});
+
+			if (!validCombination) {
+				throw error(400, 'Ugyldig kombinasjon av drikketype og størrelse');
+			}
 		}
 
 		// Validate file type
@@ -68,12 +101,14 @@ export const actions: Actions = {
 				}
 			});
 
-			// Insert attendee record with image URL
+			// Insert attendee record with image URL and drink info
 			const attendeeId = generateUserId();
 			await locals.db.insert(table.attendees).values({
 				id: attendeeId,
 				eventId: eventId,
 				userId: locals.user.id,
+				drinkTypeId: drinkTypeId || null,
+				drinkSizeId: drinkSizeId || null,
 				imageId: fileName,
 				createdAt: new Date()
 			});

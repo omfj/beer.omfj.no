@@ -79,6 +79,12 @@ export const attendees = sqliteTable(
 			.references(() => users.id, {
 				onDelete: 'cascade'
 			}),
+		drinkTypeId: text().references(() => drinkTypes.id, {
+			onDelete: 'set null'
+		}),
+		drinkSizeId: text().references(() => drinkSizes.id, {
+			onDelete: 'set null'
+		}),
 		imageId: text(),
 		createdAt: integer({ mode: 'timestamp' }).notNull()
 	},
@@ -93,9 +99,82 @@ export const attendeesRelations = relations(attendees, ({ one }) => ({
 	user: one(users, {
 		fields: [attendees.userId],
 		references: [users.id]
+	}),
+	drinkType: one(drinkTypes, {
+		fields: [attendees.drinkTypeId],
+		references: [drinkTypes.id]
+	}),
+	drinkSize: one(drinkSizes, {
+		fields: [attendees.drinkSizeId],
+		references: [drinkSizes.id]
+	})
+}));
+
+export const drinkTypes = sqliteTable('drink_type', {
+	id: text().primaryKey(),
+	name: text().notNull().unique(), // e.g., 'Beer', 'Wine', 'Cocktail', 'Shot'
+	description: text(),
+	abv: integer(), // Alcohol by volume percentage (nullable)
+	createdAt: integer({ mode: 'timestamp' }).$defaultFn(() => new Date())
+});
+
+export const drinkTypesRelations = relations(drinkTypes, ({ many }) => ({
+	drinkTypeSizes: many(drinkTypeSizes),
+	attendees: many(attendees)
+}));
+
+export const drinkSizes = sqliteTable('drink_size', {
+	id: text().primaryKey(),
+	name: text().notNull(),
+	volumeML: integer(), // Volume in milliliters (nullable for "Other" size)
+	description: text(),
+	createdAt: integer({ mode: 'timestamp' }).$defaultFn(() => new Date())
+});
+
+export const drinkSizesRelations = relations(drinkSizes, ({ many }) => ({
+	drinkTypeSizes: many(drinkTypeSizes),
+	attendees: many(attendees)
+}));
+
+export const drinkTypeSizes = sqliteTable(
+	'drink_type_size',
+	{
+		id: text().primaryKey(),
+		drinkTypeId: text()
+			.notNull()
+			.references(() => drinkTypes.id, {
+				onDelete: 'cascade'
+			}),
+		drinkSizeId: text()
+			.notNull()
+			.references(() => drinkSizes.id, {
+				onDelete: 'cascade'
+			}),
+		createdAt: integer({ mode: 'timestamp' }).$defaultFn(() => new Date())
+	},
+	(t) => [
+		index('drink_type_size_type_idx').on(t.drinkTypeId),
+		index('drink_type_size_size_idx').on(t.drinkSizeId)
+	]
+);
+
+export const drinkTypeSizesRelations = relations(drinkTypeSizes, ({ one }) => ({
+	drinkType: one(drinkTypes, {
+		fields: [drinkTypeSizes.drinkTypeId],
+		references: [drinkTypes.id]
+	}),
+	drinkSize: one(drinkSizes, {
+		fields: [drinkTypeSizes.drinkSizeId],
+		references: [drinkSizes.id]
 	})
 }));
 
 export type Session = typeof sessions.$inferSelect;
 
 export type User = typeof users.$inferSelect;
+
+export type DrinkType = typeof drinkTypes.$inferSelect;
+
+export type DrinkSize = typeof drinkSizes.$inferSelect;
+
+export type DrinkTypeSize = typeof drinkTypeSizes.$inferSelect;

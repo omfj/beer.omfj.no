@@ -22,7 +22,9 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		.findMany({
 			where: (attendees, { eq }) => eq(attendees.eventId, id),
 			with: {
-				user: true
+				user: true,
+				drinkType: true,
+				drinkSize: true
 			},
 			orderBy: (attendees, { desc }) => [desc(attendees.createdAt)]
 		})
@@ -32,7 +34,9 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 				userId: attendee.userId,
 				username: attendee.user.username,
 				createdAt: attendee.createdAt,
-				imageId: attendee.user.hasAgreedToTerms ? attendee.imageId : null
+				imageId: attendee.user.hasAgreedToTerms ? attendee.imageId : null,
+				drinkType: attendee.drinkType,
+				drinkSize: attendee.drinkSize
 			}));
 		});
 
