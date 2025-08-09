@@ -1,4 +1,4 @@
-import { error, fail } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import * as table from '$lib/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	const id = params.id;
 
 	if (!locals.user) {
-		throw error(401, 'Ikke logget inn');
+		throw redirect(307, '/logg-inn');
 	}
 
 	const event = await locals.db.query.events.findFirst({
