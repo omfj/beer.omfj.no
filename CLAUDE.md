@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Core Development
 
 - `pnpm dev` - Start development server
+- `pnpm dev --host` - Start development server accessible from other devices (mobile testing)
 - `pnpm build` - Build for production
 - `pnpm preview` - Build and preview with Wrangler
 - `pnpm deploy` - Build and deploy to Cloudflare Workers

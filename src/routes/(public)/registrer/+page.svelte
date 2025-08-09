@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import Button from '$lib/components/button.svelte';
 	import Checkbox from '$lib/components/checkbox.svelte';
+	import Input from '$lib/components/input.svelte';
 
 	let { form } = $props();
 
@@ -34,34 +35,17 @@
 <form class="flex flex-col gap-6" method="post" action="?/login" use:enhance>
 	<label class="flex flex-col gap-1 text-xl font-medium">
 		Brukernavn
-		<input
-			bind:value={username}
-			class="bg-background-dark h-14 p-4 text-3xl"
-			name="username"
-			required
-		/>
+		<Input bind:value={username} name="username" required />
 	</label>
 
 	<label class="flex flex-col gap-1 text-xl font-medium">
 		Passord
-		<input
-			bind:value={password}
-			class="bg-background-dark h-14 p-4 text-3xl"
-			type="password"
-			name="password"
-			required
-		/>
+		<Input bind:value={password} type="password" name="password" required />
 	</label>
 
 	<label class="flex flex-col gap-1 text-xl font-medium">
 		Gjenta passord
-		<input
-			bind:value={repeatPassword}
-			class="bg-background-dark h-14 p-4 text-3xl"
-			type="password"
-			name="repeat-password"
-			required
-		/>
+		<Input bind:value={repeatPassword} type="password" name="repeat-password" required />
 	</label>
 
 	{#if !isPasswordIsMatching}

@@ -1,4 +1,5 @@
 import type { RequestEvent } from '@sveltejs/kit';
+import { dev } from '$app/environment';
 import { eq } from 'drizzle-orm';
 import { sha256 } from '@oslojs/crypto/sha2';
 import { encodeBase64url, encodeHexLowerCase } from '@oslojs/encoding';
@@ -83,13 +84,19 @@ export class SessionService {
 	setSessionTokenCookie(event: RequestEvent, token: string, expiresAt: Date) {
 		event.cookies.set(sessionCookieName, token, {
 			expires: expiresAt,
-			path: '/'
+			path: '/',
+			httpOnly: true,
+			secure: !dev, // Only require HTTPS in production
+			sameSite: dev ? 'lax' : 'strict' // More permissive in development
 		});
 	}
 
 	deleteSessionTokenCookie(event: RequestEvent) {
 		event.cookies.delete(sessionCookieName, {
-			path: '/'
+			path: '/',
+			httpOnly: true,
+			secure: !dev,
+			sameSite: dev ? 'lax' : 'strict'
 		});
 	}
 }
