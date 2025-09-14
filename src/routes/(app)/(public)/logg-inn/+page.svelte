@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import Button from '$lib/components/button.svelte';
 	import Input from '$lib/components/input.svelte';
 	import SEO from '$lib/components/seo.svelte';
@@ -31,7 +32,7 @@
 
 	<Button>Logg inn</Button>
 
-	<a class="text-primary text-center hover:underline" href="/registrer">
+	<a class="text-primary text-center hover:underline" href={resolve('/registrer')}>
 		Har du ikke bruker? Registrer deg her.</a
 	>
 </form>

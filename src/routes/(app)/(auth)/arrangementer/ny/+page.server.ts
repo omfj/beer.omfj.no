@@ -2,6 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import * as table from '$lib/db/schema';
 import { generateSoftColor } from '$lib/color';
+import { nanoid } from 'nanoid';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
@@ -25,7 +26,7 @@ export const actions: Actions = {
 		const [event] = await locals.db
 			.insert(table.events)
 			.values({
-				id: crypto.randomUUID(),
+				id: nanoid(8),
 				name,
 				color: generateSoftColor(),
 				createdAt: new Date(),

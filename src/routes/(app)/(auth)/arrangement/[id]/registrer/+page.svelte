@@ -3,6 +3,7 @@
 	import { ArrowLeft, Camera, Upload, X, Loader, SwitchCamera } from '@lucide/svelte';
 	import Select from '$lib/components/select.svelte';
 	import { calculateDrinkPoints } from '$lib/scoring';
+	import { resolve } from '$app/paths';
 
 	let { data } = $props();
 	let files = $state<FileList | null>(null);
@@ -205,7 +206,7 @@
 </svelte:head>
 
 <a
-	href="/arrangement/{data.event.id}"
+	href={resolve('/arrangement/[id]', { id: data.event.id })}
 	class="my-4 flex items-center gap-4 text-2xl font-light hover:underline"
 >
 	<ArrowLeft class="h-6 w-6" /> Tilbake til arrangement

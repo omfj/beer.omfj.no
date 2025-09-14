@@ -6,7 +6,6 @@
 	import { setUserContext } from '$lib/context/user';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { pwaInfo } from 'virtual:pwa-info';
-	import Footer from '$lib/components/footer.svelte';
 
 	let webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
 
@@ -36,7 +35,4 @@
 	{@html webManifestLink}
 </svelte:head>
 
-<div class="mx-auto w-full max-w-2xl p-8">
-	{@render children()}
-	<Footer />
-</div>
+{@render children()}

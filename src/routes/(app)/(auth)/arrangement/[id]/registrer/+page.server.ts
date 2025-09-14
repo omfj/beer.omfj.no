@@ -3,6 +3,7 @@ import * as table from '$lib/db/schema';
 import { generateUserId } from '$lib/utils';
 import type { PageServerLoad, Actions } from './$types';
 import { randomUUID } from 'crypto';
+import { createHttpUrl } from '$lib/ws';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const id = params.id;
@@ -39,7 +40,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, locals, params }) => {
+	default: async ({ request, locals, params, platform }) => {
 		if (!locals.user) {
 			throw error(401, 'Ikke logget inn');
 		}
@@ -112,6 +113,17 @@ export const actions: Actions = {
 				imageId: fileName,
 				createdAt: new Date()
 			});
+
+			// Broadcast new registration via WebSocket (if applicable)
+			if (platform?.env.WS_HOST && platform?.env.API_KEY) {
+				await fetch(createHttpUrl(platform.env.WS_HOST, eventId), {
+					headers: {
+						Authorization: `Bearer ${platform.env.API_KEY}`
+					}
+				}).catch(() => {
+					console.warn('Failed to notify WebSocket server');
+				});
+			}
 
 			console.log(
 				`Beer registered successfully: ${fileName} for user ${locals.user.id} in event ${eventId}`

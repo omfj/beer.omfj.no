@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { ChevronRight } from '@lucide/svelte';
 	import { formatDate } from '$lib/date';
+	import { resolve } from '$app/paths';
 
 	let { data } = $props();
 	let user = $derived(data.user);
@@ -39,7 +40,7 @@
 			<li>
 				<a
 					class="bg-background-dark hover:bg-background-darker group flex h-24 items-center justify-between p-4 transition-colors"
-					href="/arrangement/{event.id}"
+					href={resolve('/arrangement/[id]', { id: event.id })}
 				>
 					<div class="flex items-center gap-4">
 						<div

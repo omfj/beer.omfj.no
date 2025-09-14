@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import Button from '$lib/components/button.svelte';
 	import Checkbox from '$lib/components/checkbox.svelte';
+	import { resolve } from '$app/paths';
 	import Input from '$lib/components/input.svelte';
 
 	let { form } = $props();
@@ -63,8 +64,8 @@
 			/>
 
 			<span>
-				Jeg godtar <a class="text-primary hover:underline" href="/vilkar">vilkårene</a> for å bruke Beer
-				Counter.
+				Jeg godtar <a class="text-primary hover:underline" href={resolve('/vilkar')}>vilkårene</a> for
+				å bruke Beer Counter.
 			</span>
 		</label>
 
@@ -80,7 +81,7 @@
 		>Register ny bruker</Button
 	>
 
-	<a class="text-primary text-center hover:underline" href="/logg-inn">
+	<a class="text-primary text-center hover:underline" href={resolve('/logg-inn')}>
 		Har du allerede en bruker? Logg inn her.</a
 	>
 </form>

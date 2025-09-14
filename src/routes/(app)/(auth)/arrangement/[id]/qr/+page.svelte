@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import Button from '$lib/components/button.svelte';
 	import { ArrowLeft, Download, Copy, Check } from '@lucide/svelte';
 	import qrcode from 'qrcode-generator';
@@ -79,7 +80,9 @@
 </svelte:head>
 
 <a
-	href="/arrangement/{event.id}"
+	href={resolve('/arrangement/[id]', {
+		id: event.id
+	})}
 	class="my-4 flex items-center gap-4 text-2xl font-light hover:underline"
 >
 	<ArrowLeft class="h-6 w-6" /> Tilbake til arrangement

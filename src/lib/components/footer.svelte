@@ -1,4 +1,4 @@
-<footer class="mt-16 border-t border-background-darkest py-8">
+<footer class="border-background-darkest mt-16 border-t py-8">
 	<div class="text-center">
 		<a
 			href="https://omfj.no"

@@ -4,6 +4,7 @@
 	import Button from '$lib/components/button.svelte';
 	import ButtonLink from '$lib/components/button-link.svelte';
 	import SEO from '$lib/components/seo.svelte';
+	import { resolve } from '$app/paths';
 
 	let { data } = $props();
 	let joinedEvents = $derived(data.joinedEvents);
@@ -23,7 +24,7 @@
 	</p>
 
 	<div class="flex items-center justify-between">
-		<ButtonLink href="/arrangementer/ny">Lag nytt arrangement</ButtonLink>
+		<ButtonLink href={resolve('/arrangementer/ny')}>Lag nytt arrangement</ButtonLink>
 	</div>
 </div>
 
@@ -35,7 +36,9 @@
 			<li>
 				<a
 					class="bg-background-dark hover:bg-background-darker group flex h-24 items-center justify-between p-4 transition-colors"
-					href="/arrangement/{event.id}"
+					href={resolve('/arrangement/[id]', {
+						id: event.id
+					})}
 				>
 					<div class="flex flex-col gap-2">
 						<span class="text-3xl group-hover:underline">{event.name}</span>
@@ -74,7 +77,7 @@
 					Du må godta våre vilkår for å fortsette å bruke Beer Counter. Vilkårene beskriver hvordan
 					vi håndterer opplastede filer og deling av innhold. <a
 						class="text-primary hover:underline"
-						href="/vilkar">Les vilkårene her</a
+						href={resolve('/vilkar')}>Les vilkårene her</a
 					>.
 				</p>
 

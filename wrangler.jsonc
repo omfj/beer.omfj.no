@@ -8,6 +8,9 @@
 		"binding": "ASSETS",
 		"directory": ".svelte-kit/cloudflare"
 	},
+	"vars": {
+		"WS_HOST": "ws.beer.omfj.no"
+	},
 	"routes": [
 		{
 			"custom_domain": true,

@@ -1,11 +1,13 @@
 <script lang="ts">
 	import ButtonLink from '$lib/components/button-link.svelte';
 	import Button from '$lib/components/button.svelte';
+	import { resolve } from '$app/paths';
 	import { ArrowLeft, CircleAlert, Trophy, Share, QrCode, Trash2 } from '@lucide/svelte';
 	import { fly } from 'svelte/transition';
 	import { enhance } from '$app/forms';
 	import SEO from '$lib/components/seo.svelte';
 	import { calculateDrinkPoints } from '$lib/scoring';
+	import { SvelteMap } from 'svelte/reactivity';
 
 	let { data } = $props();
 
@@ -15,7 +17,7 @@
 
 	// Create scoreboard: calculate points per user
 	let scoreboard = $derived.by(() => {
-		const userStats = new Map<
+		const userStats = new SvelteMap<
 			string,
 			{
 				user: {
@@ -112,7 +114,7 @@
 	type="article"
 />
 
-<a href="/" class="my-4 flex items-center gap-4 text-2xl font-light hover:underline">
+<a href={resolve('/')} class="my-4 flex items-center gap-4 text-2xl font-light hover:underline">
 	<ArrowLeft class="h-6 w-6" /> Tilbake hjem
 </a>
 
@@ -128,13 +130,22 @@
 
 <div class="my-4 flex flex-col gap-4">
 	<div>
-		<ButtonLink class="w-full" href="/arrangement/{data.event.id}/registrer"
-			>Registrer ny drink</ButtonLink
+		<ButtonLink
+			class="w-full"
+			href={resolve('/arrangement/[id]/registrer', {
+				id: data.event.id
+			})}>Registrer ny drink</ButtonLink
 		>
 	</div>
 
 	<div class="flex flex-col gap-4 sm:flex-row">
-		<ButtonLink variant="outline" class="w-full gap-2" href="/arrangement/{data.event.id}/qr">
+		<ButtonLink
+			variant="outline"
+			class="w-full gap-2"
+			href={resolve('/arrangement/[id]/qr', {
+				id: data.event.id
+			})}
+		>
 			<QrCode class="size-5" />
 			QR-kode
 		</ButtonLink>
@@ -234,7 +245,9 @@
 					{#if attendee.imageId}
 						<div class="aspect-square">
 							<a
-								href="/api/image/{attendee.imageId}"
+								href={resolve('/api/image/[id]', {
+									id: attendee.imageId
+								})}
 								target="_blank"
 								rel="noopener noreferrer"
 								class="block h-full w-full transition-transform hover:scale-105"
