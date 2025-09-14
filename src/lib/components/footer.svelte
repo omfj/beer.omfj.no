@@ -1,12 +1,15 @@
 <footer class="border-background-darkest mt-16 border-t py-8">
-	<div class="text-center">
+	<p class="text-center text-sm text-gray-500">
+		Laget med ❤️ av
+		<a href="https://omfj.no" target="_blank" rel="noopener noreferrer" class="underline"> omfj </a>
+		se koden på
 		<a
-			href="https://omfj.no"
+			href="https://omfj.no/github/beer.omfj.no"
 			target="_blank"
 			rel="noopener noreferrer"
-			class="text-sm text-gray-500 hover:underline"
+			class="underline"
 		>
-			Laget med ❤️ av omfj
+			Github.
 		</a>
-	</div>
+	</p>
 </footer>
