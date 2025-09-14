@@ -27,7 +27,7 @@ export const load: PageServerLoad = async ({ platform, locals, params }) => {
 				drinkSize: true
 			},
 			orderBy: (attendees, { desc }) => [desc(attendees.createdAt)],
-			limit: 5
+			limit: 9
 		})
 		.then((attendees) => {
 			return attendees.map((attendee) => ({
