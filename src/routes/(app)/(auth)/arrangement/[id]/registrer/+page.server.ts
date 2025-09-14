@@ -119,7 +119,8 @@ export const actions: Actions = {
 				await fetch(createHttpUrl(platform.env.WS_HOST, eventId), {
 					headers: {
 						Authorization: `Bearer ${platform.env.API_KEY}`
-					}
+					},
+					method: 'POST'
 				}).catch(() => {
 					console.warn('Failed to notify WebSocket server');
 				});
