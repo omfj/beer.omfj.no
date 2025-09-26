@@ -29,6 +29,7 @@
 			const message = event.data;
 			if (message === 'UPDATE') {
 				invalidateAll();
+				window.refresh();
 			}
 		};
 
