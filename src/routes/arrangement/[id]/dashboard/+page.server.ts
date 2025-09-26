@@ -5,10 +5,6 @@ import { createWsUrl } from '$lib/ws';
 export const load: PageServerLoad = async ({ platform, locals, params }) => {
 	const id = params.id;
 
-	if (!locals.user) {
-		throw redirect(307, '/logg-inn');
-	}
-
 	const event = await locals.db.query.events.findFirst({
 		where: (events, { eq }) => eq(events.id, id)
 	});
