@@ -5,14 +5,13 @@ import svelte from 'eslint-plugin-svelte';
 import globals from 'globals';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript-eslint';
+import { defineConfig } from 'eslint/config';
 import svelteConfig from './svelte.config.js';
+
 const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
 
-export default ts.config(
+export default defineConfig([
 	includeIgnoreFile(gitignorePath),
-	{
-		ignores: ['src/worker-configuration.d.ts']
-	},
 	js.configs.recommended,
 	...ts.configs.recommended,
 	...svelte.configs.recommended,
@@ -28,7 +27,7 @@ export default ts.config(
 	},
 	{
 		files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
-		ignores: ['eslint.config.js', 'svelte.config.js', 'src/worker-configuration.d.ts'],
+		ignores: ['eslint.config.js', 'svelte.config.js'],
 
 		languageOptions: {
 			parserOptions: {
@@ -39,7 +38,11 @@ export default ts.config(
 			}
 		},
 		rules: {
-			'svelte/no-at-html-tags': 'off'
+			'svelte/no-at-html-tags': 'off',
+			'svelte/no-unnecessary-state-wrap': 'warn'
 		}
+	},
+	{
+		ignores: ['src/worker-configuration.d.ts']
 	}
-);
+]);

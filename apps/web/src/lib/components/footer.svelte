@@ -9,7 +9,7 @@
 			rel="noopener noreferrer"
 			class="underline"
 		>
-			Github.
+			GitHub.
 		</a>
 	</p>
 </footer>

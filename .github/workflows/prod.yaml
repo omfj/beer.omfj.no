@@ -32,9 +32,11 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: 🚀 Run migrations
+        working-directory: apps/web
         run: pnpm run db:migrate --remote
 
       - name: 🚀 Deploy
+        working-directory: apps/web
         run: pnpm run deploy
 
   deploy-ws:
@@ -57,12 +59,11 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: ./ws/pnpm-lock.yaml
+          cache-dependency-path: ./pnpm-lock.yaml
 
       - name: 📦 Install dependencies
         run: pnpm install --frozen-lockfile
-        working-directory: ws
 
       - name: 🚀 Deploy
+        working-directory: apps/ws
         run: pnpm run deploy
-        working-directory: ws

@@ -29,7 +29,11 @@
 	});
 </script>
 
-<header class="mb-6 flex items-center justify-end border-b-2 pb-4">
+<header class="mb-6 flex items-center justify-between border-b-2 pb-4">
+	<h1 class="text-2xl font-medium">
+		<a href={resolve('/')} class="hover:underline">Beer Counter</a>
+	</h1>
+
 	<button onclick={toggleMenu} class="relative z-50">
 		<Menu class="size-8" />
 	</button>
@@ -40,7 +44,11 @@
 {#if isOpen}
 	<div class="bg-background fixed top-0 left-0 z-50 h-full w-full">
 		<div class="mx-auto flex h-full max-w-2xl flex-col p-8">
-			<header class="mb-6 flex items-center justify-end border-b-2 pb-4">
+			<header class="mb-6 flex items-center justify-between border-b-2 pb-4">
+				<h1 class="text-2xl font-medium">
+					<a href={resolve('/')} class="hover:underline">Beer Counter</a>
+				</h1>
+
 				<button onclick={toggleMenu} class="relative z-50">
 					<X class="size-8" />
 				</button>

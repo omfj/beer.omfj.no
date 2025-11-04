@@ -1,15 +1,17 @@
-import tailwindcss from '@tailwindcss/vite';
 import { svelteTesting } from '@testing-library/svelte/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit';
-import basicSsl from '@vitejs/plugin-basic-ssl';
+import tailwindcss from '@tailwindcss/vite';
+import devtoolsJson from 'vite-plugin-devtools-json';
+import mkcert from 'vite-plugin-mkcert';
 
 export default defineConfig({
 	plugins: [
 		sveltekit(),
 		tailwindcss(),
-		basicSsl(),
+		devtoolsJson(),
+		mkcert(),
 		SvelteKitPWA({
 			registerType: 'autoUpdate',
 			devOptions: {

@@ -1,0 +1,22 @@
+{
+    "$schema": "https://turborepo.com/schema.json",
+    "tasks": {
+        "build": {
+            "outputs": [
+                ".svelte-kit/**",
+                ".wrangler/**"
+            ]
+        },
+        "dev": {
+            "cache": false,
+            "persistent": true
+        },
+        "format": {},
+        "lint": {},
+        "typegen": {
+            "outputs": [
+                "worker-configuration.d.ts"
+            ]
+        }
+    }
+}
