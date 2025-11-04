@@ -148,11 +148,11 @@ importers:
   apps/ws:
     dependencies:
       hono:
-        specifier: ^4.9.7
+        specifier: ^4.10.4
         version: 4.10.4
     devDependencies:
       wrangler:
-        specifier: ^4.36.0
+        specifier: ^4.45.3
         version: 4.45.3(@cloudflare/workers-types@4.20251014.0)
 
 packages:
