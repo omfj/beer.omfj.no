@@ -6,7 +6,8 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "beer-ws",
   "main": "src/index.ts",
-  "compatibility_date": "2025-09-13",
+  "compatibility_date": "2025-11-07",
+  "compatibility_flags": ["nodejs_compat", "nodejs_als"],
   "assets": {
     "binding": "ASSETS",
     "directory": "./public"
