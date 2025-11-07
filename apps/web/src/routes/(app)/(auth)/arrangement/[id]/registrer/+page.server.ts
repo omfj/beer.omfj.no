@@ -120,7 +120,7 @@ export const actions: Actions = {
 			);
 		} catch (uploadError) {
 			console.error('Error uploading file:', uploadError);
-			throw error(500, 'Feil ved opplasting av fil');
+			error(500, 'Feil ved opplasting av fil');
 		}
 
 		// Broadcast new registration via WebSocket (if applicable)
