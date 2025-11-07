@@ -7,6 +7,7 @@
 	let event = $derived(data.event);
 	let latestRegistrations = $derived(data.latestRegistrations);
 	let qrCanvas: HTMLCanvasElement;
+	let imageCacheBuster = $state(Date.now());
 
 	const eventUrl = $derived.by(() => {
 		if (typeof window !== 'undefined') {
@@ -28,8 +29,8 @@
 		ws.onmessage = (event) => {
 			const message = event.data;
 			if (message === 'UPDATE') {
+				imageCacheBuster = Date.now();
 				invalidateAll();
-				window.refresh();
 			}
 		};
 
@@ -54,12 +55,16 @@
 		qrCanvas.width = canvasSize;
 		qrCanvas.height = canvasSize;
 
-		// White background
-		ctx.fillStyle = '#ffffff';
+		// Background color
+		ctx.fillStyle =
+			getComputedStyle(document.documentElement).getPropertyValue('--color-qr-background').trim() ||
+			'#ffffff';
 		ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-		// Black modules
-		ctx.fillStyle = '#1a1a1a';
+		// Foreground color
+		ctx.fillStyle =
+			getComputedStyle(document.documentElement).getPropertyValue('--color-qr-foreground').trim() ||
+			'#1a1a1a';
 		for (let row = 0; row < modules; row++) {
 			for (let col = 0; col < modules; col++) {
 				if (qr.isDark(row, col)) {
@@ -91,7 +96,7 @@
 <div class="h-screen p-8">
 	<div class="mb-8">
 		<h1 class="mb-3 text-3xl font-medium">Dashboard for {event.name}</h1>
-		<p class="text-xl font-light text-gray-600">
+		<p class="text-foreground-muted text-xl font-light">
 			Siste registreringer og QR-kode for å dele arrangementet
 		</p>
 	</div>
@@ -102,9 +107,9 @@
 			<h2 class="mb-6 text-2xl font-medium">Siste registreringer</h2>
 
 			{#if latestRegistrations.length === 0}
-				<div class="rounded-lg bg-gray-50 p-8 text-center">
-					<p class="text-lg text-gray-500">Ingen registreringer ennå</p>
-					<p class="mt-2 text-gray-400">
+				<div class="bg-empty-state-background rounded-lg p-8 text-center">
+					<p class="text-foreground-muted text-lg">Ingen registreringer ennå</p>
+					<p class="text-foreground-light mt-2">
 						Registreringer vil vises her når folk begynner å registrere øl
 					</p>
 				</div>
@@ -114,20 +119,21 @@
 						class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
 					>
 						{#each latestRegistrations.slice(0, 9) as registration (registration.id)}
-							<div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+							<div class="border-border bg-card-background overflow-hidden rounded-lg border">
 								<div class="flex flex-col">
-									<div class="flex-shrink-0">
+									<div class="shrink-0">
 										{#if registration.imageId}
 											<img
-												src="/api/image/{registration.imageId}"
+												src="/api/image/{registration.imageId}?v={imageCacheBuster}"
 												alt="Drink registration"
 												class="h-32 w-full object-cover"
 											/>
 										{:else}
 											<div
-												class="flex h-32 w-full items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600"
+												class="flex h-32 w-full items-center justify-center rounded-lg"
+												style="background: linear-gradient(to bottom right, var(--color-accent-start), var(--color-accent-end));"
 											>
-												<span class="text-2xl font-medium text-white">
+												<span class="text-foreground text-2xl font-medium">
 													{registration.username.charAt(0).toUpperCase()}
 												</span>
 											</div>
@@ -135,8 +141,10 @@
 									</div>
 									<div class="flex items-center justify-between p-4">
 										<div>
-											<h3 class="font-medium text-gray-900">{registration.username}</h3>
-											<p class="text-sm text-gray-600">
+											<h3 class="text-foreground font-medium">
+												{registration.username}
+											</h3>
+											<p class="text-foreground-muted text-sm">
 												{#if registration.drinkType && registration.drinkSize}
 													{registration.drinkType.name} ({registration.drinkSize.name})
 												{:else if registration.drinkType}
@@ -146,7 +154,7 @@
 												{/if}
 											</p>
 										</div>
-										<div class="text-right text-sm text-gray-500">
+										<div class="text-foreground-muted text-right text-sm">
 											<div>{formatTime(registration.createdAt)}</div>
 											<div>{formatDate(registration.createdAt)}</div>
 										</div>
@@ -161,7 +169,7 @@
 
 		<!-- QR Code - Takes up 1/3 of the width -->
 		<div class="lg:col-span-1">
-			<canvas bind:this={qrCanvas} class="mx-auto my-auto rounded-lg border-2 border-gray-100"
+			<canvas bind:this={qrCanvas} class="border-border-light mx-auto my-auto rounded-lg border-2"
 			></canvas>
 		</div>
 	</div>
