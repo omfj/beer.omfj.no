@@ -4,6 +4,7 @@ import { generateUserId } from '$lib/utils';
 import type { PageServerLoad, Actions } from './$types';
 import { randomUUID } from 'crypto';
 import { createHttpUrl } from '$lib/ws';
+import ky from 'ky';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const id = params.id;
@@ -114,24 +115,26 @@ export const actions: Actions = {
 				createdAt: new Date()
 			});
 
-			// Broadcast new registration via WebSocket (if applicable)
-			if (platform?.env.WS_HOST && platform?.env.API_KEY) {
-				await fetch(createHttpUrl(platform.env.WS_HOST, eventId), {
-					headers: {
-						Authorization: `Bearer ${platform.env.API_KEY}`
-					},
-					method: 'POST'
-				}).catch(() => {
-					console.warn('Failed to notify WebSocket server');
-				});
-			}
-
 			console.log(
 				`Beer registered successfully: ${fileName} for user ${locals.user.id} in event ${eventId}`
 			);
 		} catch (uploadError) {
 			console.error('Error uploading file:', uploadError);
 			throw error(500, 'Feil ved opplasting av fil');
+		}
+
+		// Broadcast new registration via WebSocket (if applicable)
+		if (platform?.env.WS_HOST && platform?.env.API_KEY) {
+			await ky
+				.post(createHttpUrl(platform.env.WS_HOST, eventId), {
+					headers: {
+						Authorization: `Bearer ${platform.env.API_KEY}`
+					},
+					timeout: 5000
+				})
+				.catch(() => {
+					console.warn('Failed to notify WebSocket server');
+				});
 		}
 
 		// Redirect back to the event page
