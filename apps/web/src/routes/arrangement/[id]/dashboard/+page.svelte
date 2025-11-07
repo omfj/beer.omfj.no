@@ -129,20 +129,6 @@
 			}
 		}
 	}
-
-	function formatTime(date: Date): string {
-		return date.toLocaleTimeString('no-NO', {
-			hour: '2-digit',
-			minute: '2-digit'
-		});
-	}
-
-	function formatDate(date: Date): string {
-		return date.toLocaleDateString('no-NO', {
-			day: 'numeric',
-			month: 'short'
-		});
-	}
 </script>
 
 <svelte:head>

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import Button from '$lib/components/button.svelte';
 	import Input from '$lib/components/input.svelte';
@@ -37,6 +36,7 @@
 	</label>
 
 	<Button>Logg inn</Button>
+	<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 	<a class="text-primary text-center hover:underline" href={registerUrl}>
 		Har du ikke bruker? Registrer deg her.</a
 	>

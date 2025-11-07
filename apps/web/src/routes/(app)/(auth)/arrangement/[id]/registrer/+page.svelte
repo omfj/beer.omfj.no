@@ -5,7 +5,7 @@
 	import { calculateDrinkPoints } from '$lib/scoring';
 	import { resolve } from '$app/paths';
 
-	let { data } = $props();
+	let { data, form } = $props();
 	let files = $state<FileList | null>(null);
 	let fileInput = $state<HTMLInputElement | null>(null);
 	let isDragOver = $state(false);
@@ -216,6 +216,12 @@
 	<h1 class="mb-3 text-3xl font-medium">Registrer ny drink</h1>
 	<p class="text-xl font-light">Velg type, størrelse og last opp et bilde.</p>
 </div>
+
+{#if form?.message}
+	<div class="mb-6 border-l-4 border-red-500 bg-red-50 p-4 text-red-700">
+		<p class="font-medium">{form.message}</p>
+	</div>
+{/if}
 
 <form
 	method="post"

@@ -1,31 +1,27 @@
 {
-  "name": "beer.omfj",
-  "short_name": "beer.omfj",
-  "description": "En enkel app for å telle og registrere øl på arrangementer med venner. Opprett arrangementer, ta bilder av øl, og konkurrer med venner om hvem som drikker mest.",
-  "lang": "no",
-  "orientation": "portrait-primary",
-  "categories": [
-    "social",
-    "lifestyle",
-    "utilities"
-  ],
-  "start_url": "/",
-  "scope": "/",
-  "icons": [
-    {
-      "src": "/web-app-manifest-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/web-app-manifest-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
-  ],
-  "theme_color": "#f8f8f7",
-  "background_color": "#ffffff",
-  "display": "standalone"
+	"name": "beer.omfj",
+	"short_name": "beer.omfj",
+	"description": "En enkel app for å telle og registrere øl på arrangementer med venner. Opprett arrangementer, ta bilder av øl, og konkurrer med venner om hvem som drikker mest.",
+	"lang": "no",
+	"orientation": "portrait-primary",
+	"categories": ["social", "lifestyle", "utilities"],
+	"start_url": "/",
+	"scope": "/",
+	"icons": [
+		{
+			"src": "/web-app-manifest-192x192.png",
+			"sizes": "192x192",
+			"type": "image/png",
+			"purpose": "maskable"
+		},
+		{
+			"src": "/web-app-manifest-512x512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "maskable"
+		}
+	],
+	"theme_color": "#f8f8f7",
+	"background_color": "#ffffff",
+	"display": "standalone"
 }

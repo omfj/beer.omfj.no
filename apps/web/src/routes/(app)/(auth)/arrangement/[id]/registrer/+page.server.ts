@@ -1,4 +1,4 @@
-import { error, redirect } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import * as table from '$lib/db/schema';
 import { generateUserId } from '$lib/utils';
 import type { PageServerLoad, Actions } from './$types';
@@ -43,7 +43,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 export const actions: Actions = {
 	default: async ({ request, locals, params, platform }) => {
 		if (!locals.user) {
-			throw error(401, 'Ikke logget inn');
+			return fail(401, { message: 'Ikke logget inn' });
 		}
 
 		const eventId = params.id;
@@ -54,7 +54,7 @@ export const actions: Actions = {
 		const drinkSizeId = formData.get('drinkSizeId') as string;
 
 		if (!file || file.size === 0) {
-			throw error(400, 'Ingen fil ble lastet opp');
+			return fail(400, { message: 'Ingen fil ble lastet opp' });
 		}
 
 		// Validate that if both are provided, the combination exists
@@ -68,19 +68,19 @@ export const actions: Actions = {
 			});
 
 			if (!validCombination) {
-				throw error(400, 'Ugyldig kombinasjon av drikketype og størrelse');
+				return fail(400, { message: 'Ugyldig kombinasjon av drikketype og størrelse' });
 			}
 		}
 
 		// Validate file type
 		if (!file.type.startsWith('image/')) {
-			throw error(400, 'Kun bildefiler er tillatt');
+			return fail(400, { message: 'Kun bildefiler er tillatt' });
 		}
 
 		// Validate file size (max 10MB)
 		const maxSize = 10 * 1024 * 1024; // 10MB
 		if (file.size > maxSize) {
-			throw error(400, 'Filen er for stor. Maksimal størrelse er 10MB');
+			return fail(400, { message: 'Filen er for stor. Maksimal størrelse er 10MB' });
 		}
 
 		try {
@@ -120,7 +120,7 @@ export const actions: Actions = {
 			);
 		} catch (uploadError) {
 			console.error('Error uploading file:', uploadError);
-			error(500, 'Feil ved opplasting av fil');
+			return fail(500, { message: 'Feil ved opplasting av fil' });
 		}
 
 		// Broadcast new registration via WebSocket (if applicable)
@@ -138,6 +138,6 @@ export const actions: Actions = {
 		}
 
 		// Redirect back to the event page
-		throw redirect(303, `/arrangement/${eventId}`);
+		redirect(303, `/arrangement/${eventId}`);
 	}
 };
