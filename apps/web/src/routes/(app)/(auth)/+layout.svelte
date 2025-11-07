@@ -2,12 +2,14 @@
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import { onNavigate } from '$app/navigation';
-	import { Menu, X } from '@lucide/svelte';
+	import { Menu, Moon, Sun, X } from '@lucide/svelte';
 	import { browser } from '$app/environment';
+	import { getThemeContext } from '$lib/theme.svelte';
 
 	let { children } = $props();
 
 	let isOpen = $state(false);
+	let theme = getThemeContext();
 
 	function toggleMenu() {
 		isOpen = !isOpen;
@@ -34,9 +36,19 @@
 		<a href={resolve('/')} class="hover:underline">Beer Counter</a>
 	</h1>
 
-	<button onclick={toggleMenu} class="relative z-50">
-		<Menu class="size-8" />
-	</button>
+	<div class="flex items-center">
+		<button onclick={() => theme.toggle()} class="mr-4">
+			{#if theme.current === 'dark'}
+				<Sun class="size-7" />
+			{:else}
+				<Moon class="size-7" />
+			{/if}
+		</button>
+
+		<button onclick={toggleMenu} class="relative z-50">
+			<Menu class="size-8" />
+		</button>
+	</div>
 </header>
 
 {@render children()}
@@ -49,9 +61,19 @@
 					<a href={resolve('/')} class="hover:underline">Beer Counter</a>
 				</h1>
 
-				<button onclick={toggleMenu} class="relative z-50">
-					<X class="size-8" />
-				</button>
+				<div class="flex items-center">
+					<button onclick={() => theme.toggle()} class="mr-4">
+						{#if theme.current === 'dark'}
+							<Sun class="size-7" />
+						{:else}
+							<Moon class="size-7" />
+						{/if}
+					</button>
+
+					<button onclick={toggleMenu} class="relative z-50">
+						<X class="size-8" />
+					</button>
+				</div>
 			</header>
 
 			<nav>

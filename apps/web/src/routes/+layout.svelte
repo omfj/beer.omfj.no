@@ -6,8 +6,12 @@
 	import { setUserContext } from '$lib/context/user';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { pwaInfo } from 'virtual:pwa-info';
+	import { createThemeContext } from '$lib/theme.svelte';
 
 	let webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
+
+	// Initialize theme context
+	createThemeContext();
 
 	const { data, children } = $props();
 

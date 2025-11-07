@@ -1,24 +1,66 @@
 @import 'tailwindcss';
 @import 'tailwindcss/preflight.css' layer(base);
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+	--background: #f8f8f7;
+	--background-dark: #f0f0ef;
+	--background-darker: #e8e8e7;
+	--background-darkest: #e0e0df;
+
+	--primary: #007bff;
+	--primary-dark: #0056b3;
+	--primary-darker: #004494;
+
+	--foreground: #000000;
+	--foreground-muted: #6a7282;
+
+	--danger: #dc3545;
+	--danger-dark: #b02a37;
+	--danger-darker: #8a1f2c;
+
+	--border: #e0e0df;
+}
+
+.dark {
+	--background: #000000;
+	--background-dark: #242424;
+	--background-darker: #2e2e2e;
+	--background-darkest: #383838;
+
+	--primary: #4a9eff;
+	--primary-dark: #007bff;
+	--primary-darker: #0056b3;
+
+	--foreground: #ffffff;
+	--foreground-muted: #a0a0a0;
+
+	--danger: #ff6b7a;
+	--danger-dark: #dc3545;
+	--danger-darker: #b02a37;
+
+	--border: #383838;
+}
+
 @theme {
-	--color-background: #f8f8f7;
-	--color-background-dark: #f0f0ef;
-	--color-background-darker: #e8e8e7;
-	--color-background-darkest: #e0e0df;
+	--color-background: var(--background);
+	--color-background-dark: var(--background-dark);
+	--color-background-darker: var(--background-darker);
+	--color-background-darkest: var(--background-darkest);
 
-	--color-primary: #007bff;
-	--color-primary-dark: #0056b3;
-	--color-primary-darker: #004494;
+	--color-primary: var(--primary);
+	--color-primary-dark: var(--primary-dark);
+	--color-primary-darker: var(--primary-darker);
 
-	--color-foreground: #000000;
-	--color-foreground-muted: #6a7282;
+	--color-foreground: var(--foreground);
+	--color-foreground-muted: var(--foreground-muted);
 
-	--color-danger: #dc3545;
-	--color-danger-dark: #b02a37;
-	--color-danger-darker: #8a1f2c;
+	--color-danger: var(--danger);
+	--color-danger-dark: var(--danger-dark);
+	--color-danger-darker: var(--danger-darker);
 
-	--color-border: #e0e0df;
+	--color-border: var(--border);
 }
 
 * {
@@ -27,6 +69,7 @@
 
 html,
 body {
+	color: var(--color-foreground);
 	background-color: var(--color-background);
 }
 
@@ -56,4 +99,11 @@ body {
 		0 0 5px var(--color-primary);
 	opacity: 1;
 	transform: rotate(3deg) translate(0px, -4px);
+}
+
+/* Disable color transitions when theme is changing */
+.disable-transitions *,
+.disable-transitions *::before,
+.disable-transitions *::after {
+	transition: none !important;
 }

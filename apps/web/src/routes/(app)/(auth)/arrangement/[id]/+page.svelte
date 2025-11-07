@@ -276,7 +276,7 @@
 						<div class="flex items-center justify-between gap-2">
 							<p class="truncate font-medium">{attendee.username}</p>
 							<div class="flex items-center gap-2">
-								<p class="flex-shrink-0 text-xs whitespace-nowrap text-gray-600">
+								<p class="shrink-0 text-xs whitespace-nowrap text-gray-600">
 									{attendee.createdAt.toLocaleDateString('no-NO', {
 										day: 'numeric',
 										month: 'short',
@@ -326,6 +326,6 @@
 	</div>
 {:else}
 	<div class="bg-background-dark flex h-32 items-center justify-center rounded-lg p-4">
-		<p class="text-lg text-gray-600">Ingen drinker registrert ennå</p>
+		<p class="text-foreground-muted text-lg">Ingen drinker registrert ennå</p>
 	</div>
 {/if}

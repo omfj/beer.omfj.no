@@ -38,6 +38,31 @@
 		<!-- Twitter Card -->
 		<meta name="twitter:card" content="summary" />
 
+		<!-- Dark Mode script -->
+		<meta name="theme-color" content="#f8f8f7" media="(prefers-color-scheme: light)" />
+		<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+		<script>
+			try {
+				const stored = localStorage.getItem('theme');
+				let theme;
+				if (stored === 'dark' || stored === 'light') {
+					theme = stored;
+				} else {
+					const prefersDark =
+						window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+					theme = prefersDark ? 'dark' : 'light';
+				}
+
+				if (theme === 'dark') {
+					document.documentElement.classList.add('dark');
+				} else {
+					document.documentElement.classList.remove('dark');
+				}
+			} catch (e) {
+				// Ignore
+			}
+		</script>
+
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">
