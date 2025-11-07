@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	const id = params.id;
 
 	if (!locals.user) {
-		throw redirect(307, '/logg-inn');
+		throw redirect(307, `/logg-inn?event=${id}`);
 	}
 
 	const event = await locals.db.query.events.findFirst({

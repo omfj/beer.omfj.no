@@ -4,9 +4,11 @@
 	import Checkbox from '$lib/components/checkbox.svelte';
 	import { resolve } from '$app/paths';
 	import Input from '$lib/components/input.svelte';
+	import { page } from '$app/state';
 
 	let { form } = $props();
 
+	let event = page.url.searchParams.get('event');
 	let username = $state('');
 	let password = $state('');
 	let repeatPassword = $state('');
@@ -34,6 +36,8 @@
 {/if}
 
 <form class="flex flex-col gap-6" method="post" action="?/login" use:enhance>
+	<input type="hidden" name="eventId" value={event} />
+
 	<label class="flex flex-col gap-1 text-xl font-medium">
 		Brukernavn
 		<Input bind:value={username} name="username" required />

@@ -6,6 +6,10 @@ import { validateUsername, validatePassword, generateUserId } from '$lib/utils';
 
 export const load: PageServerLoad = async (event) => {
 	if (event.locals.user) {
+		const eventId = event.url.searchParams.get('event');
+		if (eventId) {
+			return redirect(302, `/arrangement/${eventId}`);
+		}
 		return redirect(302, '/');
 	}
 };
@@ -53,6 +57,10 @@ export const actions: Actions = {
 			return fail(500, { message: 'En feil har oppstått' });
 		}
 
+		const eventId = formData.get('eventId');
+		if (eventId) {
+			return redirect(302, `/arrangement/${eventId}`);
+		}
 		return redirect(302, '/');
 	}
 };
