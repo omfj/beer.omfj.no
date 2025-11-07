@@ -13,31 +13,38 @@ export const load: PageServerLoad = async ({ platform, locals, params }) => {
 		throw error(404, 'Arrangementet ble ikke funnet');
 	}
 
-	// Get the 5 latest registrations for this event
-	const latestRegistrations = await locals.db.query.attendees
-		.findMany({
-			where: (attendees, { eq }) => eq(attendees.eventId, id),
-			with: {
-				user: true,
-				drinkType: true,
-				drinkSize: true
-			},
-			orderBy: (attendees, { desc }) => [desc(attendees.createdAt)],
-			limit: 9
-		})
-		.then((attendees) => {
-			return attendees.map((attendee) => ({
-				id: attendee.id,
-				userId: attendee.userId,
-				username: attendee.user.username,
-				createdAt: attendee.createdAt,
-				imageId: attendee.user.hasAgreedToTerms ? attendee.imageId : null,
-				drinkType: attendee.drinkType,
-				drinkSize: attendee.drinkSize
-			}));
-		});
+	// Get all attendees for stats calculation
+	const allAttendees = await locals.db.query.attendees.findMany({
+		where: (attendees, { eq }) => eq(attendees.eventId, id),
+		with: {
+			user: true,
+			drinkType: true,
+			drinkSize: true
+		},
+		orderBy: (attendees, { desc }) => [desc(attendees.createdAt)]
+	});
+
+	// Get the 4 latest registrations for display
+	const latestRegistrations = allAttendees.slice(0, 4).map((attendee) => ({
+		id: attendee.id,
+		userId: attendee.userId,
+		username: attendee.user.username,
+		createdAt: attendee.createdAt,
+		imageId: attendee.user.hasAgreedToTerms ? attendee.imageId : null,
+		drinkType: attendee.drinkType,
+		drinkSize: attendee.drinkSize
+	}));
+
+	// Prepare all attendees data for stats calculation
+	const attendeesForStats = allAttendees.map((attendee) => ({
+		id: attendee.id,
+		userId: attendee.userId,
+		username: attendee.user.username,
+		drinkType: attendee.drinkType,
+		drinkSize: attendee.drinkSize
+	}));
 
 	const wsUrl = createWsUrl(platform!.env.WS_HOST, event.id);
 
-	return { event, latestRegistrations, wsUrl };
+	return { event, latestRegistrations, attendeesForStats, wsUrl };
 };

@@ -1,13 +1,69 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import qrcode from 'qrcode-generator';
+	import { calculateDrinkPoints } from '$lib/scoring';
+	import { SvelteMap } from 'svelte/reactivity';
 
 	let { data } = $props();
 
 	let event = $derived(data.event);
 	let latestRegistrations = $derived(data.latestRegistrations);
+	let attendeesForStats = $derived(data.attendeesForStats);
 	let qrCanvas: HTMLCanvasElement;
 	let imageCacheBuster = $state(Date.now());
+
+	// Calculate stats
+	let totalRegistrations = $derived(attendeesForStats.length);
+
+	let uniqueParticipants = $derived(new Set(attendeesForStats.map((a) => a.userId)).size);
+
+	let topUsers = $derived.by(() => {
+		const userStats = new SvelteMap<
+			string,
+			{
+				username: string;
+				points: number;
+				count: number;
+			}
+		>();
+
+		attendeesForStats.forEach((attendee) => {
+			const userId = attendee.userId;
+			const points = calculateDrinkPoints(
+				attendee.drinkSize?.volumeML || null,
+				attendee.drinkType?.abv || null
+			);
+
+			if (userStats.has(userId)) {
+				const stats = userStats.get(userId)!;
+				stats.points += points;
+				stats.count++;
+			} else {
+				userStats.set(userId, {
+					username: attendee.username,
+					points: points,
+					count: 1
+				});
+			}
+		});
+
+		return Array.from(userStats.values())
+			.map((entry) => ({
+				...entry,
+				points: Math.round(entry.points * 10) / 10
+			}))
+			.sort((a, b) => b.points - a.points)
+			.slice(0, 4);
+	});
+
+	let totalPoints = $derived.by(() => {
+		return attendeesForStats.reduce((sum, attendee) => {
+			return (
+				sum +
+				calculateDrinkPoints(attendee.drinkSize?.volumeML || null, attendee.drinkType?.abv || null)
+			);
+		}, 0);
+	});
 
 	const eventUrl = $derived.by(() => {
 		if (typeof window !== 'undefined') {
@@ -93,84 +149,114 @@
 	<title>Dashboard - {event.name} - Beer Counter</title>
 </svelte:head>
 
-<div class="h-screen p-8">
-	<div class="mb-8">
-		<h1 class="mb-3 text-3xl font-medium">Dashboard for {event.name}</h1>
-		<p class="text-foreground-muted text-xl font-light">
-			Siste registreringer og QR-kode for å dele arrangementet
-		</p>
+<div class="flex h-screen flex-col p-4">
+	<div class="mb-4">
+		<h1 class="text-5xl font-medium">{event.name}</h1>
 	</div>
 
-	<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
-		<!-- Latest Registrations - Takes up 2/3 of the width -->
-		<div class="lg:col-span-2">
-			<h2 class="mb-6 text-2xl font-medium">Siste registreringer</h2>
-
+	<div class="flex flex-1 gap-4 overflow-hidden">
+		<!-- Latest Registrations -->
+		<div class="flex-1 overflow-hidden">
 			{#if latestRegistrations.length === 0}
-				<div class="bg-empty-state-background rounded-lg p-8 text-center">
-					<p class="text-foreground-muted text-lg">Ingen registreringer ennå</p>
-					<p class="text-foreground-light mt-2">
-						Registreringer vil vises her når folk begynner å registrere øl
-					</p>
+				<div class="bg-empty-state-background flex h-full items-center justify-center rounded-lg">
+					<p class="text-foreground-muted">Ingen registreringer ennå</p>
 				</div>
 			{:else}
-				<div class="space-y-4">
-					<div
-						class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
-					>
-						{#each latestRegistrations.slice(0, 9) as registration (registration.id)}
-							<div class="border-border bg-card-background overflow-hidden rounded-lg border">
-								<div class="flex flex-col">
-									<div class="shrink-0">
-										{#if registration.imageId}
-											<img
-												src="/api/image/{registration.imageId}?v={imageCacheBuster}"
-												alt="Drink registration"
-												class="h-32 w-full object-cover"
-											/>
-										{:else}
-											<div
-												class="flex h-32 w-full items-center justify-center rounded-lg"
-												style="background: linear-gradient(to bottom right, var(--color-accent-start), var(--color-accent-end));"
-											>
-												<span class="text-foreground text-2xl font-medium">
-													{registration.username.charAt(0).toUpperCase()}
-												</span>
-											</div>
-										{/if}
+				<div class="grid h-full grid-cols-2 grid-rows-2 gap-3">
+					{#each latestRegistrations.slice(0, 4) as registration (registration.id)}
+						<div
+							class="border-border bg-card-background flex min-h-0 flex-col overflow-hidden rounded-lg border"
+						>
+							<div class="relative min-h-0 flex-1 overflow-hidden">
+								{#if registration.imageId}
+									<img
+										src="/api/image/{registration.imageId}?v={imageCacheBuster}"
+										alt="Drink registration"
+										class="h-full w-full object-cover"
+									/>
+								{:else}
+									<div
+										class="flex h-full w-full items-center justify-center"
+										style="background: linear-gradient(to bottom right, var(--color-accent-start), var(--color-accent-end));"
+									>
+										<span class="text-foreground text-4xl font-medium">
+											{registration.username.charAt(0).toUpperCase()}
+										</span>
 									</div>
-									<div class="flex items-center justify-between p-4">
-										<div>
-											<h3 class="text-foreground font-medium">
-												{registration.username}
-											</h3>
-											<p class="text-foreground-muted text-sm">
-												{#if registration.drinkType && registration.drinkSize}
-													{registration.drinkType.name} ({registration.drinkSize.name})
-												{:else if registration.drinkType}
-													{registration.drinkType.name}
-												{:else}
-													Registrering
-												{/if}
-											</p>
-										</div>
-										<div class="text-foreground-muted text-right text-sm">
-											<div>{formatTime(registration.createdAt)}</div>
-											<div>{formatDate(registration.createdAt)}</div>
-										</div>
-									</div>
-								</div>
+								{/if}
 							</div>
-						{/each}
-					</div>
+							<div
+								class="bg-card-background border-border flex h-10 min-h-10 shrink-0 items-center justify-center border-t px-2"
+							>
+								<h3 class="text-foreground w-full truncate text-center text-sm font-medium">
+									{registration.username}
+								</h3>
+							</div>
+						</div>
+					{/each}
 				</div>
 			{/if}
 		</div>
 
-		<!-- QR Code - Takes up 1/3 of the width -->
-		<div class="lg:col-span-1">
-			<canvas bind:this={qrCanvas} class="border-border-light mx-auto my-auto rounded-lg border-2"
-			></canvas>
+		<!-- QR Code and Stats -->
+		<div class="flex w-80 flex-col gap-3">
+			<div class="flex items-center justify-center">
+				<canvas bind:this={qrCanvas} class="border-border-light rounded-lg border-2"></canvas>
+			</div>
+
+			<!-- Stats -->
+			<div class="border-border bg-card-background flex flex-col gap-3 rounded-lg border p-3">
+				<div class="border-border-light border-b pb-3">
+					<h3 class="text-foreground text-lg font-medium">Statistikk</h3>
+				</div>
+
+				<div class="space-y-3">
+					<div class="flex items-center justify-between">
+						<span class="text-foreground-muted text-sm">Totalt registrert</span>
+						<span class="text-foreground text-lg font-medium">{totalRegistrations}</span>
+					</div>
+
+					<div class="flex items-center justify-between">
+						<span class="text-foreground-muted text-sm">Deltakere</span>
+						<span class="text-foreground text-lg font-medium">{uniqueParticipants}</span>
+					</div>
+
+					<div class="flex items-center justify-between">
+						<span class="text-foreground-muted text-sm">Totale poeng</span>
+						<span class="text-foreground text-lg font-medium"
+							>{Math.round(totalPoints * 10) / 10}</span
+						>
+					</div>
+				</div>
+
+				{#if topUsers.length > 0}
+					<div class="border-border-light mt-2 border-t pt-3">
+						<h4 class="text-foreground-muted mb-3 text-sm font-medium">Toppliste</h4>
+						<div class="space-y-2">
+							{#each topUsers as { username, points, count }, index (username)}
+								<div class="flex items-center justify-between">
+									<div class="flex items-center gap-2">
+										<span class="text-foreground-muted text-xs font-medium">
+											{index === 0
+												? '🥇'
+												: index === 1
+													? '🥈'
+													: index === 2
+														? '🥉'
+														: `${index + 1}.`}
+										</span>
+										<span class="text-foreground text-sm">{username}</span>
+									</div>
+									<div class="flex items-center gap-2">
+										<span class="text-foreground-muted text-xs">({count})</span>
+										<span class="text-foreground text-sm font-medium">{points}</span>
+									</div>
+								</div>
+							{/each}
+						</div>
+					</div>
+				{/if}
+			</div>
 		</div>
 	</div>
 </div>
