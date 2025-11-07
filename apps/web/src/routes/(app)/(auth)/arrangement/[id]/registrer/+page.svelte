@@ -26,7 +26,7 @@
 			.filter((combo) => combo.drinkTypeId === selectedDrinkType)
 			.map((combo) => data.drinkSizes.find((size) => size.id === combo.drinkSizeId)!)
 			.sort((a, b) => {
-				if (!a || !b) return 0;
+				if (!a.volumeML || !b.volumeML) return 0;
 				return a.volumeML - b.volumeML;
 			});
 	});
@@ -257,7 +257,7 @@
 			</div>
 		{/if}
 
-		<div class="bg-primary/10 border-primary/20 rounded-lg border p-4">
+		<div class="bg-primary/10 border-primary/20 border p-4">
 			<div class="flex items-center justify-between">
 				<span class="text-lg font-medium">Forventet poengsum:</span>
 				<span class="text-primary text-2xl font-bold">{previewPoints} poeng</span>
@@ -385,6 +385,9 @@
 						</p>
 						<p class="text-sm text-gray-600">Dra og slipp fil her, eller klikk for å velge</p>
 						<p class="text-xs text-gray-500">PNG, JPG eller WEBP (maks 10MB)</p>
+						<p class="text-xs text-gray-500 italic md:hidden">
+							Tips: For best resultat, klikk opplastingsboksen og velg "Ta bilde"
+						</p>
 					</div>
 				</div>
 			</div>
