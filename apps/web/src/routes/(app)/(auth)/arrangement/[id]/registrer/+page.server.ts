@@ -29,59 +29,44 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		throw error(401, 'Ikke logget inn');
 	}
 
-	try {
-		// Fetch event with error handling
-		const event = await locals.db.query.events.findFirst({
-			where: (events, { eq }) => eq(events.id, id)
-		});
+	// Fetch event with error handling
+	const event = await locals.db.query.events.findFirst({
+		where: (events, { eq }) => eq(events.id, id)
+	});
 
-		if (!event) {
-			console.warn('Event not found:', logContext('event_not_found', id, locals.user.id));
-			throw error(404, 'Arrangementet ble ikke funnet');
-		}
-
-		console.log('Event found:', logContext('event_found', id, locals.user.id));
-
-		// Load drink types and sizes with their valid combinations
-		const [drinkTypes, drinkSizes, drinkTypeSizes] = await Promise.all([
-			locals.db.query.drinkTypes.findMany({
-				orderBy: (drinkTypes, { asc }) => [asc(drinkTypes.name)]
-			}),
-			locals.db.query.drinkSizes.findMany({
-				orderBy: (drinkSizes, { asc }) => [asc(drinkSizes.volumeML)]
-			}),
-			locals.db.query.drinkTypeSizes.findMany()
-		]);
-
-		const duration = Date.now() - startTime;
-		console.log('Registration page loaded successfully:', {
-			...logContext('load_success', id, locals.user.id),
-			duration_ms: duration,
-			drink_types_count: drinkTypes.length,
-			drink_sizes_count: drinkSizes.length,
-			valid_combinations_count: drinkTypeSizes.length
-		});
-
-		return {
-			event,
-			drinkTypes,
-			drinkSizes,
-			drinkTypeSizes
-		};
-	} catch (err) {
-		// Re-throw SvelteKit errors (401, 404, etc.)
-		if (err && typeof err === 'object' && 'status' in err) {
-			throw err;
-		}
-
-		// Log and handle unexpected database errors
-		console.error('Database error loading registration page:', {
-			...logContext('load_db_error', id, locals.user?.id),
-			error: err instanceof Error ? err.message : String(err),
-			stack: err instanceof Error ? err.stack : undefined
-		});
-		throw error(500, 'Kunne ikke laste inn registreringssiden');
+	if (!event) {
+		console.warn('Event not found:', logContext('event_not_found', id, locals.user.id));
+		throw error(404, 'Arrangementet ble ikke funnet');
 	}
+
+	console.log('Event found:', logContext('event_found', id, locals.user.id));
+
+	// Load drink types and sizes with their valid combinations
+	const [drinkTypes, drinkSizes, drinkTypeSizes] = await Promise.all([
+		locals.db.query.drinkTypes.findMany({
+			orderBy: (drinkTypes, { asc }) => [asc(drinkTypes.name)]
+		}),
+		locals.db.query.drinkSizes.findMany({
+			orderBy: (drinkSizes, { asc }) => [asc(drinkSizes.volumeML)]
+		}),
+		locals.db.query.drinkTypeSizes.findMany()
+	]);
+
+	const duration = Date.now() - startTime;
+	console.log('Registration page loaded successfully:', {
+		...logContext('load_success', id, locals.user.id),
+		duration_ms: duration,
+		drink_types_count: drinkTypes.length,
+		drink_sizes_count: drinkSizes.length,
+		valid_combinations_count: drinkTypeSizes.length
+	});
+
+	return {
+		event,
+		drinkTypes,
+		drinkSizes,
+		drinkTypeSizes
+	};
 };
 
 export const actions: Actions = {
@@ -102,8 +87,6 @@ export const actions: Actions = {
 			});
 			return fail(401, { message: 'Ikke logget inn' });
 		}
-
-		const waitUntil = platform?.ctx.waitUntil;
 
 		let formData: FormData;
 		try {
@@ -322,14 +305,14 @@ export const actions: Actions = {
 		}
 
 		// Broadcast new registration via WebSocket (if applicable) - use waitUntil for background execution
-		if (platform?.env.WS_HOST && platform?.env.API_KEY && waitUntil) {
+		if (platform?.env.WS_HOST && platform?.env.API_KEY && platform?.ctx.waitUntil) {
 			console.log('Broadcasting registration to WebSocket:', {
 				...logContext('ws_broadcast_start', eventId, locals.user.id),
 				operationId,
 				ws_host: platform.env.WS_HOST
 			});
 
-			waitUntil(
+			platform.ctx.waitUntil(
 				ky
 					.post(createHttpUrl(platform.env.WS_HOST, eventId), {
 						headers: {
@@ -357,7 +340,7 @@ export const actions: Actions = {
 				operationId,
 				has_ws_host: !!platform?.env.WS_HOST,
 				has_api_key: !!platform?.env.API_KEY,
-				has_wait_until: !!waitUntil
+				has_wait_until: !!platform?.ctx.waitUntil
 			});
 		}
 

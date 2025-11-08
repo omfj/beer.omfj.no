@@ -180,6 +180,10 @@
 				dataTransfer.items.add(file);
 				files = dataTransfer.files;
 
+				if (fileInput) {
+					fileInput.files = dataTransfer.files;
+				}
+
 				stopCamera();
 			},
 			'image/jpeg',
