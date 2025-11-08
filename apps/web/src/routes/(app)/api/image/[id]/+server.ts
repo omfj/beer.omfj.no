@@ -8,10 +8,6 @@ export const GET: RequestHandler = async ({ params, locals, setHeaders }) => {
 		throw error(400, 'Missing image ID');
 	}
 
-	if (!locals.user) {
-		throw error(401, 'Unauthorized access');
-	}
-
 	try {
 		// Get the image from R2 bucket
 		const object = await locals.bucket.get(imageId);
