@@ -62,7 +62,7 @@
 		const selectedSize = availableSizes.find((size) => size?.id === selectedDrinkSize);
 		if (!selectedTypeData || !selectedSize) return 0.5;
 
-		return calculateDrinkPoints(selectedSize.volumeML, selectedTypeData.abv);
+		return calculateDrinkPoints(selectedSize.volumeML, selectedTypeData.abv, selectedTypeData.id);
 	});
 
 	// Reactive effect to set up video stream when elements are ready
@@ -323,6 +323,8 @@
 					Standard poeng (ingen type/størrelse valgt)
 				{:else if !selectedDrinkType || !selectedDrinkSize}
 					Standard poeng (mangler type eller størrelse)
+				{:else if selectedDrinkType === 'beer'}
+					Basert på størrelse og type + 10% øl-bonus! 🍺
 				{:else}
 					Basert på størrelse og type
 				{/if}

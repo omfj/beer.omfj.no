@@ -35,7 +35,8 @@
 			// Calculate points for this drink
 			const points = calculateDrinkPoints(
 				attendee.drinkSize?.volumeML || null,
-				attendee.drinkType?.abv || null
+				attendee.drinkType?.abv || null,
+				attendee.drinkType?.id || null
 			);
 
 			if (userStats.has(userId)) {

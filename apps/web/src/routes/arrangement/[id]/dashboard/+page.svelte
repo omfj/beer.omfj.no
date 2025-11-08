@@ -31,7 +31,8 @@
 			const userId = attendee.userId;
 			const points = calculateDrinkPoints(
 				attendee.drinkSize?.volumeML || null,
-				attendee.drinkType?.abv || null
+				attendee.drinkType?.abv || null,
+				attendee.drinkType?.id || null
 			);
 
 			if (userStats.has(userId)) {
@@ -60,7 +61,11 @@
 		return attendeesForStats.reduce((sum, attendee) => {
 			return (
 				sum +
-				calculateDrinkPoints(attendee.drinkSize?.volumeML || null, attendee.drinkType?.abv || null)
+				calculateDrinkPoints(
+					attendee.drinkSize?.volumeML || null,
+					attendee.drinkType?.abv || null,
+					attendee.drinkType?.id || null
+				)
 			);
 		}, 0);
 	});

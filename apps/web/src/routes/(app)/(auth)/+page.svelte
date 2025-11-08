@@ -23,6 +23,18 @@
 		informasjon og melde deg på.
 	</p>
 
+	<div class="mb-4 border-l-4 border-amber-200 bg-amber-50 p-4">
+		<div class="flex items-center gap-2">
+			<span class="text-2xl">🍺</span>
+			<div>
+				<p class="text-sm font-medium text-gray-900">Visste du? Øl gir 10% bonuspoeng!</p>
+				<p class="text-xs text-gray-700">
+					Vi feirer ølkulturen med en liten bonus, men alle drikketyper er velkomne.
+				</p>
+			</div>
+		</div>
+	</div>
+
 	<div class="flex items-center justify-between">
 		<ButtonLink href={resolve('/arrangementer/ny')}>Lag nytt arrangement</ButtonLink>
 	</div>
