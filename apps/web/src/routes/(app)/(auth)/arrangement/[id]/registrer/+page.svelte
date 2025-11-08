@@ -18,6 +18,9 @@
 	let hasMultipleCameras = $state(false);
 	let selectedDrinkType = $state<string>('');
 	let selectedDrinkSize = $state<string>('');
+	let fileError = $state<string | null>(null);
+
+	const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
 
 	// Computed available sizes based on selected drink type
 	let availableSizes = $derived.by(() => {
@@ -79,6 +82,18 @@
 			console.error('Error checking cameras:', error);
 			hasMultipleCameras = false;
 		}
+	}
+
+	function validateFileSize(file: File): boolean {
+		fileError = null;
+
+		if (file.size > MAX_FILE_SIZE) {
+			const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+			fileError = `Filen er for stor (${sizeMB} MB). Maksimal filstørrelse er 10 MB.`;
+			return false;
+		}
+
+		return true;
 	}
 
 	async function startCamera() {
@@ -154,6 +169,12 @@
 				// Create a File object from the blob
 				const file = new File([blob], `beer-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
 
+				// Validate file size
+				if (!validateFileSize(file)) {
+					stopCamera();
+					return;
+				}
+
 				// Create a FileList-like object
 				const dataTransfer = new DataTransfer();
 				dataTransfer.items.add(file);
@@ -182,6 +203,11 @@
 		isDragOver = false;
 
 		if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+			const file = e.dataTransfer.files[0];
+			if (!validateFileSize(file)) {
+				return;
+			}
+
 			files = e.dataTransfer.files;
 			if (fileInput) {
 				fileInput.files = e.dataTransfer.files;
@@ -193,8 +219,22 @@
 		fileInput?.click();
 	};
 
+	const handleFileSelect = (e: Event) => {
+		const target = e.target as HTMLInputElement;
+		if (target.files && target.files.length > 0) {
+			const file = target.files[0];
+			if (!validateFileSize(file)) {
+				target.value = ''; // Clear the input
+				files = null;
+				return;
+			}
+			files = target.files;
+		}
+	};
+
 	const removeFile = () => {
 		files = null;
+		fileError = null;
 		if (fileInput) {
 			fileInput.value = '';
 		}
@@ -220,6 +260,12 @@
 {#if form?.message}
 	<div class="mb-6 border-l-4 border-red-500 bg-red-50 p-4 text-red-700">
 		<p class="font-medium">{form.message}</p>
+	</div>
+{/if}
+
+{#if fileError}
+	<div class="mb-6 border-l-4 border-red-500 bg-red-50 p-4 text-red-700">
+		<p class="font-medium">{fileError}</p>
 	</div>
 {/if}
 
@@ -287,7 +333,7 @@
 		id="image"
 		name="image"
 		accept="image/*"
-		bind:files
+		onchange={handleFileSelect}
 		class="sr-only"
 		required
 	/>
