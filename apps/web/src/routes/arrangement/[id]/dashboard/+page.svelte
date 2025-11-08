@@ -17,6 +17,14 @@
 
 	let uniqueParticipants = $derived(new Set(attendeesForStats.map((a) => a.userId)).size);
 
+	// Calculate beer count
+	let beerCount = $derived(attendeesForStats.filter((a) => a.drinkType?.id === 'beer').length);
+
+	// Calculate percentage of beers
+	let beerPercentage = $derived(
+		totalRegistrations > 0 ? Math.round((beerCount / totalRegistrations) * 100) : 0
+	);
+
 	let topUsers = $derived.by(() => {
 		const userStats = new SvelteMap<
 			string,
@@ -217,6 +225,20 @@
 						<span class="text-foreground text-lg font-medium"
 							>{Math.round(totalPoints * 10) / 10}</span
 						>
+					</div>
+
+					<!-- Beer Count -->
+					<div
+						class="flex items-center justify-between rounded border border-amber-200 bg-amber-50 p-2"
+					>
+						<div class="flex items-center gap-2">
+							<span class="text-lg">🍺</span>
+							<span class="text-foreground-muted text-sm">Øl registrert</span>
+						</div>
+						<div class="flex items-center gap-1">
+							<span class="text-foreground text-lg font-medium">{beerCount}</span>
+							<span class="text-foreground-muted text-xs">({beerPercentage}%)</span>
+						</div>
 					</div>
 				</div>
 

@@ -63,6 +63,12 @@
 			.sort((a, b) => b.points - a.points);
 	});
 
+	// Calculate beer statistics
+	let beerCount = $derived(attendees.filter((a) => a.drinkType?.id === 'beer').length);
+	let beerPercentage = $derived(
+		attendees.length > 0 ? Math.round((beerCount / attendees.length) * 100) : 0
+	);
+
 	// Pagination state
 	let scoreboardLimit = $state(10);
 	let imagesLimit = $state(10);
@@ -126,6 +132,15 @@
 
 	{#if attendees.length > 0}
 		<p class="text-lg text-gray-600">{attendees.length} drinker registrert totalt</p>
+		{#if beerCount > 0}
+			<div class="mt-3 flex items-center gap-2 border-l-4 border-amber-200 bg-amber-50 p-3">
+				<span class="text-xl">🍺</span>
+				<p class="text-sm text-gray-700">
+					{beerCount} øl ({beerPercentage}%) med bonuspoeng! Øl får 10% ekstra poeng for å feire
+					ølkulturen.
+				</p>
+			</div>
+		{/if}
 	{/if}
 </div>
 
