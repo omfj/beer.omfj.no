@@ -46,6 +46,8 @@ export const actions: Actions = {
 			return fail(401, { message: 'Ikke logget inn' });
 		}
 
+		const waitUntil = platform?.ctx.waitUntil;
+
 		const eventId = params.id;
 		const formData = await request.formData();
 
@@ -91,7 +93,7 @@ export const actions: Actions = {
 
 			// Upload to R2 bucket
 			const arrayBuffer = await file.arrayBuffer();
-			await locals.bucket.put(fileName, arrayBuffer, {
+			const uploadPromise = locals.bucket.put(fileName, arrayBuffer, {
 				httpMetadata: {
 					contentType: file.type
 				},
@@ -102,6 +104,13 @@ export const actions: Actions = {
 					uploadedAt: new Date().toISOString()
 				}
 			});
+
+			// Add 30 second timeout for R2 upload
+			const timeoutPromise = new Promise((_, reject) =>
+				setTimeout(() => reject(new Error('R2 upload timeout')), 30000)
+			);
+
+			await Promise.race([uploadPromise, timeoutPromise]);
 
 			// Insert attendee record with image URL and drink info
 			const attendeeId = generateUserId();
@@ -123,18 +132,20 @@ export const actions: Actions = {
 			return fail(500, { message: 'Feil ved opplasting av fil' });
 		}
 
-		// Broadcast new registration via WebSocket (if applicable)
-		if (platform?.env.WS_HOST && platform?.env.API_KEY) {
-			await ky
-				.post(createHttpUrl(platform.env.WS_HOST, eventId), {
-					headers: {
-						Authorization: `Bearer ${platform.env.API_KEY}`
-					},
-					timeout: 5000
-				})
-				.catch(() => {
-					console.warn('Failed to notify WebSocket server');
-				});
+		// Broadcast new registration via WebSocket (if applicable) - use waitUntil for background execution
+		if (platform?.env.WS_HOST && platform?.env.API_KEY && waitUntil) {
+			waitUntil(
+				ky
+					.post(createHttpUrl(platform.env.WS_HOST, eventId), {
+						headers: {
+							Authorization: `Bearer ${platform.env.API_KEY}`
+						},
+						timeout: 5000
+					})
+					.catch(() => {
+						console.warn('Failed to notify WebSocket server');
+					})
+			);
 		}
 
 		// Redirect back to the event page
