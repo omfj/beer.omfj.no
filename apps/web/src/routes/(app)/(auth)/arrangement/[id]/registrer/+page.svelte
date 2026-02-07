@@ -342,13 +342,11 @@
 		required
 	/>
 
-	<!-- svelte-ignore a11y_media_has_caption -->
 	<div class="space-y-4">
 		{#if showCamera}
 			<!-- Camera Interface -->
 			<div class="space-y-4">
 				<div class="relative">
-					<!-- svelte-ignore a11y_media_has_caption -->
 					<video bind:this={videoElement} autoplay playsinline class="w-full rounded"></video>
 
 					<!-- Camera Flip Button -->

@@ -11,6 +11,6 @@
     "typegen": "turbo typegen"
   },
   "devDependencies": {
-    "turbo": "^2.6.0"
+    "turbo": "^2.8.3"
   }
 }
