@@ -69,6 +69,9 @@
 						<a href={resolve('/')} class="text-2xl font-light hover:underline">Hjem</a>
 					</li>
 					<li>
+						<a href={resolve('/topliste')} class="text-2xl font-light hover:underline">Topliste</a>
+					</li>
+					<li>
 						<a href={resolve('/profil')} class="text-2xl font-light hover:underline">Profil</a>
 					</li>
 					<li>
