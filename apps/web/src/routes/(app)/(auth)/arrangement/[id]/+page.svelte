@@ -308,6 +308,15 @@
 								{/if}
 							</div>
 						</div>
+						<div class="mt-2 flex items-center gap-1">
+							<span class="text-primary text-lg font-bold"
+								>{calculateDrinkPoints(
+									attendee.drinkSize?.volumeML || null,
+									attendee.drinkType?.abv || null
+								)}</span
+							>
+							<span class="text-sm text-gray-500">poeng</span>
+						</div>
 					</div>
 				</div>
 			{/each}
