@@ -2,34 +2,82 @@
 	import { ChevronRight } from '@lucide/svelte';
 	import { formatDate } from '$lib/date';
 	import { resolve } from '$app/paths';
+	import Select from '$lib/components/select.svelte';
+	import Button from '$lib/components/button.svelte';
+	import { enhance } from '$app/forms';
 
 	let { data } = $props();
+
+	let isSubmitting = $state(false);
+
 	let user = $derived(data.user);
 	let createdEvents = $derived(data.createdEvents);
+
+	let weight = $state(data.user.weight ?? '');
+	let gender = $state(data.user.gender ?? '');
 </script>
 
 <svelte:head>
 	<title>Profil - Beer Counter</title>
 </svelte:head>
 
-<div class="mb-8">
-	<h1 class="mb-3 text-3xl font-medium">Din profil</h1>
+<h1 class="mb-6 text-3xl font-medium">Din profil</h1>
 
-	<div class="bg-background-dark p-6">
+<div class="mb-4 space-y-2">
+	<div>
+		<span class="text-foreground-muted text-sm">Brukernavn</span>
+		<p class="text-xl font-medium">{user.username}</p>
+	</div>
+
+	{#if user.createdAt}
+		<div>
+			<span class="text-foreground-muted text-sm">Medlem siden</span>
+			<p class="text-lg">{formatDate(user.createdAt)}</p>
+		</div>
+	{/if}
+</div>
+
+<div class="bg-background-dark mb-8 p-4">
+	<h2 class="mb-1 text-lg font-medium">Promilleinnstillinger</h2>
+	<p class="text-foreground-muted mb-4 text-sm">Brukes til å estimere promille i arrangementer.</p>
+
+	<form
+		method="post"
+		action="?/saveProfile"
+		use:enhance={() => {
+			isSubmitting = true;
+			return async ({ update }) => {
+				isSubmitting = false;
+				await update({ reset: false });
+			};
+		}}
+	>
 		<div class="space-y-4">
-			<div>
-				<span class="text-foreground-muted text-sm">Brukernavn</span>
-				<p class="text-xl font-medium">{user.username}</p>
+			<div class="flex flex-col gap-1">
+				<label for="weight" class="text-foreground-muted text-sm">Vektklasse</label>
+				<Select bind:value={weight} class="text-foreground" name="weight">
+					<option value="">Ikke oppgitt</option>
+					<option value="light">Lett (40–60 kg)</option>
+					<option value="medium">Middels (61–80 kg)</option>
+					<option value="heavy">Tung (81+ kg)</option>
+				</Select>
 			</div>
 
-			{#if user.createdAt}
-				<div>
-					<span class="text-foreground-muted text-sm">Medlem siden</span>
-					<p class="text-lg">{formatDate(user.createdAt)}</p>
-				</div>
-			{/if}
+			<div class="flex flex-col gap-1">
+				<label for="gender" class="text-foreground-muted text-sm">Kjønn</label>
+				<Select bind:value={gender} class="text-foreground" name="gender">
+					<option value="">Ikke oppgitt</option>
+					<option value="male">Mann</option>
+					<option value="female">Dame</option>
+					<option value="other">Annet</option>
+				</Select>
+			</div>
+
+			<Button disabled={isSubmitting} class="disabled:cursor-not-allowed disabled:opacity-75"
+				>Lagre</Button
+			>
 		</div>
-	</div>
+	</form>
 </div>
 
 <section>

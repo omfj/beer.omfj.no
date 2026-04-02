@@ -1,20 +1,22 @@
 <script lang="ts">
 	import SEO from '$lib/components/seo.svelte';
+	import Select from '$lib/components/select.svelte';
 	import { Trophy, Medal, TrendingUp } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
 
 	let { data } = $props();
 	let leaderboard = $derived(data.leaderboard);
 	let selectedYear = $derived(data.selectedYear);
+	let selectedYearValue = $derived(data.selectedYearValue);
 	let availableYears = $derived(data.availableYears);
 
 	function handleYearChange(event: Event) {
 		const select = event.target as HTMLSelectElement;
 		const year = select.value;
 		if (year === 'all') {
-			goto('/topliste');
+			goto('/toppliste');
 		} else {
-			goto(`/topliste?year=${year}`);
+			goto(`/toppliste?year=${year}`);
 		}
 	}
 
@@ -33,12 +35,12 @@
 </script>
 
 <SEO
-	title="Topliste"
+	title="Toppliste"
 	description="Se hvem som har drukket mest og samlet flest poeng. Konkurrer med venner og klatre på topplisten."
 />
 
 <div class="mb-8">
-	<h1 class="mb-3 text-3xl font-medium">Topliste</h1>
+	<h1 class="mb-3 text-3xl font-medium">Toppliste</h1>
 
 	<p class="mb-4 text-xl font-light">
 		Her finner du de 10 beste drikkerne rangert etter poeng. Filtrer etter år eller se totalen for
@@ -47,17 +49,17 @@
 
 	<div class="flex items-center gap-4">
 		<label for="year-filter" class="text-sm font-medium">Filtrer etter år:</label>
-		<select
+		<Select
 			id="year-filter"
-			class="bg-background-dark hover:bg-background-darker rounded border border-gray-700 px-4 py-2 transition-colors"
-			value={selectedYear?.toString() ?? 'all'}
+			class="text-foreground w-44"
+			value={selectedYearValue}
 			onchange={handleYearChange}
 		>
 			<option value="all">Alle tider</option>
-			{#each availableYears as year}
-				<option value={year}>{year}</option>
+			{#each availableYears as year (year)}
+				<option value={year.toString()}>{year}</option>
 			{/each}
-		</select>
+		</Select>
 	</div>
 </div>
 

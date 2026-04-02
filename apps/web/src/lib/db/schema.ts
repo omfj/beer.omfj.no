@@ -1,11 +1,13 @@
 import { relations } from 'drizzle-orm';
-import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, index, integer } from 'drizzle-orm/sqlite-core';
 
 export const users = sqliteTable('user', {
 	id: text().primaryKey(),
 	username: text().notNull().unique(),
 	type: text(),
 	hasAgreedToTerms: integer({ mode: 'boolean' }).notNull().default(false),
+	gender: text({ enum: ['male', 'female', 'other'] }),
+	weight: text({ enum: ['light', 'medium', 'heavy'] }),
 	// Users with null are created before 2. aug 2025
 	createdAt: integer({ mode: 'timestamp' }).$defaultFn(() => new Date())
 });

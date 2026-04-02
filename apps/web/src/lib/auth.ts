@@ -46,7 +46,10 @@ export class SessionService {
 				user: {
 					id: table.users.id,
 					username: table.users.username,
-					hasAgreedToTerms: table.users.hasAgreedToTerms
+					hasAgreedToTerms: table.users.hasAgreedToTerms,
+					weight: table.users.weight,
+					gender: table.users.gender,
+					createdAt: table.users.createdAt
 				},
 				session: table.sessions
 			})

@@ -1,6 +1,8 @@
-import type { User } from '$lib/db/schema';
+import type { SessionValidationResult } from '$lib/auth';
 import { getContext, setContext } from 'svelte';
 import { get, type Writable } from 'svelte/store';
+
+type User = SessionValidationResult['user'];
 
 export type UserContext = Writable<User | null>;
 

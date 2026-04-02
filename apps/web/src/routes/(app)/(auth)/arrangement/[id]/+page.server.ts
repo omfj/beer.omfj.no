@@ -36,7 +36,9 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 				createdAt: attendee.createdAt,
 				imageId: attendee.user.hasAgreedToTerms ? attendee.imageId : null,
 				drinkType: attendee.drinkType,
-				drinkSize: attendee.drinkSize
+				drinkSize: attendee.drinkSize,
+				userWeight: attendee.user.weight,
+				userGender: attendee.user.gender
 			}));
 		});
 

@@ -35,3 +35,23 @@ export function calculateDrinkPoints(
 
 	return Math.round(score * 10) / 10;
 }
+
+/**
+ * Convert a named weight class to a representative weight in kg (midpoint of range).
+ * light: 40–60 kg → 50 kg, medium: 61–80 kg → 70 kg, heavy: 81+ kg → 90 kg
+ */
+export function weightToKg(weight: 'light' | 'medium' | 'heavy'): number {
+	const map = { light: 50, medium: 70, heavy: 90 };
+	return map[weight];
+}
+
+export function calculateBac(
+	alcoholGram: number,
+	weightKg: number,
+	hours: number,
+	gender: 'male' | 'female' | 'other'
+): number {
+	// r = Widmark-faktoren (norsk standard): mann 0.7, kvinne 0.6, annet bruker gjennomsnitt
+	const r = gender === 'male' ? 0.7 : gender === 'female' ? 0.6 : 0.65;
+	return alcoholGram / (weightKg * r) - 0.15 * hours;
+}

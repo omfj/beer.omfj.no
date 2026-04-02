@@ -6,7 +6,7 @@
 	import { fly } from 'svelte/transition';
 	import { enhance } from '$app/forms';
 	import SEO from '$lib/components/seo.svelte';
-	import { calculateDrinkPoints } from '$lib/scoring';
+	import { calculateDrinkPoints, calculateBac, weightToKg } from '$lib/scoring';
 	import { SvelteMap } from 'svelte/reactivity';
 
 	let { data } = $props();
@@ -15,7 +15,7 @@
 	let attendees = $derived(data.attendees);
 	let user = $derived(data.user);
 
-	// Create scoreboard: calculate points per user
+	// Create scoreboard: calculate points and promille per user
 	let scoreboard = $derived.by(() => {
 		const userStats = new SvelteMap<
 			string,
@@ -26,40 +26,118 @@
 				};
 				points: number;
 				count: number;
+				totalAlcoholGrams: number;
+				firstDrinkAt: Date;
+				lastDrinkAt: Date;
+				weight: string | null;
+				gender: string | null;
 			}
 		>();
 
 		attendees.toReversed().forEach((attendee) => {
 			const userId = attendee.userId;
 
-			// Calculate points for this drink
 			const points = calculateDrinkPoints(
 				attendee.drinkSize?.volumeML || null,
 				attendee.drinkType?.abv || null
 			);
 
+			const volumeL = (attendee.drinkSize?.volumeML ?? 0) / 1000;
+			const abvDecimal = (attendee.drinkType?.abv ?? 0) / 100;
+			const alcoholGrams = volumeL * abvDecimal * 0.789 * 1000;
+
 			if (userStats.has(userId)) {
-				userStats.get(userId)!.points += points;
-				userStats.get(userId)!.count++;
+				const entry = userStats.get(userId)!;
+				entry.points += points;
+				entry.count++;
+				entry.totalAlcoholGrams += alcoholGrams;
+				if (attendee.createdAt < entry.firstDrinkAt) {
+					entry.firstDrinkAt = attendee.createdAt;
+				}
+				if (attendee.createdAt > entry.lastDrinkAt) {
+					entry.lastDrinkAt = attendee.createdAt;
+				}
 			} else {
 				userStats.set(userId, {
-					user: {
-						id: attendee.userId,
-						username: attendee.username
-					},
-					points: points,
-					count: 1
+					user: { id: attendee.userId, username: attendee.username },
+					points,
+					count: 1,
+					totalAlcoholGrams: alcoholGrams,
+					firstDrinkAt: attendee.createdAt,
+					lastDrinkAt: attendee.createdAt,
+					weight: attendee.userWeight,
+					gender: attendee.userGender
 				});
 			}
 		});
 
 		// Convert to array and sort by points (highest first)
 		return Array.from(userStats.values())
-			.map((entry) => ({
-				...entry,
-				points: Math.round(entry.points * 10) / 10 // Round to 1 decimal place
-			}))
+			.map((entry) => {
+				// Use current time so promille reflects ongoing elimination
+				const hoursElapsed = (Date.now() - entry.firstDrinkAt.getTime()) / 3_600_000;
+				let promille: number | null = null;
+				if (
+					entry.weight &&
+					entry.gender &&
+					(entry.weight === 'light' || entry.weight === 'medium' || entry.weight === 'heavy') &&
+					(entry.gender === 'male' || entry.gender === 'female' || entry.gender === 'other')
+				) {
+					promille = Math.max(
+						0,
+						calculateBac(
+							entry.totalAlcoholGrams,
+							weightToKg(entry.weight),
+							hoursElapsed,
+							entry.gender
+						)
+					);
+				}
+				return {
+					user: entry.user,
+					points: Math.round(entry.points * 10) / 10,
+					count: entry.count,
+					promille
+				};
+			})
 			.sort((a, b) => b.points - a.points);
+	});
+
+	// Pre-compute cumulative promille at the moment of each drink registration
+	let attendeePromille = $derived.by(() => {
+		const result = new SvelteMap<string, number | null>();
+		const userAccum = new SvelteMap<string, { totalAlcohol: number; firstDrinkAt: Date }>();
+
+		// Process chronologically so accumulation is correct
+		const sorted = [...attendees].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+
+		for (const attendee of sorted) {
+			const volumeL = (attendee.drinkSize?.volumeML ?? 0) / 1000;
+			const abvDecimal = (attendee.drinkType?.abv ?? 0) / 100;
+			const alcoholGrams = volumeL * abvDecimal * 0.789 * 1000;
+
+			const prev = userAccum.get(attendee.userId);
+			const prevTotal = prev?.totalAlcohol ?? 0;
+			const firstDrinkAt = prev?.firstDrinkAt ?? attendee.createdAt;
+
+			// Show promille BEFORE this drink (exclude current drink from calculation)
+			const w = attendee.userWeight;
+			const g = attendee.userGender;
+			if (
+				prevTotal > 0 &&
+				(w === 'light' || w === 'medium' || w === 'heavy') &&
+				(g === 'male' || g === 'female' || g === 'other')
+			) {
+				const hours = (attendee.createdAt.getTime() - firstDrinkAt.getTime()) / 3_600_000;
+				result.set(attendee.id, Math.max(0, calculateBac(prevTotal, weightToKg(w), hours, g)));
+			} else {
+				result.set(attendee.id, null);
+			}
+
+			userAccum.set(attendee.userId, { totalAlcohol: prevTotal + alcoholGrams, firstDrinkAt });
+		}
+
+		return result;
 	});
 
 	// Pagination state
@@ -166,9 +244,14 @@
 			<Trophy class="text-primary h-6 w-6" />
 			<h2 class="text-2xl font-medium">Toppliste</h2>
 		</div>
+		<p class="text-foreground-muted text-sm">
+			Promille er et estimat beregnet akkurat nå, basert på registrerte drinker siden første
+			registrering. Krever at vekt og kjønn er satt i
+			<a href="/profil" class="underline">profilen din</a>.
+		</p>
 
 		<div class="space-y-3">
-			{#each scoreboard.slice(0, scoreboardLimit) as { user: scoreUser, points, count }, index (scoreUser.id)}
+			{#each scoreboard.slice(0, scoreboardLimit) as { user: scoreUser, points, count, promille }, index (scoreUser.id)}
 				<div
 					class="flex items-center justify-between rounded p-3 transition-colors {index === 0
 						? 'bg-primary/10 border-primary/20 border'
@@ -206,17 +289,22 @@
 						</div>
 					</div>
 
-					<div class="flex items-center gap-2">
-						<span
-							class="text-2xl font-bold {index === 0
-								? 'text-primary'
-								: index === 1
-									? 'text-amber-500'
-									: index === 2
-										? 'text-orange-600'
-										: 'text-gray-600'}">{points}</span
-						>
-						<span class="text-sm text-gray-500">poeng</span>
+					<div class="flex flex-col items-end gap-0.5">
+						<div class="flex items-center gap-2">
+							<span
+								class="text-2xl font-bold {index === 0
+									? 'text-primary'
+									: index === 1
+										? 'text-amber-500'
+										: index === 2
+											? 'text-orange-600'
+											: 'text-gray-600'}">{points}</span
+							>
+							<span class="text-sm text-gray-500">poeng</span>
+						</div>
+						{#if promille !== null && count >= 2}
+							<span class="text-xs text-gray-500">~{promille.toFixed(2)} ‰</span>
+						{/if}
 					</div>
 				</div>
 			{/each}
@@ -272,11 +360,11 @@
 					{/if}
 
 					<!-- Beer info -->
-					<div class="p-4">
-						<div class="flex items-center justify-between gap-2">
-							<p class="truncate font-medium">{attendee.username}</p>
-							<div class="flex items-center gap-2">
-								<p class="shrink-0 text-xs whitespace-nowrap text-gray-600">
+					<div class="p-3">
+						<div class="flex items-start justify-between gap-2">
+							<div class="min-w-0">
+								<p class="truncate font-medium">{attendee.username}</p>
+								<p class="text-xs text-gray-500">
 									{attendee.createdAt.toLocaleDateString('no-NO', {
 										day: 'numeric',
 										month: 'short',
@@ -284,38 +372,51 @@
 										minute: '2-digit'
 									})}
 								</p>
-								{#if attendee.userId === user.id}
-									<form
-										method="POST"
-										action="?/delete"
-										use:enhance={() => {
-											return async ({ update }) => {
-												if (handleDelete()) {
-													await update();
-												}
-											};
-										}}
-									>
-										<input type="hidden" name="attendeeId" value={attendee.id} />
-										<button
-											type="submit"
-											class="rounded p-1 text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
-											title="Slett registrering"
-										>
-											<Trash2 class="h-4 w-4" />
-										</button>
-									</form>
-								{/if}
 							</div>
+							{#if attendee.userId === user.id}
+								<form
+									method="POST"
+									action="?/delete"
+									use:enhance={() => {
+										return async ({ update }) => {
+											if (handleDelete()) {
+												await update();
+											}
+										};
+									}}
+								>
+									<input type="hidden" name="attendeeId" value={attendee.id} />
+									<button
+										type="submit"
+										class="shrink-0 rounded p-1 text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
+										title="Slett registrering"
+									>
+										<Trash2 class="h-4 w-4" />
+									</button>
+								</form>
+							{/if}
 						</div>
-						<div class="mt-2 flex items-center gap-1">
-							<span class="text-primary text-lg font-bold"
-								>{calculateDrinkPoints(
-									attendee.drinkSize?.volumeML || null,
-									attendee.drinkType?.abv || null
-								)}</span
-							>
-							<span class="text-sm text-gray-500">poeng</span>
+
+						<div class="bg-background-darkest mt-3 h-px"></div>
+
+						<div class="mt-2 flex items-baseline justify-between">
+							<div class="flex items-baseline gap-1">
+								<span class="text-primary text-xl font-bold"
+									>{calculateDrinkPoints(
+										attendee.drinkSize?.volumeML || null,
+										attendee.drinkType?.abv || null
+									)}</span
+								>
+								<span class="text-xs text-gray-500">poeng</span>
+							</div>
+							{#if attendeePromille.get(attendee.id) !== null}
+								<div class="text-right">
+									<span class="text-sm font-medium text-gray-600"
+										>{attendeePromille.get(attendee.id)?.toFixed(2)} ‰</span
+									>
+									<p class="text-xs text-gray-400">før denne</p>
+								</div>
+							{/if}
 						</div>
 					</div>
 				</div>

@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { attendees, users, drinkTypes, drinkSizes } from '$lib/db/schema';
-import { eq, and, gte, lt, sql } from 'drizzle-orm';
+import { attendees } from '$lib/db/schema';
+import { and, gte, lt, sql } from 'drizzle-orm';
 import { calculateDrinkPoints } from '$lib/scoring';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
@@ -10,7 +10,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	}
 
 	const yearParam = url.searchParams.get('year');
-	const selectedYear = yearParam ? parseInt(yearParam) : null;
+	const selectedYear = yearParam && /^\d{4}$/.test(yearParam) ? Number(yearParam) : null;
+	const selectedYearValue = selectedYear ? selectedYear.toString() : 'all';
 
 	// Build date filters for the selected year
 	let startDate: Date | null = null;
@@ -22,7 +23,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	}
 
 	// Get all drink registrations with user, drink type and size info
-	let attendeeRecords = await locals.db.query.attendees.findMany({
+	const attendeeRecords = await locals.db.query.attendees.findMany({
 		with: {
 			user: true,
 			drinkType: true,
@@ -77,6 +78,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	return {
 		leaderboard,
 		selectedYear,
+		selectedYearValue,
 		availableYears
 	};
 };

@@ -1,8 +1,8 @@
 {
-  "id": "226259b1-028a-402b-b992-a514e211bef3",
-  "prevId": "47fcd902-2f04-400f-a575-e61d45e76440",
   "version": "6",
   "dialect": "sqlite",
+  "id": "fcca0a95-84e0-4782-9d3b-1b4f6a86a7c7",
+  "prevId": "226259b1-028a-402b-b992-a514e211bef3",
   "tables": {
     "attendee": {
       "name": "attendee",
@@ -77,54 +77,54 @@
         "attendee_event_id_event_id_fk": {
           "name": "attendee_event_id_event_id_fk",
           "tableFrom": "attendee",
+          "tableTo": "event",
           "columnsFrom": [
             "event_id"
           ],
-          "tableTo": "event",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "attendee_user_id_user_id_fk": {
           "name": "attendee_user_id_user_id_fk",
           "tableFrom": "attendee",
+          "tableTo": "user",
           "columnsFrom": [
             "user_id"
           ],
-          "tableTo": "user",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "attendee_drink_type_id_drink_type_id_fk": {
           "name": "attendee_drink_type_id_drink_type_id_fk",
           "tableFrom": "attendee",
+          "tableTo": "drink_type",
           "columnsFrom": [
             "drink_type_id"
           ],
-          "tableTo": "drink_type",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         },
         "attendee_drink_size_id_drink_size_id_fk": {
           "name": "attendee_drink_size_id_drink_size_id_fk",
           "tableFrom": "attendee",
+          "tableTo": "drink_size",
           "columnsFrom": [
             "drink_size_id"
           ],
-          "tableTo": "drink_size",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -152,7 +152,7 @@
           "name": "volume_ml",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "description": {
@@ -228,28 +228,28 @@
         "drink_type_size_drink_type_id_drink_type_id_fk": {
           "name": "drink_type_size_drink_type_id_drink_type_id_fk",
           "tableFrom": "drink_type_size",
+          "tableTo": "drink_type",
           "columnsFrom": [
             "drink_type_id"
           ],
-          "tableTo": "drink_type",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "drink_type_size_drink_size_id_drink_size_id_fk": {
           "name": "drink_type_size_drink_size_id_drink_size_id_fk",
           "tableFrom": "drink_type_size",
+          "tableTo": "drink_size",
           "columnsFrom": [
             "drink_size_id"
           ],
-          "tableTo": "drink_size",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -353,15 +353,15 @@
         "event_created_by_user_id_fk": {
           "name": "event_created_by_user_id_fk",
           "tableFrom": "event",
+          "tableTo": "user",
           "columnsFrom": [
             "created_by"
           ],
-          "tableTo": "user",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -398,15 +398,15 @@
         "session_user_id_user_id_fk": {
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
+          "tableTo": "user",
           "columnsFrom": [
             "user_id"
           ],
-          "tableTo": "user",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -436,15 +436,15 @@
         "user_password_user_id_user_id_fk": {
           "name": "user_password_user_id_user_id_fk",
           "tableFrom": "user_password",
+          "tableTo": "user",
           "columnsFrom": [
             "user_id"
           ],
-          "tableTo": "user",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -483,6 +483,20 @@
           "autoincrement": false,
           "default": false
         },
+        "gender": {
+          "name": "gender",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "weight": {
+          "name": "weight",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "integer",
@@ -509,9 +523,9 @@
   "views": {},
   "enums": {},
   "_meta": {
-    "columns": {},
     "schemas": {},
-    "tables": {}
+    "tables": {},
+    "columns": {}
   },
   "internal": {
     "indexes": {}

@@ -291,7 +291,12 @@
 			<label for="drinkTypeId" class="mb-2 block text-lg font-medium"
 				>Drikketype <span class="text-sm text-gray-500">(valgfritt)</span></label
 			>
-			<Select bind:value={selectedDrinkType} id="drinkTypeId" name="drinkTypeId">
+			<Select
+				bind:value={selectedDrinkType}
+				id="drinkTypeId"
+				name="drinkTypeId"
+				class="text-foreground"
+			>
 				<option value="">Ikke oppgitt</option>
 				{#each data.drinkTypes as drinkType (drinkType.id)}
 					<option value={drinkType.id}>{drinkType.name}</option>
@@ -304,7 +309,12 @@
 				<label for="drinkSizeId" class="mb-2 block text-lg font-medium"
 					>Størrelse <span class="text-sm text-gray-500">(valgfritt)</span></label
 				>
-				<Select bind:value={selectedDrinkSize} id="drinkSizeId" name="drinkSizeId">
+				<Select
+					bind:value={selectedDrinkSize}
+					id="drinkSizeId"
+					name="drinkSizeId"
+					class="text-foreground"
+				>
 					<option value="">Ikke oppgitt</option>
 					{#each availableSizes as size (size.id)}
 						<option value={size.id}>{size.name} ({size.volumeML}ml)</option>
