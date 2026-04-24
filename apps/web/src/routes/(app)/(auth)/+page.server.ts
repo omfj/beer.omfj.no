@@ -1,7 +1,7 @@
 import { redirect, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { users, sessions, userPasswords, events, attendees } from '$lib/db/schema';
-import { count, countDistinct, eq, inArray } from 'drizzle-orm';
+import { count, countDistinct, desc, eq, inArray } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
@@ -25,7 +25,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.leftJoin(attendees, eq(events.id, attendees.eventId))
 		.where(inArray(events.id, eventIds))
 		.groupBy(events.id, events.name)
-		.orderBy(events.id);
+		.orderBy(desc(events.createdAt));
 
 	const showTermsPopup = !locals.user.hasAgreedToTerms;
 
