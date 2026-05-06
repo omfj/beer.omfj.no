@@ -73,6 +73,11 @@
 						>
 					</li>
 					<li>
+						<a href={resolve('/endringer')} class="text-2xl font-light hover:underline"
+							>Endringslogg</a
+						>
+					</li>
+					<li>
 						<a href={resolve('/profil')} class="text-2xl font-light hover:underline">Profil</a>
 					</li>
 					<li>

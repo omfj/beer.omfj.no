@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { ChevronRight, TriangleAlert } from '@lucide/svelte';
+	import { ChevronRight, ExternalLink, TriangleAlert } from '@lucide/svelte';
 	import Button from '$lib/components/button.svelte';
 	import ButtonLink from '$lib/components/button-link.svelte';
 	import SEO from '$lib/components/seo.svelte';
@@ -25,6 +25,10 @@
 
 	<div class="flex items-center justify-between">
 		<ButtonLink href={resolve('/arrangementer/ny')}>Lag nytt arrangement</ButtonLink>
+		<a href={resolve('/endringer')} class="text-foreground-muted flex items-center gap-1 text-sm underline">
+			Endringslogg
+			<ExternalLink class="size-3" />
+		</a>
 	</div>
 </div>
 
