@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-The application allows users to create events, register drinks consumed with various types and sizes, and view real-time leaderboards. Users can track different drink types (beer, wine, cocktails, shots) with configurable sizes and ABV percentages.
+Track drinks at events with friends. Create an event, log beers, wines, shots, and cocktails, and compete on a real-time leaderboard. Events can be password-protected.
 
 ## Development Commands
 
@@ -34,90 +34,88 @@ pnpm typegen                # Generate Wrangler types
 
 ### Database Schema (Drizzle ORM with Cloudflare D1)
 
-The database uses Drizzle ORM with SQLite (Cloudflare D1) and is defined in `apps/web/src/lib/db/schema.ts`:
+Defined in `src/lib/db/schema.ts`:
 
-- **users**: User accounts with username, type, terms acceptance, and creation timestamp
+- **users**: Username, type, gender, weight, terms acceptance, creation timestamp
 - **userPasswords**: Password hashes (separate table, cascade delete)
-- **sessions**: User sessions with expiration (30-day expiry, auto-renewed at 15 days)
-- **events**: Events/gatherings where drinks are tracked (name, color, creator, timestamp)
-- **attendees**: Drink registrations (should conceptually be "registrations" - tracks each drink logged by a user at an event, not just attendance). Links user + event + drink type + size + optional image
-- **drinkTypes**: Drink categories (beer, wine, cocktail, shot) with ABV percentage
+- **sessions**: User sessions (30-day expiry, auto-renewed at 15 days). Cookie name: `auth-session`
+- **events**: Name, color, optional password, creator, timestamp
+- **eventAccess**: Tracks which users have unlocked password-protected events (eventId, userId, grantedAt)
+- **attendees**: One record per drink logged — links user + event + drink type + size + optional image + optional ABV override
+- **drinkTypes**: Drink categories (beer, wine, cocktail, shot) with ABV percentage and score multiplier
 - **drinkSizes**: Drink volumes in mL (e.g., 0.33L, 0.5L, glass of wine)
 - **drinkTypeSizes**: Junction table mapping valid type-size combinations
 
-Key relationships:
-
-- Each attendee record represents one drink registration with type, size, and timestamp
-- Events have many attendees (drink registrations)
-- Users have many sessions and many attendees (drink registrations)
-- Drink types and sizes are related via the drinkTypeSizes junction table
-
 ### Authentication System
 
-Custom session-based authentication in `apps/web/src/lib/auth.ts`:
+Custom session-based auth in `src/lib/auth.ts`:
 
-- SessionService class handles token generation, validation, and cookie management
 - Session tokens are 18-byte random values, base64url encoded
-- Session IDs are SHA-256 hashes of tokens (stored in database)
-- Sessions expire after 30 days, auto-renewed if within last 15 days
-- Hook in `apps/web/src/hooks.server.ts` validates sessions on every request
-- Database instance, R2 bucket, and session service injected into event.locals
-- User and session data attached to event.locals for route access
+- Session IDs are SHA-256 hashes of tokens (stored in DB)
+- Hook in `src/hooks.server.ts` validates sessions on every request
+- DB instance, R2 bucket, and session service injected into `event.locals`
+
+### Event Access Control
+
+Password-protected events use bcryptjs. Logic in `src/lib/event-access.ts`:
+
+- Users must unlock a protected event before viewing it (`/arrangement/[id]/unlock`)
+- Access is recorded in the `eventAccess` table
+- The global leaderboard (`/toppliste`) only shows public (non-password-protected) events
 
 ### Scoring System
 
-Located in `apps/web/src/lib/scoring.ts`:
+Located in `src/lib/scoring.ts`:
 
-- Points calculated by formula: `(Volume (L) × ABV (decimal) × 0.789 × 1000) / 10`
-- Returns 0.5 points if volume or ABV is missing/invalid (for backwards compatibility)
-- The 0.789 factor represents ethanol density in g/mL
-- Result is rounded to 1 decimal place
+- Formula: `((Volume (L) × ABV (decimal) × 0.789 × 1000) / 10) × multiplier`
+- `multiplier` comes from the drinkType (defaults to 1.0)
+- Returns 0.5 points if volume or ABV is missing/invalid (backwards compatibility)
+- 0.789 = ethanol density in g/mL
+- Result rounded to 1 decimal place
 
 ### SvelteKit Route Structure
 
-Routes in `apps/web/src/routes`:
+Routes in `src/routes`:
 
-- `(app)/(auth)/*`: Protected routes requiring authentication
-  - `/`: Home/dashboard showing user's events
-  - `/arrangement/[id]`: Event detail page with registrations
-  - `/arrangement/[id]/registrer`: Register a new drink for the event
-  - `/arrangement/[id]/qr`: QR code for event sharing
+- `(app)/(auth)/*`: Protected routes (require login)
+  - `/`: Home — user's events
+  - `/arrangement/[id]`: Event detail with drink registrations
+  - `/arrangement/[id]/registrer`: Log a drink
+  - `/arrangement/[id]/qr`: QR code for sharing
+  - `/arrangement/[id]/unlock`: Unlock a password-protected event
   - `/arrangementer/ny`: Create new event
-  - `/profil`: User profile page
+  - `/toppliste`: Global leaderboard (public events only)
+  - `/endringer`: Changelog
+  - `/profil`: User profile
   - `/logg-ut`: Logout
 - `(app)/(public)/*`: Public routes
-  - `/logg-inn`: Login page
-  - `/registrer`: User registration
+  - `/logg-inn`: Login
+  - `/registrer`: Register account
   - `/vilkar`: Terms and conditions
-- `arrangement/[id]/dashboard`: Real-time event leaderboard (WebSocket connected)
-- `api/image/[id]`: Image serving endpoint (from R2 bucket)
+- `api/image/[id]`: Serve images from R2
 
-Route groups `(app)`, `(auth)`, `(public)` are layout groupings (parentheses mean they don't affect URL structure).
+Route groups `(app)`, `(auth)`, `(public)` are layout groupings and don't affect URLs.
 
 ### Platform Environment Access
 
-The app runs on Cloudflare Pages/Workers with these platform bindings (see `apps/web/src/app.d.ts`):
+Cloudflare bindings (see `src/app.d.ts`):
 
 - `env.DB`: Cloudflare D1 database
 - `env.BUCKET`: R2 bucket for image storage
-- `env.API_KEY`: API key for WebSocket server authentication
-- Access via `event.platform.env` in endpoints
-- Access via `event.locals` after hooks process them
+- Access via `event.platform.env` in endpoints, or `event.locals` after hooks
 
 ### Migration Strategy
 
-Drizzle Kit manages database migrations in `apps/web/migrations/`:
+Drizzle Kit manages migrations in `migrations/`:
 
-- Generate: `pnpm db:generate` creates migration files from schema changes
-- Apply locally: `pnpm db:migrate:local` (uses Wrangler local mode)
-- Apply remote: `pnpm db:migrate:remote` (applies to production D1)
-- Migration files include both schema DDL and data seeding (see `0010_seed-drink-types-sizes.sql`)
+- Generate: `pnpm db:generate`
+- Apply locally: `pnpm db:migrate:local`
+- Apply remote: `pnpm db:migrate:remote`
+- Some migrations include data seeding (e.g., `0010_seed-drink-types-sizes.sql`)
 
 ## Key Technical Decisions
 
 - **Cloudflare Stack**: D1 (SQLite), R2 (object storage), Pages (hosting), Durable Objects (WebSockets)
-- **Monorepo**: Turborepo for managing web app and WebSocket server together
-- **No Traditional Backend**: Leverages SvelteKit's server-side capabilities and Cloudflare bindings
-- **Custom Auth**: Hand-rolled session management (no third-party auth library)
-- **Real-time**: Durable Objects provide stateful WebSocket rooms per event
-- **Type Safety**: TypeScript throughout, with Drizzle for type-safe database queries
+- **No Traditional Backend**: SvelteKit server-side + Cloudflare bindings
+- **Custom Auth**: Hand-rolled session management, no third-party auth library
+- **Type Safety**: TypeScript throughout with Drizzle for type-safe queries
