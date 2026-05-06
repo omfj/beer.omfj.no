@@ -283,7 +283,7 @@
 							<p class="font-medium">
 								{scoreUser.username} <span class="text-sm text-gray-500">({count} stk)</span>
 							</p>
-							{#if scoreUser.id === user.id}
+							{#if scoreUser.id === user?.id}
 								<p class="text-primary text-xs">Det er deg!</p>
 							{/if}
 						</div>
@@ -373,7 +373,7 @@
 									})}
 								</p>
 							</div>
-							{#if attendee.userId === user.id}
+							{#if attendee.userId === user?.id}
 								<form
 									method="POST"
 									action="?/delete"
