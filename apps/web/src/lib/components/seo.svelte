@@ -15,12 +15,8 @@
 		type = 'website'
 	}: Props = $props();
 
-	const fullTitle = $derived(
-		title.includes('Beer Counter') ? title : `${title} - Beer Counter`
-	);
-	const canonicalUrl = $derived(
-		url || (typeof window !== 'undefined' ? window.location.href : '')
-	);
+	const fullTitle = $derived(title.includes('Beer Counter') ? title : `${title} - Beer Counter`);
+	const canonicalUrl = $derived(url || (typeof window !== 'undefined' ? window.location.href : ''));
 	const ogImage = $derived(image || '/android-chrome-512x512.png');
 </script>
 
