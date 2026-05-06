@@ -2,6 +2,7 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import * as table from '$lib/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { hasEventAccess } from '$lib/event-access';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const id = params.id;
@@ -18,8 +19,13 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		throw error(404, 'Arrangementet ble ikke funnet');
 	}
 
-	const attendees = await locals.db.query.attendees
-		.findMany({
+	const access = await hasEventAccess(locals.db, event, locals.user.id);
+	if (!access) {
+		throw redirect(302, `/arrangement/${id}/unlock`);
+	}
+
+	const [rawAttendees, accessRecords] = await Promise.all([
+		locals.db.query.attendees.findMany({
 			where: (attendees, { eq }) => eq(attendees.eventId, id),
 			with: {
 				user: true,
@@ -27,22 +33,48 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 				drinkSize: true
 			},
 			orderBy: (attendees, { desc }) => [desc(attendees.createdAt)]
+		}),
+		locals.db.query.eventAccess.findMany({
+			where: (ea, { eq }) => eq(ea.eventId, id),
+			with: { user: true }
 		})
-		.then((attendees) => {
-			return attendees.map((attendee) => ({
-				id: attendee.id,
-				userId: attendee.userId,
-				username: attendee.user.username,
-				createdAt: attendee.createdAt,
-				imageId: attendee.user.hasAgreedToTerms ? attendee.imageId : null,
-				drinkType: attendee.drinkType,
-				drinkSize: attendee.drinkSize,
-				userWeight: attendee.user.weight,
-				userGender: attendee.user.gender
-			}));
-		});
+	]);
 
-	return { event, attendees };
+	const attendees = rawAttendees.map((attendee) => ({
+		id: attendee.id,
+		userId: attendee.userId,
+		username: attendee.user.username,
+		createdAt: attendee.createdAt,
+		imageId: attendee.user.hasAgreedToTerms ? attendee.imageId : null,
+		drinkType: attendee.drinkType,
+		drinkSize: attendee.drinkSize,
+		userWeight: attendee.user.weight,
+		userGender: attendee.user.gender
+	}));
+
+	const accessUsers = accessRecords.map((r) => ({
+		id: r.user.id,
+		username: r.user.username,
+		weight: r.user.weight,
+		gender: r.user.gender
+	}));
+
+	// Include creator if not already present
+	if (event.createdBy && !accessUsers.find((u) => u.id === event.createdBy)) {
+		const creator = await locals.db.query.users.findFirst({
+			where: (u, { eq }) => eq(u.id, event.createdBy!)
+		});
+		if (creator) {
+			accessUsers.push({
+				id: creator.id,
+				username: creator.username,
+				weight: creator.weight,
+				gender: creator.gender
+			});
+		}
+	}
+
+	return { event, attendees, accessUsers };
 };
 
 export const actions: Actions = {
@@ -82,7 +114,6 @@ export const actions: Actions = {
 		if (attendee.imageId) {
 			try {
 				await locals.bucket.delete(attendee.imageId);
-				console.log(`Deleted image: ${attendee.imageId}`);
 			} catch (deleteError) {
 				console.error('Error deleting image from R2:', deleteError);
 				// Continue with database deletion even if image deletion fails
@@ -99,8 +130,6 @@ export const actions: Actions = {
 					eq(table.attendees.userId, locals.user.id)
 				)
 			);
-
-		console.log(`Deleted attendee record: ${attendeeId} for user ${locals.user.id}`);
 
 		return { success: true };
 	}

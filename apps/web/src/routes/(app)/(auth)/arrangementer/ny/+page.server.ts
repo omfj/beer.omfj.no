@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs';
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import * as table from '$lib/db/schema';
@@ -29,10 +30,17 @@ export const actions: Actions = {
 
 		const formData = await request.formData();
 		const name = formData.get('name') as string;
+		const password = formData.get('password') as string | null;
 
 		if (!name) {
 			return fail(400, { message: 'Navn er påkrevd' });
 		}
+
+		if (password && password.length < 4) {
+			return fail(400, { message: 'Passord må være minst 4 tegn' });
+		}
+
+		const passwordHash = password ? await bcrypt.hash(password, 12) : null;
 
 		const maxRetries = 5;
 		let attempts = 0;
@@ -49,6 +57,7 @@ export const actions: Actions = {
 						id: eventId,
 						name,
 						color: generateSoftColor(),
+						password: passwordHash,
 						createdAt: new Date(),
 						createdBy: locals.user.id
 					})

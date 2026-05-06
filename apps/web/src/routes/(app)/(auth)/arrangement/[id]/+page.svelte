@@ -13,6 +13,7 @@
 
 	let event = $derived(data.event);
 	let attendees = $derived(data.attendees);
+	let accessUsers = $derived(data.accessUsers);
 	let user = $derived(data.user);
 
 	// Create scoreboard: calculate points and promille per user
@@ -33,6 +34,20 @@
 				gender: string | null;
 			}
 		>();
+
+		// Seed all users with access at 0 so they appear even without drinks
+		for (const u of accessUsers) {
+			userStats.set(u.id, {
+				user: { id: u.id, username: u.username },
+				points: 0,
+				count: 0,
+				totalAlcoholGrams: 0,
+				firstDrinkAt: new Date(),
+				lastDrinkAt: new Date(),
+				weight: u.weight,
+				gender: u.gender
+			});
+		}
 
 		attendees.toReversed().forEach((attendee) => {
 			const userId = attendee.userId;
@@ -210,7 +225,7 @@
 	<div>
 		<ButtonLink
 			class="w-full"
-			href={resolve('/arrangement/[id]/registrer', {
+			href={resolve('/(app)/(auth)/arrangement/[id]/registrer', {
 				id: data.event.id
 			})}>Registrer ny drink</ButtonLink
 		>
@@ -220,7 +235,7 @@
 		<ButtonLink
 			variant="outline"
 			class="w-full gap-2"
-			href={resolve('/arrangement/[id]/qr', {
+			href={resolve('/(app)/(auth)/arrangement/[id]/qr', {
 				id: data.event.id
 			})}
 		>
@@ -333,7 +348,7 @@
 					{#if attendee.imageId}
 						<div class="aspect-square">
 							<a
-								href={resolve('/api/image/[id]', {
+								href={resolve('/(app)/api/image/[id]', {
 									id: attendee.imageId
 								})}
 								target="_blank"

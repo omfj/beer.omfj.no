@@ -1,5 +1,8 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { eq } from 'drizzle-orm';
+import * as table from '$lib/db/schema';
+import { hasEventAccess } from '$lib/event-access';
 
 export const GET: RequestHandler = async ({ params, locals, setHeaders }) => {
 	if (!locals.user) {
@@ -10,6 +13,19 @@ export const GET: RequestHandler = async ({ params, locals, setHeaders }) => {
 
 	if (!imageId) {
 		throw error(400, 'Missing image ID');
+	}
+
+	// Check the user has access to the event this image belongs to
+	const attendee = await locals.db.query.attendees.findFirst({
+		where: eq(table.attendees.imageId, imageId),
+		with: { event: true }
+	});
+
+	if (attendee?.event) {
+		const access = await hasEventAccess(locals.db, attendee.event, locals.user.id);
+		if (!access) {
+			throw error(403, 'Forbidden');
+		}
 	}
 
 	try {

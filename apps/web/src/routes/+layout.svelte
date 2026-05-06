@@ -4,6 +4,7 @@
 	import { writable } from 'svelte/store';
 	import NProgress from 'nprogress';
 	import { setUserContext } from '$lib/context/user';
+	import type { UserContext } from '$lib/context/user';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { pwaInfo } from 'virtual:pwa-info';
 	import { createThemeContext } from '$lib/theme.svelte';
@@ -15,7 +16,7 @@
 
 	const { data, children } = $props();
 
-	const user = writable(data.user);
+	const user: UserContext = writable(null);
 	$effect.pre(() => {
 		user.set(data.user);
 	});

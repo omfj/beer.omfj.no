@@ -13,8 +13,13 @@
 	let user = $derived(data.user);
 	let createdEvents = $derived(data.createdEvents);
 
-	let weight = $state(data.user.weight ?? '');
-	let gender = $state(data.user.gender ?? '');
+	let weight = $state('');
+	let gender = $state('');
+
+	$effect(() => {
+		weight = data.user.weight ?? '';
+		gender = data.user.gender ?? '';
+	});
 </script>
 
 <svelte:head>

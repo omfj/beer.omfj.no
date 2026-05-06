@@ -48,8 +48,6 @@ export const actions: Actions = {
 			const session = await sessionService.createSession(sessionToken, userId);
 			sessionService.setSessionTokenCookie(event, sessionToken, session.expiresAt);
 		} catch (e) {
-			console.log('Error:', e);
-
 			if (e instanceof Error && e.message.includes('UNIQUE constraint')) {
 				return fail(400, { message: 'Brukernavnet er allerede tatt' });
 			}

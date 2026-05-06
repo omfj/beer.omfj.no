@@ -1,6 +1,6 @@
 import { redirect, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { users, sessions, userPasswords, events, attendees } from '$lib/db/schema';
+import { users, sessions, userPasswords, events, attendees, eventAccess } from '$lib/db/schema';
 import { count, countDistinct, desc, eq, inArray } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -8,11 +8,31 @@ export const load: PageServerLoad = async ({ locals }) => {
 		redirect(302, '/logg-inn');
 	}
 
-	const eventIds = await locals.db.query.attendees
-		.findMany({
-			where: (attendee, { eq }) => eq(attendee.userId, locals.user.id)
-		})
-		.then((attendees) => attendees.map((attendee) => attendee.eventId));
+	const userId = locals.user.id;
+
+	const [attendeeEventIds, accessEventIds, createdEventIds] = await Promise.all([
+		locals.db
+			.select({ eventId: attendees.eventId })
+			.from(attendees)
+			.where(eq(attendees.userId, userId))
+			.then((rows) => rows.map((r) => r.eventId)),
+		locals.db
+			.select({ eventId: eventAccess.eventId })
+			.from(eventAccess)
+			.where(eq(eventAccess.userId, userId))
+			.then((rows) => rows.map((r) => r.eventId)),
+		locals.db
+			.select({ id: events.id })
+			.from(events)
+			.where(eq(events.createdBy, userId))
+			.then((rows) => rows.map((r) => r.id))
+	]);
+
+	const allEventIds = [...new Set([...attendeeEventIds, ...accessEventIds, ...createdEventIds])];
+
+	if (allEventIds.length === 0) {
+		return { joinedEvents: [], showTermsPopup: !locals.user.hasAgreedToTerms };
+	}
 
 	const joinedEvents = await locals.db
 		.select({
@@ -23,7 +43,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		})
 		.from(events)
 		.leftJoin(attendees, eq(events.id, attendees.eventId))
-		.where(inArray(events.id, eventIds))
+		.where(inArray(events.id, allEventIds))
 		.groupBy(events.id, events.name)
 		.orderBy(desc(events.createdAt));
 

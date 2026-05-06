@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm';
-import { sqliteTable, text, index, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, index, integer, primaryKey } from 'drizzle-orm/sqlite-core';
 
 export const users = sqliteTable('user', {
 	id: text().primaryKey(),
@@ -54,6 +54,7 @@ export const events = sqliteTable('event', {
 	id: text().primaryKey(),
 	name: text().notNull(),
 	color: text().notNull(),
+	password: text(),
 	createdAt: integer({ mode: 'timestamp' }).notNull(),
 	createdBy: text().references(() => users.id, {
 		onDelete: 'set null'
@@ -61,7 +62,35 @@ export const events = sqliteTable('event', {
 });
 
 export const eventsRelations = relations(events, ({ many }) => ({
-	attendees: many(attendees)
+	attendees: many(attendees),
+	accessList: many(eventAccess)
+}));
+
+export const eventAccess = sqliteTable(
+	'event_access',
+	{
+		eventId: text()
+			.notNull()
+			.references(() => events.id, { onDelete: 'cascade' }),
+		userId: text()
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		grantedAt: integer({ mode: 'timestamp' })
+			.notNull()
+			.$defaultFn(() => new Date())
+	},
+	(t) => [primaryKey({ columns: [t.eventId, t.userId] })]
+);
+
+export const eventAccessRelations = relations(eventAccess, ({ one }) => ({
+	event: one(events, {
+		fields: [eventAccess.eventId],
+		references: [events.id]
+	}),
+	user: one(users, {
+		fields: [eventAccess.userId],
+		references: [users.id]
+	})
 }));
 
 // Should be renamed to registrations or something similar

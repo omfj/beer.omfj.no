@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { attendees } from '$lib/db/schema';
-import { and, gte, lt, sql } from 'drizzle-orm';
+import { attendees, events, users, drinkTypes, drinkSizes } from '$lib/db/schema';
+import { and, gte, isNull, lt, sql, eq } from 'drizzle-orm';
 import { calculateDrinkPoints } from '$lib/scoring';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
@@ -22,26 +22,33 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		endDate = new Date(selectedYear + 1, 0, 1); // January 1st next year
 	}
 
-	// Get all drink registrations with user, drink type and size info
-	const attendeeRecords = await locals.db.query.attendees.findMany({
-		with: {
-			user: true,
-			drinkType: true,
-			drinkSize: true
-		},
-		where: selectedYear
-			? and(gte(attendees.createdAt, startDate!), lt(attendees.createdAt, endDate!))
-			: undefined
-	});
+	const dateFilter = selectedYear
+		? and(gte(attendees.createdAt, startDate!), lt(attendees.createdAt, endDate!))
+		: undefined;
+
+	// Single JOIN query — only open events, no post-filter needed
+	const attendeeRecords = await locals.db
+		.select({
+			userId: attendees.userId,
+			username: users.username,
+			volumeML: drinkSizes.volumeML,
+			abv: drinkTypes.abv
+		})
+		.from(attendees)
+		.innerJoin(events, eq(attendees.eventId, events.id))
+		.innerJoin(users, eq(attendees.userId, users.id))
+		.leftJoin(drinkTypes, eq(attendees.drinkTypeId, drinkTypes.id))
+		.leftJoin(drinkSizes, eq(attendees.drinkSizeId, drinkSizes.id))
+		.where(dateFilter ? and(isNull(events.password), dateFilter) : isNull(events.password));
 
 	// Calculate points for each user
 	const userPointsMap = new Map<string, { username: string; points: number; drinkCount: number }>();
 
 	for (const record of attendeeRecords) {
 		const userId = record.userId;
-		const username = record.user.username;
-		const volumeML = record.drinkSize?.volumeML ?? null;
-		const abv = record.drinkType?.abv ?? null;
+		const username = record.username;
+		const volumeML = record.volumeML ?? null;
+		const abv = record.abv ?? null;
 
 		const points = calculateDrinkPoints(volumeML, abv);
 
@@ -65,12 +72,14 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		.sort((a, b) => b.points - a.points)
 		.slice(0, 10); // Top 10
 
-	// Get list of available years from the database
+	// Get list of available years from open events only
 	const yearResults = await locals.db
 		.selectDistinct({
 			year: sql<number>`CAST(strftime('%Y', ${attendees.createdAt}, 'unixepoch') AS INTEGER)`
 		})
 		.from(attendees)
+		.innerJoin(events, eq(attendees.eventId, events.id))
+		.where(isNull(events.password))
 		.orderBy(sql`CAST(strftime('%Y', ${attendees.createdAt}, 'unixepoch') AS INTEGER) DESC`);
 
 	const availableYears = yearResults.map((r) => r.year);

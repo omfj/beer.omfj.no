@@ -15,9 +15,13 @@
 		type = 'website'
 	}: Props = $props();
 
-	const fullTitle = title.includes('Beer Counter') ? title : `${title} - Beer Counter`;
-	const canonicalUrl = url || (typeof window !== 'undefined' ? window.location.href : '');
-	const ogImage = image || '/android-chrome-512x512.png';
+	const fullTitle = $derived(
+		title.includes('Beer Counter') ? title : `${title} - Beer Counter`
+	);
+	const canonicalUrl = $derived(
+		url || (typeof window !== 'undefined' ? window.location.href : '')
+	);
+	const ogImage = $derived(image || '/android-chrome-512x512.png');
 </script>
 
 <svelte:head>

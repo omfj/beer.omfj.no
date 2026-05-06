@@ -3,6 +3,7 @@ import * as table from '$lib/db/schema';
 import { generateUserId } from '$lib/utils';
 import type { PageServerLoad, Actions } from './$types';
 import { randomUUID } from 'crypto';
+import { hasEventAccess } from '$lib/event-access';
 
 /**
  * Helper function to create structured log context
@@ -18,9 +19,6 @@ function logContext(operation: string, eventId?: string, userId?: string) {
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const id = params.id;
-	const startTime = Date.now();
-
-	console.log('Load registration page:', logContext('load_registration_page', id, locals.user?.id));
 
 	if (!locals.user) {
 		console.warn('Unauthorized access attempt:', logContext('load_unauthorized', id));
@@ -37,7 +35,10 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		throw error(404, 'Arrangementet ble ikke funnet');
 	}
 
-	console.log('Event found:', logContext('event_found', id, locals.user.id));
+	const access = await hasEventAccess(locals.db, event, locals.user.id);
+	if (!access) {
+		throw redirect(302, `/arrangement/${id}/unlock`);
+	}
 
 	// Load drink types and sizes with their valid combinations
 	const [drinkTypes, drinkSizes, drinkTypeSizes] = await Promise.all([
@@ -50,15 +51,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		locals.db.query.drinkTypeSizes.findMany()
 	]);
 
-	const duration = Date.now() - startTime;
-	console.log('Registration page loaded successfully:', {
-		...logContext('load_success', id, locals.user.id),
-		duration_ms: duration,
-		drink_types_count: drinkTypes.length,
-		drink_sizes_count: drinkSizes.length,
-		valid_combinations_count: drinkTypeSizes.length
-	});
-
 	return {
 		event,
 		drinkTypes,
@@ -70,13 +62,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 export const actions: Actions = {
 	default: async ({ request, locals, params }) => {
 		const eventId = params.id;
-		const startTime = Date.now();
 		const operationId = randomUUID();
-
-		console.log('Starting drink registration:', {
-			...logContext('register_start', eventId, locals.user?.id),
-			operationId
-		});
 
 		if (!locals.user) {
 			console.warn('Unauthorized registration attempt:', {
@@ -101,17 +87,6 @@ export const actions: Actions = {
 		const file = formData.get('image') as File;
 		const drinkTypeId = formData.get('drinkTypeId') as string;
 		const drinkSizeId = formData.get('drinkSizeId') as string;
-
-		console.log('Form data received:', {
-			...logContext('form_received', eventId, locals.user.id),
-			operationId,
-			has_file: !!file,
-			file_size: file?.size,
-			file_type: file?.type,
-			file_name: file?.name,
-			drink_type_id: drinkTypeId,
-			drink_size_id: drinkSizeId
-		});
 
 		// Validate file presence
 		if (!file || file.size === 0) {
@@ -164,13 +139,6 @@ export const actions: Actions = {
 					});
 					return fail(400, { message: 'Ugyldig kombinasjon av drikketype og størrelse' });
 				}
-
-				console.log('Valid drink combination:', {
-					...logContext('validation_combination_ok', eventId, locals.user.id),
-					operationId,
-					drink_type_id: drinkTypeId,
-					drink_size_id: drinkSizeId
-				});
 			} catch (err) {
 				console.error('Database error validating drink combination:', {
 					...logContext('db_validation_error', eventId, locals.user.id),
@@ -187,24 +155,10 @@ export const actions: Actions = {
 		const imageId = randomUUID();
 		const fileName = `${imageId}.${extension}`;
 
-		console.log('Generated filename:', {
-			...logContext('filename_generated', eventId, locals.user.id),
-			operationId,
-			filename: fileName,
-			original_name: file.name
-		});
-
 		// Upload to R2 bucket
 		let arrayBuffer: ArrayBuffer;
 		try {
-			const conversionStart = Date.now();
 			arrayBuffer = await file.arrayBuffer();
-			console.log('File converted to array buffer:', {
-				...logContext('file_converted', eventId, locals.user.id),
-				operationId,
-				duration_ms: Date.now() - conversionStart,
-				buffer_size: arrayBuffer.byteLength
-			});
 		} catch (err) {
 			console.error('Failed to convert file to array buffer:', {
 				...logContext('file_conversion_error', eventId, locals.user.id),
@@ -215,7 +169,6 @@ export const actions: Actions = {
 		}
 
 		try {
-			const uploadStart = Date.now();
 			const uploadPromise = locals.bucket.put(fileName, arrayBuffer, {
 				httpMetadata: {
 					contentType: file.type
@@ -234,15 +187,6 @@ export const actions: Actions = {
 			);
 
 			await Promise.race([uploadPromise, timeoutPromise]);
-
-			const uploadDuration = Date.now() - uploadStart;
-			console.log('File uploaded to R2:', {
-				...logContext('r2_upload_success', eventId, locals.user.id),
-				operationId,
-				filename: fileName,
-				duration_ms: uploadDuration,
-				file_size: arrayBuffer.byteLength
-			});
 		} catch (uploadError) {
 			const isTimeout = uploadError instanceof Error && uploadError.message === 'R2 upload timeout';
 			console.error('R2 upload failed:', {
@@ -263,7 +207,6 @@ export const actions: Actions = {
 		// Insert attendee record with image URL and drink info
 		const attendeeId = generateUserId();
 		try {
-			const dbStart = Date.now();
 			await locals.db.insert(table.attendees).values({
 				id: attendeeId,
 				eventId: eventId,
@@ -272,15 +215,6 @@ export const actions: Actions = {
 				drinkSizeId: drinkSizeId || null,
 				imageId: fileName,
 				createdAt: new Date()
-			});
-
-			const dbDuration = Date.now() - dbStart;
-			console.log('Drink registration saved to database:', {
-				...logContext('db_insert_success', eventId, locals.user.id),
-				operationId,
-				attendee_id: attendeeId,
-				filename: fileName,
-				duration_ms: dbDuration
 			});
 		} catch (dbError) {
 			console.error('Database insert failed:', {
@@ -301,15 +235,6 @@ export const actions: Actions = {
 
 			return fail(500, { message: 'Feil ved lagring av registrering' });
 		}
-
-		const totalDuration = Date.now() - startTime;
-		console.log('Drink registration completed successfully:', {
-			...logContext('register_success', eventId, locals.user.id),
-			operationId,
-			attendee_id: attendeeId,
-			filename: fileName,
-			total_duration_ms: totalDuration
-		});
 
 		// Redirect back to the event page
 		redirect(303, `/arrangement/${eventId}`);
