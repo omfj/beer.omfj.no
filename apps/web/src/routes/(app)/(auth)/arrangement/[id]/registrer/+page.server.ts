@@ -3,8 +3,6 @@ import * as table from '$lib/db/schema';
 import { generateUserId } from '$lib/utils';
 import type { PageServerLoad, Actions } from './$types';
 import { randomUUID } from 'crypto';
-import { createHttpUrl } from '$lib/ws';
-import ky from 'ky';
 
 /**
  * Helper function to create structured log context
@@ -70,7 +68,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, locals, params, platform }) => {
+	default: async ({ request, locals, params }) => {
 		const eventId = params.id;
 		const startTime = Date.now();
 		const operationId = randomUUID();
@@ -302,46 +300,6 @@ export const actions: Actions = {
 			});
 
 			return fail(500, { message: 'Feil ved lagring av registrering' });
-		}
-
-		// Broadcast new registration via WebSocket (if applicable) - use waitUntil for background execution
-		if (platform?.env.WS_HOST && platform?.env.API_KEY && platform?.ctx.waitUntil) {
-			console.log('Broadcasting registration to WebSocket:', {
-				...logContext('ws_broadcast_start', eventId, locals.user.id),
-				operationId,
-				ws_host: platform.env.WS_HOST
-			});
-
-			platform.ctx.waitUntil(
-				ky
-					.post(createHttpUrl(platform.env.WS_HOST, eventId), {
-						headers: {
-							Authorization: `Bearer ${platform.env.API_KEY}`
-						},
-						timeout: 5000
-					})
-					.then(() => {
-						console.log('WebSocket notification sent:', {
-							...logContext('ws_broadcast_success', eventId, locals.user.id),
-							operationId
-						});
-					})
-					.catch((wsError) => {
-						console.error('Failed to notify WebSocket server:', {
-							...logContext('ws_broadcast_error', eventId, locals.user.id),
-							operationId,
-							error: wsError instanceof Error ? wsError.message : String(wsError)
-						});
-					})
-			);
-		} else {
-			console.warn('WebSocket broadcast skipped:', {
-				...logContext('ws_broadcast_skipped', eventId, locals.user.id),
-				operationId,
-				has_ws_host: !!platform?.env.WS_HOST,
-				has_api_key: !!platform?.env.API_KEY,
-				has_wait_until: !!platform?.ctx.waitUntil
-			});
 		}
 
 		const totalDuration = Date.now() - startTime;
