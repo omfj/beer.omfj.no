@@ -46,6 +46,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		username: attendee.user.username,
 		createdAt: attendee.createdAt,
 		imageId: attendee.user.hasAgreedToTerms ? attendee.imageId : null,
+		abv: attendee.abv ?? attendee.drinkType?.abv ?? null,
 		drinkType: attendee.drinkType,
 		drinkSize: attendee.drinkSize,
 		userWeight: attendee.user.weight,

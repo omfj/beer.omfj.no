@@ -18,6 +18,7 @@
 	let hasMultipleCameras = $state(false);
 	let selectedDrinkType = $state<string>('');
 	let selectedDrinkSize = $state<string>('');
+	let abvInput = $state<number | null>(null);
 	let fileError = $state<string | null>(null);
 
 	const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
@@ -34,7 +35,7 @@
 			});
 	});
 
-	// Reset size when drink type changes
+	// Reset size when drink type changes; auto-fill promille from drink type default
 	$effect(() => {
 		if (selectedDrinkType) {
 			if (
@@ -45,24 +46,24 @@
 			) {
 				selectedDrinkSize = '';
 			}
+			const typeData = data.drinkTypes.find((t) => t.id === selectedDrinkType);
+			if (typeData?.abv != null) {
+				abvInput = typeData.abv;
+			}
+		} else {
+			abvInput = null;
 		}
 	});
 
-	// Calculate preview points based on selected type and size
+	// Calculate preview points based on selected size and entered ABV
 	let previewPoints = $derived.by(() => {
-		if (!selectedDrinkType && !selectedDrinkSize) {
-			return 0.5; // Show default when nothing selected
+		if (!selectedDrinkSize || abvInput == null) {
+			return 0.5;
 		}
-
-		if (!selectedDrinkType || !selectedDrinkSize) {
-			return 0.5; // Show default when only one selected
-		}
-
-		const selectedTypeData = data.drinkTypes.find((type) => type.id === selectedDrinkType);
 		const selectedSize = availableSizes.find((size) => size?.id === selectedDrinkSize);
-		if (!selectedTypeData || !selectedSize) return 0.5;
-
-		return calculateDrinkPoints(selectedSize.volumeML, selectedTypeData.abv);
+		if (!selectedSize) return 0.5;
+		const typeData = data.drinkTypes.find((t) => t.id === selectedDrinkType);
+		return calculateDrinkPoints(selectedSize.volumeML, abvInput, typeData?.multiplier);
 	});
 
 	// Reactive effect to set up video stream when elements are ready
@@ -299,7 +300,7 @@
 			>
 				<option value="">Ikke oppgitt</option>
 				{#each data.drinkTypes as drinkType (drinkType.id)}
-					<option value={drinkType.id}>{drinkType.name}</option>
+					<option value={drinkType.id}>{drinkType.name} ×{drinkType.multiplier}</option>
 				{/each}
 			</Select>
 		</div>
@@ -321,6 +322,23 @@
 					{/each}
 				</Select>
 			</div>
+
+			<div>
+				<label for="abv" class="mb-2 block text-lg font-medium">
+					Alkoholprosent (%) <span class="text-sm text-gray-500">(alkoholinnhold på enheten)</span>
+				</label>
+				<input
+					type="number"
+					id="abv"
+					name="abv"
+					min="0"
+					max="100"
+					step="0.1"
+					bind:value={abvInput}
+					placeholder="f.eks. 5.2"
+					class="border-background-darker bg-background w-full border p-3 text-lg focus:outline-none"
+				/>
+			</div>
 		{/if}
 
 		<div class="bg-primary/10 border-primary/20 border p-4">
@@ -329,12 +347,10 @@
 				<span class="text-primary text-2xl font-bold">{previewPoints} poeng</span>
 			</div>
 			<p class="mt-1 text-sm text-gray-600">
-				{#if !selectedDrinkType && !selectedDrinkSize}
-					Standard poeng (ingen type/størrelse valgt)
-				{:else if !selectedDrinkType || !selectedDrinkSize}
-					Standard poeng (mangler type eller størrelse)
+				{#if !selectedDrinkSize || abvInput == null}
+					Standard poeng (mangler størrelse eller prosent)
 				{:else}
-					Basert på størrelse og type
+					Basert på størrelse og alkoholprosent
 				{/if}
 			</p>
 		</div>

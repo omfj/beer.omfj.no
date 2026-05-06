@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm';
-import { sqliteTable, text, index, integer, primaryKey } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, index, integer, real, primaryKey } from 'drizzle-orm/sqlite-core';
 
 export const users = sqliteTable('user', {
 	id: text().primaryKey(),
@@ -116,6 +116,7 @@ export const attendees = sqliteTable(
 		drinkSizeId: text().references(() => drinkSizes.id, {
 			onDelete: 'set null'
 		}),
+		abv: real(), // alcohol percentage (0–100) entered at registration time, e.g. 5.2
 		imageId: text(),
 		createdAt: integer({ mode: 'timestamp' }).notNull()
 	},
@@ -146,6 +147,7 @@ export const drinkTypes = sqliteTable('drink_type', {
 	name: text().notNull().unique(), // e.g., 'Beer', 'Wine', 'Cocktail', 'Shot'
 	description: text(),
 	abv: integer(), // Alcohol by volume percentage (nullable)
+	multiplier: real().notNull().default(1.0),
 	createdAt: integer({ mode: 'timestamp' }).$defaultFn(() => new Date())
 });
 

@@ -32,7 +32,9 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			userId: attendees.userId,
 			username: users.username,
 			volumeML: drinkSizes.volumeML,
-			abv: drinkTypes.abv
+			abv: attendees.abv,
+			fallbackAbv: drinkTypes.abv,
+			multiplier: drinkTypes.multiplier
 		})
 		.from(attendees)
 		.innerJoin(events, eq(attendees.eventId, events.id))
@@ -48,9 +50,9 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		const userId = record.userId;
 		const username = record.username;
 		const volumeML = record.volumeML ?? null;
-		const abv = record.abv ?? null;
+		const abv = record.abv ?? record.fallbackAbv ?? null;
 
-		const points = calculateDrinkPoints(volumeML, abv);
+		const points = calculateDrinkPoints(volumeML, abv, record.multiplier ?? undefined);
 
 		if (!userPointsMap.has(userId)) {
 			userPointsMap.set(userId, { username, points: 0, drinkCount: 0 });

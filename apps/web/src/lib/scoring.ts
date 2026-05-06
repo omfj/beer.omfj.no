@@ -1,16 +1,17 @@
 /**
- * Calculate drink points based on volume (mL) and ABV percentage
- * Formula: (Volume (L) × ABV (decimal) × 0.789 × 1000) / 10
+ * Calculate drink points based on volume (mL), ABV percentage, and drink type multiplier.
+ * Formula: (Volume (L) × ABV (decimal) × 0.789 × 1000) / 10 × multiplier
  *
  * @param volumeML - Volume in milliliters (nullable)
- * @param abv - Alcohol by volume percentage (nullable)
+ * @param abv - Alcohol by volume percentage, 0–100 (nullable). A 5.2% beer = 5.2.
+ * @param multiplier - Drink type score multiplier (default 1.0)
  * @returns Points scored for the drink
  */
 export function calculateDrinkPoints(
 	volumeML: number | null | undefined,
-	abv: number | null | undefined
+	abv: number | null | undefined,
+	multiplier = 1.0
 ): number {
-	// If either value is null, undefined, NaN, or 0, return default score
 	if (
 		volumeML == null ||
 		abv == null ||
@@ -25,10 +26,8 @@ export function calculateDrinkPoints(
 	const volumeL = volumeML / 1000;
 	const abvDecimal = abv / 100;
 
-	// Apply the formula: (Volume (L) × ABV (decimal) × 0.789 × 1000) / 10
-	const score = (volumeL * abvDecimal * 0.789 * 1000) / 10;
+	const score = ((volumeL * abvDecimal * 0.789 * 1000) / 10) * multiplier;
 
-	// Make sure result is not NaN
 	if (isNaN(score)) {
 		return 0.5;
 	}

@@ -87,6 +87,12 @@ export const actions: Actions = {
 		const file = formData.get('image') as File;
 		const drinkTypeId = formData.get('drinkTypeId') as string;
 		const drinkSizeId = formData.get('drinkSizeId') as string;
+		const abvRaw = formData.get('abv');
+		const abv = abvRaw ? parseFloat(abvRaw as string) : null;
+
+		if (abv !== null && (isNaN(abv) || abv < 0 || abv > 100)) {
+			return fail(400, { message: 'Ugyldig alkoholprosent (må være mellom 0 og 100)' });
+		}
 
 		// Validate file presence
 		if (!file || file.size === 0) {
@@ -213,6 +219,7 @@ export const actions: Actions = {
 				userId: locals.user.id,
 				drinkTypeId: drinkTypeId || null,
 				drinkSizeId: drinkSizeId || null,
+				abv: abv,
 				imageId: fileName,
 				createdAt: new Date()
 			});

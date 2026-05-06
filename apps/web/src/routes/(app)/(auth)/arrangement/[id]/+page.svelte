@@ -54,11 +54,12 @@
 
 			const points = calculateDrinkPoints(
 				attendee.drinkSize?.volumeML || null,
-				attendee.drinkType?.abv || null
+				attendee.abv,
+				attendee.drinkType?.multiplier
 			);
 
 			const volumeL = (attendee.drinkSize?.volumeML ?? 0) / 1000;
-			const abvDecimal = (attendee.drinkType?.abv ?? 0) / 100;
+			const abvDecimal = (attendee.abv ?? 0) / 100;
 			const alcoholGrams = volumeL * abvDecimal * 0.789 * 1000;
 
 			if (userStats.has(userId)) {
@@ -128,7 +129,7 @@
 
 		for (const attendee of sorted) {
 			const volumeL = (attendee.drinkSize?.volumeML ?? 0) / 1000;
-			const abvDecimal = (attendee.drinkType?.abv ?? 0) / 100;
+			const abvDecimal = (attendee.abv ?? 0) / 100;
 			const alcoholGrams = volumeL * abvDecimal * 0.789 * 1000;
 
 			const prev = userAccum.get(attendee.userId);
@@ -419,7 +420,8 @@
 								<span class="text-primary text-xl font-bold"
 									>{calculateDrinkPoints(
 										attendee.drinkSize?.volumeML || null,
-										attendee.drinkType?.abv || null
+										attendee.abv,
+										attendee.drinkType?.multiplier
 									)}</span
 								>
 								<span class="text-xs text-gray-500">poeng</span>
