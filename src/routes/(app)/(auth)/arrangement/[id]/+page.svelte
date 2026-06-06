@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ButtonLink from '$lib/components/button-link.svelte';
 	import Button from '$lib/components/button.svelte';
+	import Checkbox from '$lib/components/checkbox.svelte';
 	import { resolve } from '$app/paths';
 	import { ArrowLeft, CircleAlert, Trophy, Share, QrCode, Trash2 } from '@lucide/svelte';
 	import { fly } from 'svelte/transition';
@@ -155,6 +156,31 @@
 
 		return result;
 	});
+
+	// User filter state
+	let selectedUserIds = $state(new Set<string>());
+	let filterOpen = $state(false);
+
+	const toggleUser = (id: string) => {
+		const next = new Set(selectedUserIds);
+		if (next.has(id)) next.delete(id);
+		else next.add(id);
+		selectedUserIds = next;
+	};
+
+	let filterLabel = $derived(
+		selectedUserIds.size === 0
+			? 'Alle deltakere'
+			: selectedUserIds.size === 1
+				? scoreboard.find((e) => selectedUserIds.has(e.user.id))?.user.username ?? '1 valgt'
+				: `${selectedUserIds.size} valgt`
+	);
+
+	let filteredAttendees = $derived(
+		selectedUserIds.size === 0
+			? attendees
+			: attendees.filter((a) => selectedUserIds.has(a.userId))
+	);
 
 	// Pagination state
 	let scoreboardLimit = $state(10);
@@ -339,12 +365,54 @@
 	<div class="bg-background-darkest my-4 h-0.5"></div>
 {/if}
 
-{#if attendees.length > 0}
-	<div class="space-y-4">
-		<h2 class="text-2xl font-medium">Registrerte drinker</h2>
+{#if scoreboard.length > 1}
+	<div class="relative mb-4">
+		<p class="text-foreground-muted mb-1 text-sm">Filtrer:</p>
+		<button
+			onclick={() => (filterOpen = !filterOpen)}
+			class="bg-background-dark border-background-darkest focus:ring-primary focus:border-primary flex h-12 w-full items-center justify-between border px-4 text-lg text-gray-600 focus:ring-2 focus:outline-none"
+		>
+			<span>{filterLabel}</span>
+			<svg
+				class="h-5 w-5 text-gray-400 transition-transform {filterOpen ? 'rotate-180' : ''}"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke="currentColor"
+				stroke-width="2"
+			>
+				<path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+			</svg>
+		</button>
 
+		{#if filterOpen}
+			<div
+				class="bg-background-dark border-background-darkest absolute z-10 mt-1 w-full border shadow-lg"
+			>
+				{#each scoreboard as { user: u } (u.id)}
+					<div class="hover:bg-background-darker px-4 py-3">
+						<Checkbox
+							checked={selectedUserIds.has(u.id)}
+							onchange={() => toggleUser(u.id)}
+							label={u.username}
+						/>
+					</div>
+				{/each}
+				{#if selectedUserIds.size > 0}
+					<div class="border-background-darkest border-t px-4 py-3">
+						<Button variant="ghost" size="sm" onclick={() => (selectedUserIds = new Set())}>
+							Nullstill filter
+						</Button>
+					</div>
+				{/if}
+			</div>
+		{/if}
+	</div>
+{/if}
+
+{#if filteredAttendees.length > 0}
+	<div class="space-y-4">
 		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{#each attendees.slice(0, imagesLimit) as attendee (attendee.id)}
+			{#each filteredAttendees.slice(0, imagesLimit) as attendee (attendee.id)}
 				<div class="bg-background-dark overflow-hidden border-2">
 					{#if attendee.imageId}
 						<div class="aspect-square">
@@ -440,16 +508,20 @@
 			{/each}
 		</div>
 
-		{#if attendees.length > imagesLimit}
+		{#if filteredAttendees.length > imagesLimit}
 			<div class="mt-6 text-center">
 				<button
 					onclick={loadMoreImages}
 					class="bg-background-dark hover:bg-background-darker rounded px-6 py-3 text-sm transition-colors"
 				>
-					Vis {Math.min(12, attendees.length - imagesLimit)} flere bilder
+					Vis {Math.min(12, filteredAttendees.length - imagesLimit)} flere bilder
 				</button>
 			</div>
 		{/if}
+	</div>
+{:else if attendees.length > 0}
+	<div class="bg-background-dark flex h-32 items-center justify-center rounded-lg p-4">
+		<p class="text-foreground-muted text-lg">Ingen drinker å vise for valgte brukere</p>
 	</div>
 {:else}
 	<div class="bg-background-dark flex h-32 items-center justify-center rounded-lg p-4">

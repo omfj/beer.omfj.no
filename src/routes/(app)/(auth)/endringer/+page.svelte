@@ -11,6 +11,15 @@
 <div class="space-y-8">
 	<section>
 		<div class="mb-1 flex items-baseline gap-3">
+			<h2 class="text-xl font-medium">6. juni 2026</h2>
+		</div>
+		<ul class="text-foreground-muted list-disc space-y-1 pl-5">
+			<li>Filtrer drikkefeed på arrangementssiden etter deltaker</li>
+		</ul>
+	</section>
+
+	<section>
+		<div class="mb-1 flex items-baseline gap-3">
 			<h2 class="text-xl font-medium">6. mai 2026</h2>
 		</div>
 		<ul class="text-foreground-muted list-disc space-y-1 pl-5">
