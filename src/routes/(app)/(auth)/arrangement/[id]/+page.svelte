@@ -158,14 +158,14 @@
 
 	// Pagination state
 	let scoreboardLimit = $state(10);
-	let imagesLimit = $state(10);
+	let imagesLimit = $state(12);
 
 	const loadMoreScoreboard = () => {
 		scoreboardLimit += 10;
 	};
 
 	const loadMoreImages = () => {
-		imagesLimit += 10;
+		imagesLimit += 12;
 	};
 
 	const shareEvent = async () => {
@@ -446,7 +446,7 @@
 					onclick={loadMoreImages}
 					class="bg-background-dark hover:bg-background-darker rounded px-6 py-3 text-sm transition-colors"
 				>
-					Vis 10 flere bilder ({attendees.length - imagesLimit} gjenstår)
+					Vis {Math.min(12, attendees.length - imagesLimit)} flere bilder
 				</button>
 			</div>
 		{/if}
