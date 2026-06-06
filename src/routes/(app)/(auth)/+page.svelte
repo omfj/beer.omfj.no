@@ -25,7 +25,10 @@
 
 	<div class="flex items-center justify-between">
 		<ButtonLink href={resolve('/arrangementer/ny')}>Lag nytt arrangement</ButtonLink>
-		<a href={resolve('/endringer')} class="text-foreground-muted flex items-center gap-1 text-sm underline">
+		<a
+			href={resolve('/endringer')}
+			class="text-foreground-muted flex items-center gap-1 text-sm underline"
+		>
 			Endringslogg
 			<ExternalLink class="size-3" />
 		</a>
@@ -48,7 +51,11 @@
 						<span class="text-3xl group-hover:underline">{event.name}</span>
 						<ul class="text-foreground-muted flex items-center gap-4 text-xs">
 							<li>{event.distinctUsers} deltakere</li>
-							<li>{event.totalAttendees} enheter registrert</li>
+							<li>
+								{event.totalAttendees} enheter registrert ({event.distinctUsers > 0
+									? (event.totalAttendees / event.distinctUsers).toFixed(1)
+									: '0.0'})
+							</li>
 						</ul>
 					</div>
 					<div>
