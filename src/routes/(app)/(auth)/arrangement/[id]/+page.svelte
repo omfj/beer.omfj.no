@@ -7,8 +7,8 @@
 	import { fly } from 'svelte/transition';
 	import { enhance } from '$app/forms';
 	import SEO from '$lib/components/seo.svelte';
-	import { calculateDrinkPoints, calculateBac, weightToKg } from '$lib/scoring';
-	import { SvelteMap } from 'svelte/reactivity';
+	import { calculateDrinkPoints, calculateBac, alcoholGrams, weightToKg } from '$lib/scoring';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
 	let { data } = $props();
 
@@ -28,9 +28,7 @@
 				};
 				points: number;
 				count: number;
-				totalAlcoholGrams: number;
-				firstDrinkAt: Date;
-				lastDrinkAt: Date;
+				drinks: { grams: number; consumedAtMs: number }[];
 				weight: string | null;
 				gender: string | null;
 			}
@@ -42,9 +40,7 @@
 				user: { id: u.id, username: u.username },
 				points: 0,
 				count: 0,
-				totalAlcoholGrams: 0,
-				firstDrinkAt: new Date(),
-				lastDrinkAt: new Date(),
+				drinks: [],
 				weight: u.weight,
 				gender: u.gender
 			});
@@ -59,29 +55,22 @@
 				attendee.drinkType?.multiplier
 			);
 
-			const volumeL = (attendee.drinkSize?.volumeML ?? 0) / 1000;
-			const abvDecimal = (attendee.abv ?? 0) / 100;
-			const alcoholGrams = volumeL * abvDecimal * 0.789 * 1000;
+			const drink = {
+				grams: alcoholGrams(attendee.drinkSize?.volumeML, attendee.abv),
+				consumedAtMs: attendee.createdAt.getTime()
+			};
 
 			if (userStats.has(userId)) {
 				const entry = userStats.get(userId)!;
 				entry.points += points;
 				entry.count++;
-				entry.totalAlcoholGrams += alcoholGrams;
-				if (attendee.createdAt < entry.firstDrinkAt) {
-					entry.firstDrinkAt = attendee.createdAt;
-				}
-				if (attendee.createdAt > entry.lastDrinkAt) {
-					entry.lastDrinkAt = attendee.createdAt;
-				}
+				entry.drinks.push(drink);
 			} else {
 				userStats.set(userId, {
 					user: { id: attendee.userId, username: attendee.username },
 					points,
 					count: 1,
-					totalAlcoholGrams: alcoholGrams,
-					firstDrinkAt: attendee.createdAt,
-					lastDrinkAt: attendee.createdAt,
+					drinks: [drink],
 					weight: attendee.userWeight,
 					gender: attendee.userGender
 				});
@@ -91,8 +80,6 @@
 		// Convert to array and sort by points (highest first)
 		return Array.from(userStats.values())
 			.map((entry) => {
-				// Use current time so promille reflects ongoing elimination
-				const hoursElapsed = (Date.now() - entry.firstDrinkAt.getTime()) / 3_600_000;
 				let promille: number | null = null;
 				if (
 					entry.weight &&
@@ -100,15 +87,8 @@
 					(entry.weight === 'light' || entry.weight === 'medium' || entry.weight === 'heavy') &&
 					(entry.gender === 'male' || entry.gender === 'female' || entry.gender === 'other')
 				) {
-					promille = Math.max(
-						0,
-						calculateBac(
-							entry.totalAlcoholGrams,
-							weightToKg(entry.weight),
-							hoursElapsed,
-							entry.gender
-						)
-					);
+					// Per-drink elimination against current time so old drinks decay away
+					promille = calculateBac(entry.drinks, weightToKg(entry.weight), entry.gender, Date.now());
 				}
 				return {
 					user: entry.user,
@@ -123,35 +103,36 @@
 	// Pre-compute cumulative promille at the moment of each drink registration
 	let attendeePromille = $derived.by(() => {
 		const result = new SvelteMap<string, number | null>();
-		const userAccum = new SvelteMap<string, { totalAlcohol: number; firstDrinkAt: Date }>();
+		const priorDrinks = new SvelteMap<string, { grams: number; consumedAtMs: number }[]>();
 
 		// Process chronologically so accumulation is correct
 		const sorted = [...attendees].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 
 		for (const attendee of sorted) {
-			const volumeL = (attendee.drinkSize?.volumeML ?? 0) / 1000;
-			const abvDecimal = (attendee.abv ?? 0) / 100;
-			const alcoholGrams = volumeL * abvDecimal * 0.789 * 1000;
-
-			const prev = userAccum.get(attendee.userId);
-			const prevTotal = prev?.totalAlcohol ?? 0;
-			const firstDrinkAt = prev?.firstDrinkAt ?? attendee.createdAt;
+			const drinks = priorDrinks.get(attendee.userId) ?? [];
 
 			// Show promille BEFORE this drink (exclude current drink from calculation)
 			const w = attendee.userWeight;
 			const g = attendee.userGender;
 			if (
-				prevTotal > 0 &&
+				drinks.length > 0 &&
 				(w === 'light' || w === 'medium' || w === 'heavy') &&
 				(g === 'male' || g === 'female' || g === 'other')
 			) {
-				const hours = (attendee.createdAt.getTime() - firstDrinkAt.getTime()) / 3_600_000;
-				result.set(attendee.id, Math.max(0, calculateBac(prevTotal, weightToKg(w), hours, g)));
+				// Evaluate at this drink's own timestamp so each prior drink decays from its own time
+				result.set(
+					attendee.id,
+					calculateBac(drinks, weightToKg(w), g, attendee.createdAt.getTime())
+				);
 			} else {
 				result.set(attendee.id, null);
 			}
 
-			userAccum.set(attendee.userId, { totalAlcohol: prevTotal + alcoholGrams, firstDrinkAt });
+			drinks.push({
+				grams: alcoholGrams(attendee.drinkSize?.volumeML, attendee.abv),
+				consumedAtMs: attendee.createdAt.getTime()
+			});
+			priorDrinks.set(attendee.userId, drinks);
 		}
 
 		return result;
@@ -162,7 +143,7 @@
 	let filterOpen = $state(false);
 
 	const toggleUser = (id: string) => {
-		const next = new Set(selectedUserIds);
+		const next = new SvelteSet(selectedUserIds);
 		if (next.has(id)) next.delete(id);
 		else next.add(id);
 		selectedUserIds = next;
@@ -172,14 +153,12 @@
 		selectedUserIds.size === 0
 			? 'Alle deltakere'
 			: selectedUserIds.size === 1
-				? scoreboard.find((e) => selectedUserIds.has(e.user.id))?.user.username ?? '1 valgt'
+				? (scoreboard.find((e) => selectedUserIds.has(e.user.id))?.user.username ?? '1 valgt')
 				: `${selectedUserIds.size} valgt`
 	);
 
 	let filteredAttendees = $derived(
-		selectedUserIds.size === 0
-			? attendees
-			: attendees.filter((a) => selectedUserIds.has(a.userId))
+		selectedUserIds.size === 0 ? attendees : attendees.filter((a) => selectedUserIds.has(a.userId))
 	);
 
 	// Pagination state

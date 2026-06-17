@@ -44,13 +44,57 @@ export function weightToKg(weight: 'light' | 'medium' | 'heavy'): number {
 	return map[weight];
 }
 
-export function calculateBac(
-	alcoholGram: number,
-	weightKg: number,
-	hours: number,
-	gender: 'male' | 'female' | 'other'
+/**
+ * Grams of pure alcohol in a drink.
+ * grams = volume (mL) × ABV (decimal) × 0.789 (ethanol density g/mL)
+ * Returns 0 when volume or ABV is missing/invalid.
+ */
+export function alcoholGrams(
+	volumeML: number | null | undefined,
+	abv: number | null | undefined
 ): number {
-	// r = Widmark-faktoren (norsk standard): mann 0.7, kvinne 0.6, annet bruker gjennomsnitt
-	const r = gender === 'male' ? 0.7 : gender === 'female' ? 0.6 : 0.65;
-	return alcoholGram / (weightKg * r) - 0.15 * hours;
+	if (
+		volumeML == null ||
+		abv == null ||
+		isNaN(volumeML) ||
+		isNaN(abv) ||
+		volumeML <= 0 ||
+		abv <= 0
+	) {
+		return 0;
+	}
+	return volumeML * (abv / 100) * 0.789;
+}
+
+/**
+ * Widmark-faktoren (norwegian standard): male 0.7, woman 0.6, other use average.
+ */
+export function widmarkFactor(gender: 'male' | 'female' | 'other'): number {
+	return gender === 'male' ? 0.7 : gender === 'female' ? 0.6 : 0.65;
+}
+
+/**
+ * Estimate blood alcohol concentration (promille / ‰) using Widmark with
+ * per-drink elimination. Each drink decays on its own clock and is floored at
+ * zero, so alcohol consumed hours ago drops out instead of accumulating.
+ *
+ * BAC = Σ max(0, A_i / (weight × r) − 0.15 × hours_since_drink_i)
+ *
+ * @param drinks - Drinks with grams of pure alcohol and consumption time (ms epoch)
+ * @param weightKg - Body weight in kg
+ * @param gender - Used for the Widmark factor
+ * @param nowMs - Reference time in ms (e.g. Date.now())
+ */
+export function calculateBac(
+	drinks: { grams: number; consumedAtMs: number }[],
+	weightKg: number,
+	gender: 'male' | 'female' | 'other',
+	nowMs: number
+): number {
+	const rm = weightKg * widmarkFactor(gender);
+	const bac = drinks.reduce((sum, drink) => {
+		const hours = (nowMs - drink.consumedAtMs) / 3_600_000;
+		return sum + Math.max(0, drink.grams / rm - 0.15 * hours);
+	}, 0);
+	return Math.max(0, bac);
 }
