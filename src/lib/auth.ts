@@ -38,6 +38,13 @@ export class SessionService {
 		return session;
 	}
 
+	async startSession(event: RequestEvent, userId: string) {
+		const token = this.generateSessionToken();
+		const session = await this.createSession(token, userId);
+		this.setSessionTokenCookie(event, token, session.expiresAt);
+		return session;
+	}
+
 	async validateSessionToken(token: string) {
 		const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 		const [result] = await this.#db

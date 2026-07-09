@@ -18,7 +18,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
 		references: [userPasswords.userId]
 	}),
 	session: many(sessions),
-	attendances: many(attendees)
+	attendances: many(attendees),
+	passkeys: many(passkeys)
 }));
 
 export const userPasswords = sqliteTable('user_password', {
@@ -31,6 +32,35 @@ export const userPasswords = sqliteTable('user_password', {
 export const userPasswordsRelations = relations(userPasswords, ({ one }) => ({
 	user: one(users, {
 		fields: [userPasswords.userId],
+		references: [users.id]
+	})
+}));
+
+export const passkeys = sqliteTable(
+	'passkey',
+	{
+		// WebAuthn credential ID (base64url encoded)
+		id: text().primaryKey(),
+		userId: text()
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		// User-chosen label, e.g. "iPhone" or "Bitwarden"
+		name: text(),
+		// COSE public key (base64url encoded)
+		publicKey: text().notNull(),
+		counter: integer().notNull().default(0),
+		// JSON array of WebAuthn transports, e.g. ["internal", "hybrid"]
+		transports: text(),
+		createdAt: integer({ mode: 'timestamp' })
+			.notNull()
+			.$defaultFn(() => new Date())
+	},
+	(t) => [index('passkey_user_idx').on(t.userId)]
+);
+
+export const passkeysRelations = relations(passkeys, ({ one }) => ({
+	user: one(users, {
+		fields: [passkeys.userId],
 		references: [users.id]
 	})
 }));
@@ -203,6 +233,8 @@ export const drinkTypeSizesRelations = relations(drinkTypeSizes, ({ one }) => ({
 }));
 
 export type Session = typeof sessions.$inferSelect;
+
+export type Passkey = typeof passkeys.$inferSelect;
 
 export type User = typeof users.$inferSelect;
 

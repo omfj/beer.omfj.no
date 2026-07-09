@@ -1,0 +1,3 @@
+# WebAuthn relying party ID for local dev; must match the hostname the
+# app is served from. Prod value lives in wrangler.jsonc `vars`.
+PASSKEY_RP_ID=localhost

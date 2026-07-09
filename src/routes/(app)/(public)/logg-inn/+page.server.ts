@@ -47,9 +47,7 @@ export const actions: Actions = {
 			return fail(400, { message: 'Ugyldig brukernavn eller passord' });
 		}
 
-		const sessionToken = sessionService.generateSessionToken();
-		const session = await sessionService.createSession(sessionToken, user.id);
-		sessionService.setSessionTokenCookie(event, sessionToken, session.expiresAt);
+		await sessionService.startSession(event, user.id);
 
 		const eventId = formData.get('eventId');
 		if (eventId) {

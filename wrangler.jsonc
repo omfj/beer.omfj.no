@@ -17,6 +17,9 @@
 	"observability": {
 		"enabled": true
 	},
+	"vars": {
+		"PASSKEY_RP_ID": "beer.omfj.no"
+	},
 	"d1_databases": [
 		{
 			"binding": "DB",

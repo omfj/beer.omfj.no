@@ -44,9 +44,7 @@ export const actions: Actions = {
 				passwordHash
 			});
 
-			const sessionToken = sessionService.generateSessionToken();
-			const session = await sessionService.createSession(sessionToken, userId);
-			sessionService.setSessionTokenCookie(event, sessionToken, session.expiresAt);
+			await sessionService.startSession(event, userId);
 		} catch (e) {
 			if (e instanceof Error && e.message.includes('UNIQUE constraint')) {
 				return fail(400, { message: 'Brukernavnet er allerede tatt' });

@@ -1,10 +1,13 @@
 <script lang="ts">
-	import { ChevronRight } from '@lucide/svelte';
+	import { ChevronRight, KeyRound, Pencil, Trash2 } from '@lucide/svelte';
+	import Input from '$lib/components/input.svelte';
 	import { formatDate } from '$lib/date';
 	import { resolve } from '$app/paths';
+	import { invalidateAll } from '$app/navigation';
 	import Select from '$lib/components/select.svelte';
 	import Button from '$lib/components/button.svelte';
 	import { enhance } from '$app/forms';
+	import { registerPasskey, genericPasskeyError, PasskeyCancelledError } from '$lib/passkey-client';
 
 	let { data } = $props();
 
@@ -12,6 +15,26 @@
 
 	let user = $derived(data.user);
 	let createdEvents = $derived(data.createdEvents);
+	let passkeys = $derived(data.passkeys);
+
+	let isAddingPasskey = $state(false);
+	let passkeyError = $state<string | null>(null);
+	let renamingPasskeyId = $state<string | null>(null);
+
+	async function addPasskey() {
+		isAddingPasskey = true;
+		passkeyError = null;
+		try {
+			await registerPasskey();
+			await invalidateAll();
+		} catch (e) {
+			if (!(e instanceof PasskeyCancelledError)) {
+				passkeyError = e instanceof Error ? e.message : genericPasskeyError;
+			}
+		} finally {
+			isAddingPasskey = false;
+		}
+	}
 
 	let weight = $state('');
 	let gender = $state('');
@@ -83,6 +106,92 @@
 			>
 		</div>
 	</form>
+</div>
+
+<div class="bg-background-dark mb-8 p-4">
+	<h2 class="mb-1 text-lg font-medium">Passkeys</h2>
+	<p class="text-foreground-muted mb-4 text-sm">Legg til passkey</p>
+
+	{#if passkeyError}
+		<p class="mb-4 text-sm text-red-500">{passkeyError}</p>
+	{/if}
+
+	{#if passkeys.length > 0}
+		<ul class="mb-4 flex flex-col gap-2">
+			{#each passkeys as passkey (passkey.id)}
+				<li class="bg-background flex items-center justify-between gap-4 p-3">
+					{#if renamingPasskeyId === passkey.id}
+						<form
+							method="post"
+							action="?/renamePasskey"
+							class="flex flex-1 items-center gap-2"
+							use:enhance={() => {
+								return async ({ update }) => {
+									renamingPasskeyId = null;
+									await update();
+								};
+							}}
+						>
+							<input type="hidden" name="id" value={passkey.id} />
+							<Input
+								name="name"
+								value={passkey.name ?? ''}
+								placeholder="Navn på passkey"
+								maxlength={64}
+								class="h-10 min-w-0 flex-1 p-2 text-base"
+								autofocus
+							/>
+							<Button size="sm" type="submit">Lagre</Button>
+							<Button
+								variant="ghost"
+								size="sm"
+								type="button"
+								onclick={() => (renamingPasskeyId = null)}
+							>
+								Avbryt
+							</Button>
+						</form>
+					{:else}
+						<div class="flex items-center gap-3">
+							<KeyRound class="text-foreground-muted h-5 w-5 shrink-0" />
+							<div class="flex flex-col">
+								<span class="font-medium">{passkey.name || 'Passkey'}</span>
+								<span class="text-foreground-muted text-xs">
+									Lagt til {formatDate(passkey.createdAt)}
+								</span>
+							</div>
+						</div>
+						<div class="flex items-center gap-1">
+							<Button
+								variant="ghost"
+								size="sm"
+								type="button"
+								aria-label="Gi passkey nytt navn"
+								onclick={() => (renamingPasskeyId = passkey.id)}
+							>
+								<Pencil class="h-5 w-5" />
+							</Button>
+							<form method="post" action="?/deletePasskey" use:enhance>
+								<input type="hidden" name="id" value={passkey.id} />
+								<Button variant="ghost" size="sm" type="submit" aria-label="Slett passkey">
+									<Trash2 class="h-5 w-5 text-red-500" />
+								</Button>
+							</form>
+						</div>
+					{/if}
+				</li>
+			{/each}
+		</ul>
+	{/if}
+
+	<Button
+		type="button"
+		disabled={isAddingPasskey}
+		onclick={addPasskey}
+		class="disabled:cursor-not-allowed disabled:opacity-75"
+	>
+		Legg til passkey
+	</Button>
 </div>
 
 <section>

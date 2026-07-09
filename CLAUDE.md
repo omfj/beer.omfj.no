@@ -38,6 +38,7 @@ Defined in `src/lib/db/schema.ts`:
 
 - **users**: Username, type, gender, weight, terms acceptance, creation timestamp
 - **userPasswords**: Password hashes (separate table, cascade delete)
+- **passkeys**: WebAuthn credentials (credential ID, user-chosen name, public key, counter, transports; cascade delete)
 - **sessions**: User sessions (30-day expiry, auto-renewed at 15 days). Cookie name: `auth-session`
 - **events**: Name, color, optional password, creator, timestamp
 - **eventAccess**: Tracks which users have unlocked password-protected events (eventId, userId, grantedAt)
@@ -54,6 +55,7 @@ Custom session-based auth in `src/lib/auth.ts`:
 - Session IDs are SHA-256 hashes of tokens (stored in DB)
 - Hook in `src/hooks.server.ts` validates sessions on every request
 - DB instance, R2 bucket, and session service injected into `event.locals`
+- Passkeys (WebAuthn via `@simplewebauthn`): users connect a passkey from `/profil` (not at registration) and can rename/delete it there. Login on `/logg-inn` uses conditional UI (autofill) — a pending conditional request plus `autocomplete="... webauthn"` on the inputs lets browsers/password managers offer passkeys, no dedicated button. Server helpers in `src/lib/passkey.ts`, browser helpers in `src/lib/passkey-client.ts`, ceremony endpoints under `src/routes/(app)/api/passkey/`. Challenges round-trip via a short-lived `passkey-challenge` cookie
 
 ### Event Access Control
 
