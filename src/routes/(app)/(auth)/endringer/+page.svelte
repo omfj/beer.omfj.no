@@ -8,17 +8,26 @@
 	Her kan du se en oversikt over endringer som har skjedd i appen.
 </p>
 
-<div class="space-y-8">
-	<section>
+<ul class="space-y-8">
+	<li>
+		<div class="mb-1 flex items-baseline gap-3">
+			<h2 class="text-xl font-medium">10. juli 2026</h2>
+		</div>
+		<ul class="text-foreground-muted list-disc space-y-1 pl-5">
+			<li>Support for passkeys</li>
+		</ul>
+	</li>
+
+	<li>
 		<div class="mb-1 flex items-baseline gap-3">
 			<h2 class="text-xl font-medium">6. juni 2026</h2>
 		</div>
 		<ul class="text-foreground-muted list-disc space-y-1 pl-5">
 			<li>Filtrer drikkefeed på arrangementssiden etter deltaker</li>
 		</ul>
-	</section>
+	</li>
 
-	<section>
+	<li>
 		<div class="mb-1 flex items-baseline gap-3">
 			<h2 class="text-xl font-medium">6. mai 2026</h2>
 		</div>
@@ -27,5 +36,5 @@
 			<li>Forskjellige typer drikker blir scoret forskjellig</li>
 			<li>Denne siden her</li>
 		</ul>
-	</section>
-</div>
+	</li>
+</ul>
