@@ -40,13 +40,6 @@
 	{@html webManifestLink}
 </svelte:head>
 
-<div
-	class="fixed inset-x-0 top-0 z-50 bg-yellow-300 px-4 py-3 text-center font-semibold text-black"
-	role="note"
->
-	Husk å drikke vann! 💦💦
-</div>
-
 <div class="pt-12">
 	{@render children()}
 </div>
