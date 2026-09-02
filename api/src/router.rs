@@ -6,7 +6,7 @@ use tower::ServiceBuilder;
 use tower_http::{
     classify::{ServerErrorsAsFailures, SharedClassifier},
     cors::{Any, CorsLayer},
-    trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer},
+    trace::{DefaultMakeSpan, DefaultOnResponse, TraceLayer},
 };
 use tracing::Level;
 
