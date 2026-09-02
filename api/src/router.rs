@@ -1,0 +1,48 @@
+use axum::{
+    Router,
+    http::{HeaderValue, Method},
+};
+use tower::ServiceBuilder;
+use tower_http::{
+    classify::{ServerErrorsAsFailures, SharedClassifier},
+    cors::{Any, CorsLayer},
+    trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer},
+};
+use tracing::Level;
+
+use crate::{routes, state::AppState};
+
+pub fn create(
+    state: AppState,
+    web_app_url: &str,
+) -> Result<Router, axum::http::header::InvalidHeaderValue> {
+    let cors_origin = web_app_url.parse::<HeaderValue>()?;
+
+    Ok(Router::new()
+        .merge(routes::router())
+        .with_state(state)
+        .layer(
+            ServiceBuilder::new()
+                .layer(trace())
+                .layer(cors(cors_origin)),
+        ))
+}
+
+fn trace() -> TraceLayer<SharedClassifier<ServerErrorsAsFailures>> {
+    TraceLayer::new_for_http()
+        .make_span_with(DefaultMakeSpan::new().include_headers(true))
+        .on_response(DefaultOnResponse::new().level(Level::INFO))
+}
+
+fn cors(origin: HeaderValue) -> CorsLayer {
+    CorsLayer::new()
+        .allow_origin(origin)
+        .allow_methods([
+            Method::GET,
+            Method::POST,
+            Method::PUT,
+            Method::PATCH,
+            Method::DELETE,
+        ])
+        .allow_headers(Any)
+}

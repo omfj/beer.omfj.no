@@ -4,3 +4,7 @@ pnpm-lock.yaml
 yarn.lock
 worker-configuration.d.ts
 *.json
+.svelte-kit
+build
+node_modules
+.wrangler

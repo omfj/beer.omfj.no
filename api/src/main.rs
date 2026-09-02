@@ -1,0 +1,35 @@
+mod config;
+mod router;
+mod routes;
+mod state;
+mod telemetry;
+
+use std::net::Ipv4Addr;
+
+use config::Config;
+use state::AppState;
+use tracing::info;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    telemetry::init();
+
+    let config = Config::from_env()?;
+    let state = AppState::connect(&config.database_url).await?;
+    let app = router::create(state, &config.web_app_url)?;
+
+    let address = (Ipv4Addr::UNSPECIFIED, config.port);
+    let listener = tokio::net::TcpListener::bind(address).await?;
+    info!(port = config.port, "API listening");
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await?;
+
+    Ok(())
+}
+
+async fn shutdown_signal() {
+    if let Err(error) = tokio::signal::ctrl_c().await {
+        tracing::error!(%error, "failed to install shutdown signal handler");
+    }
+}

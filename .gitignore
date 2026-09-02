@@ -1,12 +1,13 @@
 node_modules
+target
 
 # Output
 .output
 .vercel
 .netlify
 .wrangler
-/.svelte-kit
-/build
+.svelte-kit
+build
 
 # OS
 .DS_Store
@@ -24,6 +25,8 @@ vite.config.ts.timestamp-*
 
 # SQLite
 *.db
+*.db-shm
+*.db-wal
 
 .dev.vars*
 !.dev.vars.example
