@@ -1,7 +1,10 @@
 mod config;
 mod database;
+mod domain;
+mod repositories;
 mod router;
 mod routes;
+mod services;
 mod state;
 mod telemetry;
 

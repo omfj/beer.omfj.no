@@ -1,0 +1,107 @@
+use std::error::Error;
+
+use axum::{Json, http::StatusCode, response::IntoResponse};
+use serde::Serialize;
+use thiserror::Error;
+
+use crate::services::{HealthError, LeaderboardError};
+
+type BoxError = Box<dyn Error + Send + Sync>;
+
+#[derive(Debug, Error)]
+pub enum ApiError {
+    #[error("{message}")]
+    Internal {
+        code: &'static str,
+        message: &'static str,
+        #[source]
+        source: BoxError,
+    },
+    #[error("{message}")]
+    Unavailable {
+        code: &'static str,
+        message: &'static str,
+        #[source]
+        source: BoxError,
+    },
+}
+
+impl ApiError {
+    fn internal<E>(code: &'static str, message: &'static str, source: E) -> Self
+    where
+        E: Error + Send + Sync + 'static,
+    {
+        Self::Internal {
+            code,
+            message,
+            source: Box::new(source),
+        }
+    }
+
+    fn unavailable<E>(code: &'static str, message: &'static str, source: E) -> Self
+    where
+        E: Error + Send + Sync + 'static,
+    {
+        Self::Unavailable {
+            code,
+            message,
+            source: Box::new(source),
+        }
+    }
+
+    fn response_parts(&self) -> (StatusCode, &'static str, &'static str) {
+        match self {
+            Self::Internal { code, message, .. } => {
+                (StatusCode::INTERNAL_SERVER_ERROR, code, message)
+            }
+            Self::Unavailable { code, message, .. } => {
+                (StatusCode::SERVICE_UNAVAILABLE, code, message)
+            }
+        }
+    }
+}
+
+impl From<LeaderboardError> for ApiError {
+    fn from(error: LeaderboardError) -> Self {
+        Self::internal(
+            "leaderboard_unavailable",
+            "failed to load leaderboard",
+            error,
+        )
+    }
+}
+
+impl From<HealthError> for ApiError {
+    fn from(error: HealthError) -> Self {
+        Self::unavailable("database_unavailable", "database unavailable", error)
+    }
+}
+
+impl IntoResponse for ApiError {
+    fn into_response(self) -> axum::response::Response {
+        let (status, code, message) = self.response_parts();
+
+        if status.is_server_error() {
+            tracing::error!(error = ?self, code, "request failed");
+        }
+
+        (
+            status,
+            Json(ErrorResponse {
+                error: ErrorBody { code, message },
+            }),
+        )
+            .into_response()
+    }
+}
+
+#[derive(Serialize)]
+struct ErrorResponse {
+    error: ErrorBody,
+}
+
+#[derive(Serialize)]
+struct ErrorBody {
+    code: &'static str,
+    message: &'static str,
+}
