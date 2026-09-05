@@ -11,10 +11,11 @@ This repository is a pnpm monorepo with two members:
 
 ```bash
 pnpm install
+cargo install cargo-watch
 pnpm dev
 ```
 
-The web app runs on Vite's default address and the API listens on port `3000`. The API exposes `GET /health`. Copy `api/.env.example` into your preferred environment setup or export those variables before starting it.
+The web app runs on Vite's default address and the API listens on port `3000`.
 
 You can also work on one member at a time:
 
