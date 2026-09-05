@@ -1,4 +1,5 @@
 pub(crate) mod auth;
+pub(crate) mod drinks;
 pub(crate) mod events;
 pub(crate) mod health;
 pub(crate) mod leaderboard;

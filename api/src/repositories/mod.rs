@@ -1,4 +1,5 @@
 mod auth;
+pub(crate) mod drinks;
 mod events;
 mod health;
 mod leaderboard;

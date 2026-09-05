@@ -192,3 +192,29 @@ struct ErrorBody {
     code: &'static str,
     message: &'static str,
 }
+
+impl From<crate::services::drinks::DrinksError> for ApiError {
+    fn from(error: crate::services::drinks::DrinksError) -> Self {
+        use crate::services::drinks::DrinksError;
+        match error {
+            DrinksError::NotFound => Self::event_not_found(),
+            DrinksError::DrinkNotFound => Self::Client {
+                status: StatusCode::NOT_FOUND,
+                code: "drink_not_found",
+                message: "drink not found",
+            },
+            DrinksError::Forbidden => Self::event_access_denied(),
+            DrinksError::InvalidSelection => Self::Client {
+                status: StatusCode::BAD_REQUEST,
+                code: "invalid_drink",
+                message: "invalid image, drink selection, or alcohol percentage",
+            },
+            DrinksError::Storage(error) => Self::unavailable(
+                "image_storage_unavailable",
+                "image storage unavailable",
+                error,
+            ),
+            error => Self::internal("drinks_unavailable", "drink operation failed", error),
+        }
+    }
+}

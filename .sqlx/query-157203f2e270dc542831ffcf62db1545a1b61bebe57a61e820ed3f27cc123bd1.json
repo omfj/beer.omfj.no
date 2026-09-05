@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT\n                (? IS NULL OR EXISTS(SELECT 1 FROM drink_type WHERE id = ?))\n                AND (? IS NULL OR EXISTS(SELECT 1 FROM drink_size WHERE id = ?))\n                AND (? IS NULL OR ? IS NULL OR EXISTS(\n                    SELECT 1 FROM drink_type_size WHERE drink_type_id = ? AND drink_size_id = ?\n                )) AS \"valid!: bool\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "valid!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "157203f2e270dc542831ffcf62db1545a1b61bebe57a61e820ed3f27cc123bd1"
+}

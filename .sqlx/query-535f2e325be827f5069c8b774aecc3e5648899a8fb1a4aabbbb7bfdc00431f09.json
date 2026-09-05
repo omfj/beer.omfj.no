@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            DELETE FROM attendee\n            WHERE id = ? AND event_id = ? AND user_id = ?\n            RETURNING image_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "image_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "attendee",
+            "name": "image_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "535f2e325be827f5069c8b774aecc3e5648899a8fb1a4aabbbb7bfdc00431f09"
+}

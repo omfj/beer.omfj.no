@@ -7,7 +7,7 @@ mod router;
 mod routes;
 mod services;
 mod state;
-mod telemetry;
+mod storage;
 mod utils;
 
 use std::net::Ipv4Addr;
@@ -17,11 +17,11 @@ use state::AppState;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    telemetry::init();
+    utils::telemetry::init();
 
     let config = Config::from_env()?;
     let database = database::connect(&config.database_url).await?;
-    let state = AppState::new(database, &config);
+    let state = AppState::new(database, &config, storage::ImageStorage::new(&config)?);
     let app = router::create(state, &config.web_app_url)?;
 
     let address = (get_host(config.development), config.port);
