@@ -81,6 +81,14 @@ impl ApiError {
         }
     }
 
+    pub fn invalid_event_name() -> Self {
+        Self::Client {
+            status: StatusCode::BAD_REQUEST,
+            code: "invalid_event_name",
+            message: "event name is required",
+        }
+    }
+
     fn internal<E>(code: &'static str, message: &'static str, source: E) -> Self
     where
         E: Error + Send + Sync + 'static,

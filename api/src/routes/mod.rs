@@ -19,7 +19,7 @@ pub fn router() -> Router<AppState> {
         .route("/auth/register", post(auth::register))
         .route("/auth/logout", post(auth::logout))
         .route("/auth/me", get(auth::me))
-        .route("/events", get(events::list))
+        .route("/events", get(events::list).post(events::create))
         .route("/event/{id}", get(events::get))
         .route("/health", get(health::get))
         .route("/leaderboard", get(leaderboard::get))

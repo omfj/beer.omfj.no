@@ -77,6 +77,33 @@ impl EventsRepository {
         .await
     }
 
+    pub async fn create(
+        &self,
+        id: &str,
+        name: &str,
+        color: &str,
+        created_at: i64,
+        created_by: &str,
+        password: Option<&str>,
+    ) -> Result<EventRecord, sqlx::Error> {
+        sqlx::query_as!(
+            EventRecord,
+            r#"
+            INSERT INTO event (id, name, color, created_at, created_by, password)
+            VALUES (?, ?, ?, ?, ?, ?)
+            RETURNING id, name, color, created_at, created_by, password
+            "#,
+            id,
+            name,
+            color,
+            created_at,
+            created_by,
+            password,
+        )
+        .fetch_one(&self.database)
+        .await
+    }
+
     pub async fn has_access(&self, event_id: &str, user_id: &str) -> Result<bool, sqlx::Error> {
         sqlx::query_scalar!(
             "SELECT EXISTS(SELECT 1 FROM event_access WHERE event_id = ? AND user_id = ?) AS \"has_access!: bool\"",

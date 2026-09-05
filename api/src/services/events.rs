@@ -1,4 +1,8 @@
-use crate::repositories::EventsRepository;
+use crate::{
+    repositories::EventsRepository,
+    utils::{password, time::now},
+};
+use rand::RngExt;
 use serde::Serialize;
 use thiserror::Error;
 
@@ -6,6 +10,8 @@ use thiserror::Error;
 pub enum EventsError {
     #[error("failed to query events")]
     Database(#[from] sqlx::Error),
+    #[error("failed to hash event password")]
+    Password(#[from] password::PasswordError),
 }
 
 #[derive(Debug, Serialize)]
@@ -28,6 +34,10 @@ pub struct Event {
     pub color: String,
     pub created_at: i64,
     pub created_by: Option<String>,
+}
+#[derive(Debug, Serialize)]
+pub struct CreatedEvent {
+    pub event: Event,
 }
 #[derive(Debug, Serialize)]
 pub struct DrinkType {
@@ -107,6 +117,42 @@ impl EventsService {
         Ok(Events { events })
     }
 
+    pub async fn create(
+        &self,
+        name: &str,
+        event_password: Option<&str>,
+        user_id: &str,
+    ) -> Result<CreatedEvent, EventsError> {
+        let password_hash = match event_password {
+            Some(password) => Some(password::hash(password).await?),
+            None => None,
+        };
+        let created_at = now();
+        let id = generate_event_id();
+        let color = generate_soft_color();
+        let record = self
+            .repository
+            .create(
+                &id,
+                name,
+                &color,
+                created_at,
+                user_id,
+                password_hash.as_deref(),
+            )
+            .await?;
+
+        Ok(CreatedEvent {
+            event: Event {
+                id: record.id,
+                name: record.name,
+                color: record.color,
+                created_at: record.created_at,
+                created_by: record.created_by,
+            },
+        })
+    }
+
     pub async fn get(&self, id: &str, user_id: &str) -> Result<EventLookup, EventsError> {
         let Some(record) = self.repository.event(id).await? else {
             return Ok(EventLookup::NotFound);
@@ -175,11 +221,49 @@ impl EventsService {
     }
 }
 
+fn generate_event_id() -> String {
+    const LETTERS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    let mut rng = rand::rng();
+    let mut id = String::with_capacity(7);
+    for _ in 0..2 {
+        id.push(LETTERS[rng.random_range(0..LETTERS.len())] as char);
+    }
+    for _ in 0..5 {
+        id.push(char::from(b'0' + rng.random_range(0..10)));
+    }
+    id
+}
+
+fn generate_soft_color() -> String {
+    let mut rng = rand::rng();
+    hsl_to_hex(
+        rng.random_range(0..360) as f64,
+        rng.random_range(30..60) as f64,
+        rng.random_range(75..95) as f64,
+    )
+}
+
+fn hsl_to_hex(hue: f64, saturation: f64, lightness: f64) -> String {
+    let saturation = saturation / 100.0;
+    let lightness = lightness / 100.0;
+    let a = saturation * lightness.min(1.0 - lightness);
+    let component = |n: f64| {
+        let k = (n + hue / 30.0) % 12.0;
+        (255.0 * (lightness - a * (k - 3.0).min(9.0 - k).clamp(-1.0, 1.0))).round() as u8
+    };
+    format!(
+        "#{:02x}{:02x}{:02x}",
+        component(0.0),
+        component(8.0),
+        component(4.0)
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use sqlx::sqlite::SqlitePoolOptions;
 
-    use super::{EventLookup, EventsService};
+    use super::{EventLookup, EventsService, generate_event_id};
     use crate::repositories::EventsRepository;
 
     async fn service() -> EventsService {
@@ -220,5 +304,30 @@ mod tests {
         };
         assert_eq!(detail.event.name, "Private");
         assert_eq!(detail.access_users[0].id, "owner");
+    }
+
+    #[tokio::test]
+    async fn creates_an_event_owned_by_the_current_user() {
+        let service = service().await;
+        let event = service
+            .create("New event", None, "guest")
+            .await
+            .unwrap()
+            .event;
+        assert_eq!(event.name, "New event");
+        assert_eq!(event.created_by.as_deref(), Some("guest"));
+        assert!(event.color.starts_with('#'));
+        assert!(matches!(
+            service.get(&event.id, "guest").await.unwrap(),
+            EventLookup::Found(_)
+        ));
+    }
+
+    #[test]
+    fn generates_svelte_compatible_event_ids() {
+        let id = generate_event_id();
+        assert_eq!(id.len(), 7);
+        assert!(id[..2].chars().all(|c| c.is_ascii_uppercase()));
+        assert!(id[2..].chars().all(|c| c.is_ascii_digit()));
     }
 }

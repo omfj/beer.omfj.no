@@ -1,7 +1,4 @@
-use std::{
-    fmt::Write as _,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fmt::Write as _;
 
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use rand::Rng;
@@ -12,7 +9,7 @@ use thiserror::Error;
 use crate::{
     domain::credentials::{Password, Username},
     repositories::AuthRepository,
-    utils::password,
+    utils::{password, time::now},
 };
 
 const SESSION_LIFETIME_SECONDS: i64 = 60 * 60 * 24 * 30;
@@ -24,8 +21,6 @@ pub enum AuthError {
     Database(#[from] sqlx::Error),
     #[error("failed to process password")]
     Password(#[from] password::PasswordError),
-    #[error("system clock is before the Unix epoch")]
-    Clock(#[from] std::time::SystemTimeError),
     #[error("new session could not be loaded")]
     SessionCreation,
 }
@@ -123,7 +118,7 @@ impl AuthService {
         let Some(record) = self.repository.session(&id).await? else {
             return Ok(None);
         };
-        let current_time = now()?;
+        let current_time = now();
 
         if current_time >= record.expires_at {
             self.repository.delete_session(&id).await?;
@@ -164,7 +159,7 @@ impl AuthService {
     ) -> Result<AuthenticatedSession, AuthError> {
         let token = generate_session_token();
         let id = hash_session_token(&token);
-        let expires_at = now()? + SESSION_LIFETIME_SECONDS;
+        let expires_at = now() + SESSION_LIFETIME_SECONDS;
         self.repository
             .create_session(&id, user_id, expires_at)
             .await?;
@@ -172,10 +167,6 @@ impl AuthService {
             .await?
             .ok_or(AuthError::SessionCreation)
     }
-}
-
-fn now() -> Result<i64, std::time::SystemTimeError> {
-    Ok(SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as i64)
 }
 
 fn generate_session_token() -> String {

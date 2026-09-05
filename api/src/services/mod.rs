@@ -6,6 +6,6 @@ pub(crate) mod leaderboard;
 pub use auth::{
     AuthError, AuthService, AuthenticatedSession, LoginResult, RegistrationResult, User,
 };
-pub use events::{EventDetail, Events, EventsError, EventsService};
+pub use events::{CreatedEvent, EventDetail, Events, EventsError, EventsService};
 pub use health::{HealthError, HealthService};
 pub use leaderboard::{Leaderboard, LeaderboardError, LeaderboardService};
