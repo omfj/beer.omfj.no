@@ -21,10 +21,10 @@ pub struct ImageStorage(Option<Arc<Bucket>>);
 impl ImageStorage {
     pub fn new(config: &Config) -> Result<Self, Box<dyn std::error::Error>> {
         let (Some(endpoint), Some(bucket), Some(access_key_id), Some(secret_access_key)) = (
-            &config.r2_endpoint,
-            &config.r2_bucket,
-            &config.r2_access_key_id,
-            &config.r2_secret_access_key,
+            &config.s3_endpoint,
+            &config.s3_bucket,
+            &config.s3_access_key_id,
+            &config.s3_secret_access_key,
         ) else {
             return Ok(Self::default());
         };

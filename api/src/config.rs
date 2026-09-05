@@ -10,10 +10,10 @@ pub struct Config {
     pub development: bool,
     pub web_app_url: String,
     pub database_url: String,
-    pub r2_endpoint: Option<String>,
-    pub r2_bucket: Option<String>,
-    pub r2_access_key_id: Option<String>,
-    pub r2_secret_access_key: Option<String>,
+    pub s3_endpoint: Option<String>,
+    pub s3_bucket: Option<String>,
+    pub s3_access_key_id: Option<String>,
+    pub s3_secret_access_key: Option<String>,
 }
 
 impl Config {
@@ -27,11 +27,11 @@ impl Config {
         let web_app_url = env::var("WEB_APP_URL").unwrap_or_else(|_| DEFAULT_WEB_APP_URL.into());
         let database_url = env::var("DATABASE_URL").unwrap_or_else(|_| DEFAULT_DATABASE_URL.into());
 
-        let r2_endpoint = env::var("R2_ENDPOINT").ok();
-        let r2_bucket = env::var("R2_BUCKET").ok();
-        let r2_access_key_id = env::var("R2_ACCESS_KEY_ID").ok();
-        let r2_secret_access_key = env::var("R2_SECRET_ACCESS_KEY").ok();
-        match (&r2_endpoint, &r2_bucket, &r2_access_key_id, &r2_secret_access_key) {
+        let s3_endpoint = env::var("S3_ENDPOINT").ok();
+        let s3_bucket = env::var("S3_BUCKET").ok();
+        let s3_access_key_id = env::var("S3_ACCESS_KEY_ID").ok();
+        let s3_secret_access_key = env::var("S3_SECRET_ACCESS_KEY").ok();
+        match (&s3_endpoint, &s3_bucket, &s3_access_key_id, &s3_secret_access_key) {
             (None, None, None, None) => {},
             (Some(endpoint), Some(bucket), Some(access_key_id), Some(secret_access_key))
                 if !endpoint.is_empty()
@@ -39,7 +39,7 @@ impl Config {
                     && !access_key_id.is_empty()
                     && !secret_access_key.is_empty() =>
             {}
-            _ => return Err("R2_ENDPOINT, R2_BUCKET, R2_ACCESS_KEY_ID, and R2_SECRET_ACCESS_KEY must all be set and nonempty when configuring R2".into()),
+            _ => return Err("S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID, and S3_SECRET_ACCESS_KEY must all be set and nonempty when configuring S3".into()),
         };
 
         Ok(Self {
@@ -47,10 +47,10 @@ impl Config {
             development,
             web_app_url,
             database_url,
-            r2_endpoint,
-            r2_bucket,
-            r2_access_key_id,
-            r2_secret_access_key,
+            s3_endpoint,
+            s3_bucket,
+            s3_access_key_id,
+            s3_secret_access_key,
         })
     }
 }
