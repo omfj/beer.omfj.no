@@ -1,11 +1,14 @@
 use axum::{
     Router,
-    http::{HeaderValue, Method},
+    http::{
+        HeaderValue, Method,
+        header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE},
+    },
 };
 use tower::ServiceBuilder;
 use tower_http::{
     classify::{ServerErrorsAsFailures, SharedClassifier},
-    cors::{Any, CorsLayer},
+    cors::CorsLayer,
     trace::{DefaultMakeSpan, DefaultOnResponse, TraceLayer},
 };
 use tracing::Level;
@@ -44,5 +47,6 @@ fn cors(origin: HeaderValue) -> CorsLayer {
             Method::PATCH,
             Method::DELETE,
         ])
-        .allow_headers(Any)
+        .allow_headers([ACCEPT, AUTHORIZATION, CONTENT_TYPE])
+        .allow_credentials(true)
 }

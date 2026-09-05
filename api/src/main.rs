@@ -1,3 +1,4 @@
+mod auth;
 mod config;
 mod database;
 mod domain;
@@ -7,6 +8,7 @@ mod routes;
 mod services;
 mod state;
 mod telemetry;
+mod utils;
 
 use std::net::Ipv4Addr;
 
@@ -19,17 +21,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = Config::from_env()?;
     let database = database::connect(&config.database_url).await?;
-    let state = AppState::new(database);
+    let state = AppState::new(database, &config);
     let app = router::create(state, &config.web_app_url)?;
 
-    let address = (Ipv4Addr::UNSPECIFIED, config.port);
+    let address = (get_host(config.development), config.port);
     let listener = tokio::net::TcpListener::bind(address).await?;
-    tracing::info!(port = config.port, "API listening");
+    tracing::info!("🚀 Starting Beer API");
+    tracing::info!(
+        "🚀 Running on http://{}:{}",
+        address.0.to_string(),
+        address.1
+    );
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
         .await?;
 
     Ok(())
+}
+
+fn get_host(development: bool) -> Ipv4Addr {
+    if development {
+        Ipv4Addr::LOCALHOST
+    } else {
+        Ipv4Addr::UNSPECIFIED
+    }
 }
 
 async fn shutdown_signal() {

@@ -4,12 +4,18 @@ use axum::{Json, http::StatusCode, response::IntoResponse};
 use serde::Serialize;
 use thiserror::Error;
 
-use crate::services::{HealthError, LeaderboardError};
+use crate::services::{AuthError, HealthError, LeaderboardError};
 
 type BoxError = Box<dyn Error + Send + Sync>;
 
 #[derive(Debug, Error)]
 pub enum ApiError {
+    #[error("{message}")]
+    Client {
+        status: StatusCode,
+        code: &'static str,
+        message: &'static str,
+    },
     #[error("{message}")]
     Internal {
         code: &'static str,
@@ -27,6 +33,22 @@ pub enum ApiError {
 }
 
 impl ApiError {
+    pub fn unauthorized() -> Self {
+        Self::Client {
+            status: StatusCode::UNAUTHORIZED,
+            code: "unauthorized",
+            message: "authentication required",
+        }
+    }
+
+    pub fn invalid_credentials() -> Self {
+        Self::Client {
+            status: StatusCode::BAD_REQUEST,
+            code: "invalid_credentials",
+            message: "invalid username or password",
+        }
+    }
+
     fn internal<E>(code: &'static str, message: &'static str, source: E) -> Self
     where
         E: Error + Send + Sync + 'static,
@@ -51,6 +73,11 @@ impl ApiError {
 
     fn response_parts(&self) -> (StatusCode, &'static str, &'static str) {
         match self {
+            Self::Client {
+                status,
+                code,
+                message,
+            } => (*status, code, message),
             Self::Internal { code, message, .. } => {
                 (StatusCode::INTERNAL_SERVER_ERROR, code, message)
             }
@@ -58,6 +85,12 @@ impl ApiError {
                 (StatusCode::SERVICE_UNAVAILABLE, code, message)
             }
         }
+    }
+}
+
+impl From<AuthError> for ApiError {
+    fn from(error: AuthError) -> Self {
+        Self::internal("authentication_unavailable", "authentication failed", error)
     }
 }
 
