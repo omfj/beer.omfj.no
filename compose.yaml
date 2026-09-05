@@ -1,0 +1,14 @@
+services:
+  storage:
+    image: versity/versitygw:v1.8.0
+    command: ["--port", ":7070", "--region", "auto", "posix", "/data"]
+    environment:
+      ROOT_ACCESS_KEY: beer-local
+      ROOT_SECRET_KEY: beer-local-secret
+    ports:
+      - "127.0.0.1:7070:7070"
+    volumes:
+      - storage:/data
+
+volumes:
+  storage:

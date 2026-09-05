@@ -12,6 +12,8 @@ This repository is a pnpm monorepo with two members:
 ```bash
 pnpm install
 cargo install cargo-watch
+cp api/.env.example api/.env
+pnpm storage:up
 pnpm dev
 ```
 
