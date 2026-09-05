@@ -1,4 +1,9 @@
-use crate::{auth::CurrentUser, routes::ApiError, services::events::EventLookup, state::AppState};
+use crate::{
+    auth::CurrentUser,
+    routes::ApiError,
+    services::events::{EventLookup, UnlockResult},
+    state::AppState,
+};
 use axum::{
     Json,
     extract::{Path, State},
@@ -10,6 +15,11 @@ use serde::Deserialize;
 pub struct CreateEventRequest {
     name: String,
     password: Option<String>,
+}
+
+#[derive(Deserialize)]
+pub struct UnlockEventRequest {
+    password: String,
 }
 
 pub async fn list(
@@ -47,5 +57,22 @@ pub async fn get(
         EventLookup::Found(event) => Ok(Json(event)),
         EventLookup::NotFound => Err(ApiError::event_not_found()),
         EventLookup::Forbidden => Err(ApiError::event_access_denied()),
+    }
+}
+
+pub async fn unlock(
+    State(state): State<AppState>,
+    CurrentUser(session): CurrentUser,
+    Path(id): Path<String>,
+    Json(request): Json<UnlockEventRequest>,
+) -> Result<StatusCode, ApiError> {
+    match state
+        .events
+        .unlock(&id, &session.user.id, &request.password)
+        .await?
+    {
+        UnlockResult::NotFound => Err(ApiError::event_not_found()),
+        UnlockResult::InvalidPassword => Err(ApiError::invalid_event_password()),
+        UnlockResult::Unlocked => Ok(StatusCode::NO_CONTENT),
     }
 }

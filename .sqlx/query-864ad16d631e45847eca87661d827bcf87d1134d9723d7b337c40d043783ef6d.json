@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO event_access (event_id, user_id, granted_at)\n            VALUES (?, ?, ?)\n            ON CONFLICT (event_id, user_id) DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "864ad16d631e45847eca87661d827bcf87d1134d9723d7b337c40d043783ef6d"
+}

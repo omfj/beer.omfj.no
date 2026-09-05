@@ -114,6 +114,27 @@ impl EventsRepository {
         .await
     }
 
+    pub async fn grant_access(
+        &self,
+        event_id: &str,
+        user_id: &str,
+        granted_at: i64,
+    ) -> Result<(), sqlx::Error> {
+        sqlx::query!(
+            r#"
+            INSERT INTO event_access (event_id, user_id, granted_at)
+            VALUES (?, ?, ?)
+            ON CONFLICT (event_id, user_id) DO NOTHING
+            "#,
+            event_id,
+            user_id,
+            granted_at,
+        )
+        .execute(&self.database)
+        .await?;
+        Ok(())
+    }
+
     pub async fn attendees(&self, event_id: &str) -> Result<Vec<AttendeeRecord>, sqlx::Error> {
         sqlx::query_as!(AttendeeRecord, r#"
             SELECT attendee.id, attendee.user_id, user.username, attendee.created_at,

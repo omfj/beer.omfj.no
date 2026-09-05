@@ -91,6 +91,12 @@ pub enum EventLookup {
     Found(EventDetail),
 }
 
+pub enum UnlockResult {
+    NotFound,
+    InvalidPassword,
+    Unlocked,
+}
+
 #[derive(Clone)]
 pub struct EventsService {
     repository: EventsRepository,
@@ -219,6 +225,32 @@ impl EventsService {
             access_users,
         }))
     }
+
+    pub async fn unlock(
+        &self,
+        id: &str,
+        user_id: &str,
+        supplied_password: &str,
+    ) -> Result<UnlockResult, EventsError> {
+        let Some(event) = self.repository.event(id).await? else {
+            return Ok(UnlockResult::NotFound);
+        };
+
+        let Some(password_hash) = event.password else {
+            return Ok(UnlockResult::Unlocked);
+        };
+        if event.created_by.as_deref() == Some(user_id)
+            || self.repository.has_access(id, user_id).await?
+        {
+            return Ok(UnlockResult::Unlocked);
+        }
+        if !password::verify(supplied_password, &password_hash).await? {
+            return Ok(UnlockResult::InvalidPassword);
+        }
+
+        self.repository.grant_access(id, user_id, now()).await?;
+        Ok(UnlockResult::Unlocked)
+    }
 }
 
 fn generate_event_id() -> String {
@@ -263,7 +295,7 @@ fn hsl_to_hex(hue: f64, saturation: f64, lightness: f64) -> String {
 mod tests {
     use sqlx::sqlite::SqlitePoolOptions;
 
-    use super::{EventLookup, EventsService, generate_event_id};
+    use super::{EventLookup, EventsService, UnlockResult, generate_event_id};
     use crate::repositories::EventsRepository;
 
     async fn service() -> EventsService {
@@ -320,6 +352,50 @@ mod tests {
         assert!(matches!(
             service.get(&event.id, "guest").await.unwrap(),
             EventLookup::Found(_)
+        ));
+    }
+
+    #[tokio::test]
+    async fn unlocks_a_password_event_for_the_current_user() {
+        let service = service().await;
+        let event = service
+            .create("Protected", Some("secret"), "owner")
+            .await
+            .unwrap()
+            .event;
+
+        assert!(matches!(
+            service.unlock(&event.id, "guest", "wrong").await.unwrap(),
+            UnlockResult::InvalidPassword
+        ));
+        assert!(matches!(
+            service.get(&event.id, "guest").await.unwrap(),
+            EventLookup::Forbidden
+        ));
+        assert!(matches!(
+            service.unlock(&event.id, "guest", "secret").await.unwrap(),
+            UnlockResult::Unlocked
+        ));
+        assert!(matches!(
+            service.get(&event.id, "guest").await.unwrap(),
+            EventLookup::Found(_)
+        ));
+    }
+
+    #[tokio::test]
+    async fn unlock_is_idempotent_for_accessible_events() {
+        let service = service().await;
+        assert!(matches!(
+            service.unlock("open", "guest", "").await.unwrap(),
+            UnlockResult::Unlocked
+        ));
+        assert!(matches!(
+            service.unlock("private", "owner", "").await.unwrap(),
+            UnlockResult::Unlocked
+        ));
+        assert!(matches!(
+            service.unlock("missing", "guest", "secret").await.unwrap(),
+            UnlockResult::NotFound
         ));
     }
 

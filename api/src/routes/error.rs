@@ -89,6 +89,14 @@ impl ApiError {
         }
     }
 
+    pub fn invalid_event_password() -> Self {
+        Self::Client {
+            status: StatusCode::BAD_REQUEST,
+            code: "invalid_event_password",
+            message: "invalid event password",
+        }
+    }
+
     fn internal<E>(code: &'static str, message: &'static str, source: E) -> Self
     where
         E: Error + Send + Sync + 'static,
