@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT 1 AS health",
+  "describe": {
+    "columns": [
+      {
+        "name": "health",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "a9ac11a0896006a03fd4260810c31bf236ebe89054f4c7e981490c596799585b"
+}

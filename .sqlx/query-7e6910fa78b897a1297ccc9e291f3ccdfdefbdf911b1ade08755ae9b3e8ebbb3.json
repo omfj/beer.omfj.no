@@ -1,0 +1,81 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT\n                attendee.user_id,\n                user.username,\n                drink_size.volume_ml,\n                attendee.abv,\n                drink_type.abv AS fallback_abv,\n                COALESCE(drink_type.multiplier, 1.0) AS multiplier\n            FROM attendee\n            INNER JOIN event ON attendee.event_id = event.id\n            INNER JOIN user ON attendee.user_id = user.id\n            LEFT JOIN drink_type ON attendee.drink_type_id = drink_type.id\n            LEFT JOIN drink_size ON attendee.drink_size_id = drink_size.id\n            WHERE event.password IS NULL\n              AND CAST(strftime('%Y', attendee.created_at, 'unixepoch') AS INTEGER) = ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "user_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "attendee",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "name": "username",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user",
+            "name": "username"
+          }
+        }
+      },
+      {
+        "name": "volume_ml",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "drink_size",
+            "name": "volume_ml"
+          }
+        }
+      },
+      {
+        "name": "abv",
+        "ordinal": 3,
+        "type_info": "Float",
+        "origin": {
+          "Table": {
+            "table": "attendee",
+            "name": "abv"
+          }
+        }
+      },
+      {
+        "name": "fallback_abv",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "drink_type",
+            "name": "abv"
+          }
+        }
+      },
+      {
+        "name": "multiplier",
+        "ordinal": 5,
+        "type_info": "Float",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "7e6910fa78b897a1297ccc9e291f3ccdfdefbdf911b1ade08755ae9b3e8ebbb3"
+}

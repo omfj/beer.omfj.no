@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT DISTINCT CAST(strftime('%Y', attendee.created_at, 'unixepoch') AS INTEGER) AS \"year!: i64\"\n            FROM attendee\n            INNER JOIN event ON attendee.event_id = event.id\n            WHERE event.password IS NULL\n            ORDER BY 1 DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "year!: i64",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "54b025cf1b0c79a138ee6b11b0d661a3ad804de6b6a54e8884d680b51656d145"
+}

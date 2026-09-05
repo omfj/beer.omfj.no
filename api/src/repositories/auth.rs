@@ -1,14 +1,12 @@
-use sqlx::FromRow;
-
 use crate::database::Database;
 
-#[derive(Debug, FromRow)]
+#[derive(Debug)]
 pub struct LoginRecord {
     pub id: String,
     pub password_hash: String,
 }
 
-#[derive(Debug, FromRow)]
+#[derive(Debug)]
 pub struct SessionRecord {
     pub session_id: String,
     pub user_id: String,
@@ -31,15 +29,16 @@ impl AuthRepository {
     }
 
     pub async fn user_for_login(&self, username: &str) -> Result<Option<LoginRecord>, sqlx::Error> {
-        sqlx::query_as(
+        sqlx::query_as!(
+            LoginRecord,
             r#"
             SELECT user.id, user_password.password_hash
             FROM user
             INNER JOIN user_password ON user_password.user_id = user.id
             WHERE user.username = ?
             "#,
+            username,
         )
-        .bind(username)
         .fetch_optional(&self.database)
         .await
     }
@@ -50,12 +49,14 @@ impl AuthRepository {
         user_id: &str,
         expires_at: i64,
     ) -> Result<(), sqlx::Error> {
-        sqlx::query("INSERT INTO session (id, user_id, expires_at) VALUES (?, ?, ?)")
-            .bind(id)
-            .bind(user_id)
-            .bind(expires_at)
-            .execute(&self.database)
-            .await?;
+        sqlx::query!(
+            "INSERT INTO session (id, user_id, expires_at) VALUES (?, ?, ?)",
+            id,
+            user_id,
+            expires_at
+        )
+        .execute(&self.database)
+        .await?;
         Ok(())
     }
 
@@ -67,31 +68,36 @@ impl AuthRepository {
     ) -> Result<(), sqlx::Error> {
         let mut transaction = self.database.begin().await?;
 
-        sqlx::query("INSERT INTO user (id, username, has_agreed_to_terms) VALUES (?, ?, true)")
-            .bind(id)
-            .bind(username)
-            .execute(&mut *transaction)
-            .await?;
+        sqlx::query!(
+            "INSERT INTO user (id, username, has_agreed_to_terms) VALUES (?, ?, true)",
+            id,
+            username
+        )
+        .execute(&mut *transaction)
+        .await?;
 
-        sqlx::query("INSERT INTO user_password (user_id, password_hash) VALUES (?, ?)")
-            .bind(id)
-            .bind(password_hash)
-            .execute(&mut *transaction)
-            .await?;
+        sqlx::query!(
+            "INSERT INTO user_password (user_id, password_hash) VALUES (?, ?)",
+            id,
+            password_hash
+        )
+        .execute(&mut *transaction)
+        .await?;
 
         transaction.commit().await?;
         Ok(())
     }
 
     pub async fn session(&self, id: &str) -> Result<Option<SessionRecord>, sqlx::Error> {
-        sqlx::query_as(
+        sqlx::query_as!(
+            SessionRecord,
             r#"
             SELECT
                 session.id AS session_id,
                 session.user_id,
                 session.expires_at,
                 user.username,
-                user.has_agreed_to_terms,
+                user.has_agreed_to_terms AS "has_agreed_to_terms: bool",
                 user.weight,
                 user.gender,
                 user.created_at
@@ -99,24 +105,25 @@ impl AuthRepository {
             INNER JOIN user ON user.id = session.user_id
             WHERE session.id = ?
             "#,
+            id,
         )
-        .bind(id)
         .fetch_optional(&self.database)
         .await
     }
 
     pub async fn renew_session(&self, id: &str, expires_at: i64) -> Result<(), sqlx::Error> {
-        sqlx::query("UPDATE session SET expires_at = ? WHERE id = ?")
-            .bind(expires_at)
-            .bind(id)
-            .execute(&self.database)
-            .await?;
+        sqlx::query!(
+            "UPDATE session SET expires_at = ? WHERE id = ?",
+            expires_at,
+            id
+        )
+        .execute(&self.database)
+        .await?;
         Ok(())
     }
 
     pub async fn delete_session(&self, id: &str) -> Result<(), sqlx::Error> {
-        sqlx::query("DELETE FROM session WHERE id = ?")
-            .bind(id)
+        sqlx::query!("DELETE FROM session WHERE id = ?", id)
             .execute(&self.database)
             .await?;
         Ok(())

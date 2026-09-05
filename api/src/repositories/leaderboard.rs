@@ -1,8 +1,6 @@
-use sqlx::FromRow;
-
 use crate::database::Database;
 
-#[derive(Debug, FromRow)]
+#[derive(Debug)]
 pub struct LeaderboardRecord {
     pub user_id: String,
     pub username: String,
@@ -23,7 +21,8 @@ impl LeaderboardRepository {
     }
 
     pub async fn records(&self, year: i64) -> Result<Vec<LeaderboardRecord>, sqlx::Error> {
-        sqlx::query_as::<_, LeaderboardRecord>(
+        sqlx::query_as!(
+            LeaderboardRecord,
             r#"
             SELECT
                 attendee.user_id,
@@ -40,16 +39,16 @@ impl LeaderboardRepository {
             WHERE event.password IS NULL
               AND CAST(strftime('%Y', attendee.created_at, 'unixepoch') AS INTEGER) = ?
             "#,
+            year,
         )
-        .bind(year)
         .fetch_all(&self.database)
         .await
     }
 
     pub async fn available_years(&self) -> Result<Vec<i64>, sqlx::Error> {
-        sqlx::query_scalar::<_, i64>(
+        let records = sqlx::query!(
             r#"
-            SELECT DISTINCT CAST(strftime('%Y', attendee.created_at, 'unixepoch') AS INTEGER)
+            SELECT DISTINCT CAST(strftime('%Y', attendee.created_at, 'unixepoch') AS INTEGER) AS "year!: i64"
             FROM attendee
             INNER JOIN event ON attendee.event_id = event.id
             WHERE event.password IS NULL
@@ -58,5 +57,8 @@ impl LeaderboardRepository {
         )
         .fetch_all(&self.database)
         .await
+        ?;
+
+        Ok(records.into_iter().map(|record| record.year).collect())
     }
 }

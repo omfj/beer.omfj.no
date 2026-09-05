@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO user (id, username, has_agreed_to_terms) VALUES (?, ?, true)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "bfda0e62318ed2ece37fde6aaf5f7fb56e4e496c5ee7f3c832e8a153e9bdfba2"
+}

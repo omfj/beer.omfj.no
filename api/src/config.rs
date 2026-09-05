@@ -3,7 +3,7 @@ use std::env;
 const DEFAULT_PORT: u16 = 3000;
 const DEFAULT_DEVELOPMENT: bool = false;
 const DEFAULT_WEB_APP_URL: &str = "http://localhost:5173";
-const DEFAULT_DATABASE_URL: &str = "sqlite://beer.db";
+const DEFAULT_DATABASE_URL: &str = "sqlite://dev.db";
 
 pub struct Config {
     pub port: u16,

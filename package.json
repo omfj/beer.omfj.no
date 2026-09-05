@@ -17,6 +17,7 @@
 		"db:migrate": "pnpm --filter @beer/web db:migrate",
 		"db:migrate:local": "pnpm --filter @beer/web db:migrate:local",
 		"db:migrate:remote": "pnpm --filter @beer/web db:migrate:remote",
+		"sqlx:prepare": "cargo sqlx prepare --workspace --database-url sqlite://$PWD/api/dev.db",
 		"deploy": "pnpm --filter @beer/web deploy"
 	}
 }

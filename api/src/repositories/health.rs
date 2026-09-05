@@ -11,7 +11,9 @@ impl HealthRepository {
     }
 
     pub async fn check(&self) -> Result<(), sqlx::Error> {
-        sqlx::query("SELECT 1").execute(&self.database).await?;
+        sqlx::query!("SELECT 1 AS health")
+            .fetch_one(&self.database)
+            .await?;
         Ok(())
     }
 }
