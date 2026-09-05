@@ -1,0 +1,208 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT attendee.id, attendee.user_id, user.username, attendee.created_at,\n                   CASE WHEN user.has_agreed_to_terms THEN attendee.image_id ELSE NULL END AS \"image_id?\",\n                   COALESCE(attendee.abv, drink_type.abv) AS \"abv?: f64\",\n                   drink_type.id AS \"drink_type_id?\", drink_type.name AS \"drink_type_name?\",\n                   drink_type.description AS \"drink_type_description?\", drink_type.abv AS \"drink_type_abv?\",\n                   drink_type.multiplier AS \"drink_type_multiplier?\", drink_size.id AS \"drink_size_id?\",\n                   drink_size.name AS \"drink_size_name?\", drink_size.volume_ml AS \"drink_size_volume_ml?\",\n                   drink_size.description AS \"drink_size_description?\",\n                   user.weight AS \"user_weight?\", user.gender AS \"user_gender?\"\n            FROM attendee INNER JOIN user ON user.id = attendee.user_id\n            LEFT JOIN drink_type ON drink_type.id = attendee.drink_type_id\n            LEFT JOIN drink_size ON drink_size.id = attendee.drink_size_id\n            WHERE attendee.event_id = ? ORDER BY attendee.created_at DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "attendee",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "user_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "attendee",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "name": "username",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user",
+            "name": "username"
+          }
+        }
+      },
+      {
+        "name": "created_at",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "attendee",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "image_id?",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "name": "abv?: f64",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "drink_type_id?",
+        "ordinal": 6,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "drink_type",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "drink_type_name?",
+        "ordinal": 7,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "drink_type",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "name": "drink_type_description?",
+        "ordinal": 8,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "drink_type",
+            "name": "description"
+          }
+        }
+      },
+      {
+        "name": "drink_type_abv?",
+        "ordinal": 9,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "drink_type",
+            "name": "abv"
+          }
+        }
+      },
+      {
+        "name": "drink_type_multiplier?",
+        "ordinal": 10,
+        "type_info": "Float",
+        "origin": {
+          "Table": {
+            "table": "drink_type",
+            "name": "multiplier"
+          }
+        }
+      },
+      {
+        "name": "drink_size_id?",
+        "ordinal": 11,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "drink_size",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "drink_size_name?",
+        "ordinal": 12,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "drink_size",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "name": "drink_size_volume_ml?",
+        "ordinal": 13,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "drink_size",
+            "name": "volume_ml"
+          }
+        }
+      },
+      {
+        "name": "drink_size_description?",
+        "ordinal": 14,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "drink_size",
+            "name": "description"
+          }
+        }
+      },
+      {
+        "name": "user_weight?",
+        "ordinal": 15,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user",
+            "name": "weight"
+          }
+        }
+      },
+      {
+        "name": "user_gender?",
+        "ordinal": 16,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user",
+            "name": "gender"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "28a0a4e640c6ef23ceb3290d328e115ec2056ce86a2b73811bfe562956758769"
+}

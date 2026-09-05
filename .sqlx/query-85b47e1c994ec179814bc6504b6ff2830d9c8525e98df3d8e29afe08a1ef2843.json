@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(SELECT 1 FROM event_access WHERE event_id = ? AND user_id = ?) AS \"has_access!: bool\"",
+  "describe": {
+    "columns": [
+      {
+        "name": "has_access!: bool",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "85b47e1c994ec179814bc6504b6ff2830d9c8525e98df3d8e29afe08a1ef2843"
+}

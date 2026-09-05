@@ -1,0 +1,52 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT event.id, event.name,\n                   COUNT(attendee.id) AS \"total_attendees!: i64\",\n                   COUNT(DISTINCT attendee.user_id) AS \"distinct_users!: i64\"\n            FROM event LEFT JOIN attendee ON attendee.event_id = event.id\n            WHERE event.created_by = ?\n               OR EXISTS (SELECT 1 FROM event_access WHERE event_access.event_id = event.id AND event_access.user_id = ?)\n               OR EXISTS (SELECT 1 FROM attendee own WHERE own.event_id = event.id AND own.user_id = ?)\n            GROUP BY event.id, event.name, event.created_at ORDER BY event.created_at DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "event",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "name",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "event",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "name": "total_attendees!: i64",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "distinct_users!: i64",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "4a475268830c9087570da86b9c4db1ce4d70070e91722b79840dd67abbed8343"
+}

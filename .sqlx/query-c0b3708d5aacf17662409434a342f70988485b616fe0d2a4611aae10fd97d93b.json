@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT user.id, user.username, user.weight, user.gender FROM user\n            WHERE user.id IN (\n                SELECT user_id FROM event_access WHERE event_id = ?\n                UNION SELECT created_by FROM event WHERE id = ? AND created_by IS NOT NULL\n            ) ORDER BY user.username, user.id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "username",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user",
+            "name": "username"
+          }
+        }
+      },
+      {
+        "name": "weight",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user",
+            "name": "weight"
+          }
+        }
+      },
+      {
+        "name": "gender",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user",
+            "name": "gender"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "c0b3708d5aacf17662409434a342f70988485b616fe0d2a4611aae10fd97d93b"
+}

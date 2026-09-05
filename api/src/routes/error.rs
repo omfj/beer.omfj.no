@@ -4,7 +4,7 @@ use axum::{Json, http::StatusCode, response::IntoResponse};
 use serde::Serialize;
 use thiserror::Error;
 
-use crate::services::{AuthError, HealthError, LeaderboardError};
+use crate::services::{AuthError, EventsError, HealthError, LeaderboardError};
 
 type BoxError = Box<dyn Error + Send + Sync>;
 
@@ -65,6 +65,22 @@ impl ApiError {
         }
     }
 
+    pub fn event_not_found() -> Self {
+        Self::Client {
+            status: StatusCode::NOT_FOUND,
+            code: "event_not_found",
+            message: "event not found",
+        }
+    }
+
+    pub fn event_access_denied() -> Self {
+        Self::Client {
+            status: StatusCode::FORBIDDEN,
+            code: "event_access_denied",
+            message: "event access denied",
+        }
+    }
+
     fn internal<E>(code: &'static str, message: &'static str, source: E) -> Self
     where
         E: Error + Send + Sync + 'static,
@@ -117,6 +133,12 @@ impl From<LeaderboardError> for ApiError {
             "failed to load leaderboard",
             error,
         )
+    }
+}
+
+impl From<EventsError> for ApiError {
+    fn from(error: EventsError) -> Self {
+        Self::internal("events_unavailable", "failed to load events", error)
     }
 }
 
