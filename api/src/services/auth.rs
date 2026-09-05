@@ -12,6 +12,7 @@ use thiserror::Error;
 use crate::{
     domain::credentials::{Password, Username},
     repositories::AuthRepository,
+    utils::password,
 };
 
 const SESSION_LIFETIME_SECONDS: i64 = 60 * 60 * 24 * 30;
@@ -21,10 +22,8 @@ const SESSION_RENEWAL_WINDOW_SECONDS: i64 = 60 * 60 * 24 * 15;
 pub enum AuthError {
     #[error("failed to query authentication data")]
     Database(#[from] sqlx::Error),
-    #[error("failed to verify password")]
-    Password(#[from] bcrypt::BcryptError),
-    #[error("password verification task failed")]
-    PasswordTask(#[from] tokio::task::JoinError),
+    #[error("failed to process password")]
+    Password(#[from] password::PasswordError),
     #[error("system clock is before the Unix epoch")]
     Clock(#[from] std::time::SystemTimeError),
     #[error("new session could not be loaded")]
@@ -56,6 +55,12 @@ pub enum LoginResult {
     Authenticated(AuthenticatedSession),
 }
 
+#[derive(Debug)]
+pub enum RegistrationResult {
+    UsernameTaken,
+    Registered(AuthenticatedSession),
+}
+
 #[derive(Clone)]
 pub struct AuthService {
     repository: AuthRepository,
@@ -75,26 +80,39 @@ impl AuthService {
             return Ok(LoginResult::InvalidCredentials);
         };
 
-        let password = password.as_str().to_owned();
-        let password_hash = user.password_hash;
-        let valid =
-            tokio::task::spawn_blocking(move || bcrypt::verify(password, &password_hash)).await??;
+        let valid = password::verify(password.as_str(), &user.password_hash).await?;
         if !valid {
             return Ok(LoginResult::InvalidCredentials);
         }
 
-        let token = generate_session_token();
-        let id = hash_session_token(&token);
-        let expires_at = now()? + SESSION_LIFETIME_SECONDS;
-        self.repository
-            .create_session(&id, &user.id, expires_at)
-            .await?;
-
-        let session = self
-            .authenticate(&token)
-            .await?
-            .ok_or(AuthError::SessionCreation)?;
+        let session = self.create_authenticated_session(&user.id).await?;
         Ok(LoginResult::Authenticated(session))
+    }
+
+    pub async fn register(
+        &self,
+        username: &Username,
+        password: &Password,
+    ) -> Result<RegistrationResult, AuthError> {
+        let password_hash = password::hash(password.as_str()).await?;
+        let user_id = generate_user_id();
+
+        if let Err(error) = self
+            .repository
+            .create_user(&user_id, username.as_str(), &password_hash)
+            .await
+        {
+            if error
+                .as_database_error()
+                .is_some_and(|error| error.is_unique_violation())
+            {
+                return Ok(RegistrationResult::UsernameTaken);
+            }
+            return Err(error.into());
+        }
+
+        let session = self.create_authenticated_session(&user_id).await?;
+        Ok(RegistrationResult::Registered(session))
     }
 
     pub async fn authenticate(
@@ -139,6 +157,21 @@ impl AuthService {
         self.repository.delete_session(session_id).await?;
         Ok(())
     }
+
+    async fn create_authenticated_session(
+        &self,
+        user_id: &str,
+    ) -> Result<AuthenticatedSession, AuthError> {
+        let token = generate_session_token();
+        let id = hash_session_token(&token);
+        let expires_at = now()? + SESSION_LIFETIME_SECONDS;
+        self.repository
+            .create_session(&id, user_id, expires_at)
+            .await?;
+        self.authenticate(&token)
+            .await?
+            .ok_or(AuthError::SessionCreation)
+    }
 }
 
 fn now() -> Result<i64, std::time::SystemTimeError> {
@@ -149,6 +182,26 @@ fn generate_session_token() -> String {
     let mut bytes = [0_u8; 18];
     rand::rng().fill_bytes(&mut bytes);
     URL_SAFE_NO_PAD.encode(bytes)
+}
+
+fn generate_user_id() -> String {
+    const ALPHABET: &[u8; 32] = b"abcdefghijklmnopqrstuvwxyz234567";
+    let mut bytes = [0_u8; 15];
+    rand::rng().fill_bytes(&mut bytes);
+    let mut id = String::with_capacity(24);
+    let mut buffer = 0_u32;
+    let mut bits = 0_u8;
+
+    for byte in bytes {
+        buffer = (buffer << 8) | u32::from(byte);
+        bits += 8;
+        while bits >= 5 {
+            bits -= 5;
+            id.push(ALPHABET[((buffer >> bits) & 31) as usize] as char);
+        }
+    }
+
+    id
 }
 
 fn hash_session_token(token: &str) -> String {
@@ -162,7 +215,16 @@ fn hash_session_token(token: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{generate_session_token, hash_session_token};
+    use sqlx::sqlite::SqlitePoolOptions;
+
+    use super::{
+        AuthService, RegistrationResult, generate_session_token, generate_user_id,
+        hash_session_token,
+    };
+    use crate::{
+        domain::credentials::{Password, Username},
+        repositories::AuthRepository,
+    };
 
     #[test]
     fn generates_svelte_compatible_session_tokens() {
@@ -177,5 +239,44 @@ mod tests {
             hash_session_token("test"),
             "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
         );
+    }
+
+    #[test]
+    fn generates_svelte_compatible_user_ids() {
+        let id = generate_user_id();
+        assert_eq!(id.len(), 24);
+        assert!(id.chars().all(|character| character.is_ascii_lowercase() || ('2'..='7').contains(&character)));
+    }
+
+    #[tokio::test]
+    async fn registers_a_user_and_rejects_a_duplicate_username() {
+        let database = SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect("sqlite::memory:")
+            .await
+            .unwrap();
+        sqlx::migrate!("./migrations").run(&database).await.unwrap();
+        let service = AuthService::new(AuthRepository::new(database));
+        let username = Username::parse("NewUser".into()).unwrap();
+        let password = Password::parse("secret".into()).unwrap();
+
+        let registered = service.register(&username, &password).await.unwrap();
+        let RegistrationResult::Registered(session) = registered else {
+            panic!("expected the first registration to succeed");
+        };
+        assert_eq!(session.user.username, "NewUser");
+        assert!(session.user.has_agreed_to_terms);
+        assert!(
+            service
+                .authenticate(&session.token)
+                .await
+                .unwrap()
+                .is_some()
+        );
+
+        assert!(matches!(
+            service.register(&username, &password).await.unwrap(),
+            RegistrationResult::UsernameTaken
+        ));
     }
 }

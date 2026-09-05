@@ -49,6 +49,22 @@ impl ApiError {
         }
     }
 
+    pub fn terms_not_accepted() -> Self {
+        Self::Client {
+            status: StatusCode::BAD_REQUEST,
+            code: "terms_not_accepted",
+            message: "terms must be accepted",
+        }
+    }
+
+    pub fn username_taken() -> Self {
+        Self::Client {
+            status: StatusCode::CONFLICT,
+            code: "username_taken",
+            message: "username is already taken",
+        }
+    }
+
     fn internal<E>(code: &'static str, message: &'static str, source: E) -> Self
     where
         E: Error + Send + Sync + 'static,

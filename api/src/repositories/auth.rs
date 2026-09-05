@@ -59,6 +59,30 @@ impl AuthRepository {
         Ok(())
     }
 
+    pub async fn create_user(
+        &self,
+        id: &str,
+        username: &str,
+        password_hash: &str,
+    ) -> Result<(), sqlx::Error> {
+        let mut transaction = self.database.begin().await?;
+
+        sqlx::query("INSERT INTO user (id, username, has_agreed_to_terms) VALUES (?, ?, true)")
+            .bind(id)
+            .bind(username)
+            .execute(&mut *transaction)
+            .await?;
+
+        sqlx::query("INSERT INTO user_password (user_id, password_hash) VALUES (?, ?)")
+            .bind(id)
+            .bind(password_hash)
+            .execute(&mut *transaction)
+            .await?;
+
+        transaction.commit().await?;
+        Ok(())
+    }
+
     pub async fn session(&self, id: &str) -> Result<Option<SessionRecord>, sqlx::Error> {
         sqlx::query_as(
             r#"
