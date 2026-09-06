@@ -41,6 +41,7 @@ fn cors(origin: HeaderValue) -> CorsLayer {
     CorsLayer::new()
         .allow_origin(origin)
         .allow_methods([
+            Method::OPTIONS,
             Method::GET,
             Method::POST,
             Method::PUT,
