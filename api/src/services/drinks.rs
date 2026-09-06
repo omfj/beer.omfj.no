@@ -14,6 +14,8 @@ pub enum DrinksError {
     NotFound,
     #[error("drink not found")]
     DrinkNotFound,
+    #[error("image not found")]
+    ImageNotFound,
     #[error("event access denied")]
     Forbidden,
     #[error("invalid drink type or size")]
@@ -93,6 +95,23 @@ impl DrinksService {
             images,
         }
     }
+    pub async fn image(
+        &self,
+        image_id: &str,
+        user_id: &str,
+    ) -> Result<crate::storage::StoredImage, DrinksError> {
+        let event_id = self
+            .repository
+            .image_event(image_id)
+            .await?
+            .ok_or(DrinksError::ImageNotFound)?;
+        self.authorize(&event_id, user_id).await?;
+        self.images
+            .get(image_id)
+            .await?
+            .ok_or(DrinksError::ImageNotFound)
+    }
+
     pub async fn options(&self) -> Result<DrinkOptions, DrinksError> {
         Ok(self.repository.options().await?)
     }

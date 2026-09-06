@@ -15,6 +15,11 @@ pub enum StorageError {
     Status(u16),
 }
 
+pub struct StoredImage {
+    pub bytes: Vec<u8>,
+    pub content_type: String,
+}
+
 #[derive(Clone, Default)]
 pub struct ImageStorage(Option<Arc<Bucket>>);
 
@@ -46,6 +51,29 @@ impl ImageStorage {
         .with_path_style();
         bucket.set_request_timeout(Some(std::time::Duration::from_secs(30)));
         Ok(Self(Some(Arc::from(bucket))))
+    }
+
+    pub async fn get(&self, key: &str) -> Result<Option<StoredImage>, StorageError> {
+        let bucket = self.0.as_ref().ok_or(StorageError::NotConfigured)?;
+        let response = match bucket.get_object(key).await {
+            Ok(response) => response,
+            Err(s3::error::S3Error::HttpFailWithBody(404, _)) => return Ok(None),
+            Err(error) => return Err(error.into()),
+        };
+        if response.status_code() == 404 {
+            return Ok(None);
+        }
+        check_status(response.status_code())?;
+        let content_type = response
+            .headers()
+            .into_iter()
+            .find(|(name, _)| name.eq_ignore_ascii_case("content-type"))
+            .map(|(_, value)| value)
+            .unwrap_or_else(|| "image/jpeg".into());
+        Ok(Some(StoredImage {
+            bytes: response.to_vec(),
+            content_type,
+        }))
     }
 
     pub async fn put(

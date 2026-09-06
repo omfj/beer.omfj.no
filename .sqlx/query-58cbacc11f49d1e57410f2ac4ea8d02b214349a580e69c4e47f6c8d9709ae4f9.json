@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT attendee.event_id\n            FROM attendee\n            JOIN event ON event.id = attendee.event_id\n            WHERE attendee.image_id = ? LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "event_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "attendee",
+            "name": "event_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "58cbacc11f49d1e57410f2ac4ea8d02b214349a580e69c4e47f6c8d9709ae4f9"
+}

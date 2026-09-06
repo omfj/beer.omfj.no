@@ -203,6 +203,11 @@ impl From<crate::services::drinks::DrinksError> for ApiError {
                 code: "drink_not_found",
                 message: "drink not found",
             },
+            DrinksError::ImageNotFound => Self::Client {
+                status: StatusCode::NOT_FOUND,
+                code: "image_not_found",
+                message: "image not found",
+            },
             DrinksError::Forbidden => Self::event_access_denied(),
             DrinksError::InvalidSelection => Self::Client {
                 status: StatusCode::BAD_REQUEST,

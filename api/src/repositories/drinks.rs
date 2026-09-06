@@ -11,6 +11,18 @@ pub struct DeletedDrink {
 pub struct DrinksRepository(pub Database);
 
 impl DrinksRepository {
+    pub async fn image_event(&self, image_id: &str) -> Result<Option<String>, sqlx::Error> {
+        sqlx::query_scalar!(
+            "SELECT attendee.event_id
+            FROM attendee
+            JOIN event ON event.id = attendee.event_id
+            WHERE attendee.image_id = ? LIMIT 1",
+            image_id,
+        )
+        .fetch_optional(&self.0)
+        .await
+    }
+
     pub async fn options(&self) -> Result<DrinkOptions, sqlx::Error> {
         Ok(DrinkOptions {
             drink_types: sqlx::query_as!(

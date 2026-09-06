@@ -3,6 +3,7 @@ mod drinks;
 mod error;
 mod events;
 mod health;
+mod images;
 mod leaderboard;
 
 use axum::{
@@ -30,6 +31,7 @@ pub fn router() -> Router<AppState> {
             post(drinks::create).layer(DefaultBodyLimit::max(11 * 1024 * 1024)),
         )
         .route("/event/{id}/drinks/{drinkId}", delete(drinks::delete))
+        .route("/images/{id}", get(images::get))
         .route("/health", get(health::get))
         .route("/leaderboard", get(leaderboard::get))
 }
