@@ -4,7 +4,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     auth::CurrentUser,
-    domain::credentials::{Password, Username},
+    domain::{
+        credentials::{Password, Username},
+        profile::{Gender, Weight},
+    },
     routes::ApiError,
     services::{LoginResult, RegistrationResult, User},
     state::AppState,
@@ -28,6 +31,12 @@ pub struct RegisterRequest {
     username: String,
     password: String,
     terms_accepted: bool,
+}
+
+#[derive(Deserialize)]
+pub struct UpdateProfileRequest {
+    weight: Option<String>,
+    gender: Option<String>,
 }
 
 pub async fn register(
@@ -93,6 +102,34 @@ pub async fn me(
         state.secure_cookies,
     ));
     (jar, Json(UserResponse { user: session.user }))
+}
+
+pub async fn update_me(
+    State(state): State<AppState>,
+    CurrentUser(mut session): CurrentUser,
+    Json(request): Json<UpdateProfileRequest>,
+) -> Result<impl IntoResponse, ApiError> {
+    let weight = request
+        .weight
+        .as_deref()
+        .map(Weight::parse)
+        .transpose()
+        .map_err(|_| ApiError::invalid_profile())?;
+    let gender = request
+        .gender
+        .as_deref()
+        .map(Gender::parse)
+        .transpose()
+        .map_err(|_| ApiError::invalid_profile())?;
+
+    state
+        .auth
+        .update_profile(&session.user.id, weight, gender)
+        .await?;
+    session.user.weight = weight;
+    session.user.gender = gender;
+
+    Ok(Json(UserResponse { user: session.user }))
 }
 
 pub async fn logout(

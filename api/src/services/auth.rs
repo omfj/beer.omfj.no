@@ -7,7 +7,10 @@ use sha2::{Digest, Sha256};
 use thiserror::Error;
 
 use crate::{
-    domain::credentials::{Password, Username},
+    domain::{
+        credentials::{Password, Username},
+        profile::{Gender, InvalidProfileValue, Weight},
+    },
     repositories::AuthRepository,
     utils::{password, time::now},
 };
@@ -23,6 +26,8 @@ pub enum AuthError {
     Password(#[from] password::PasswordError),
     #[error("new session could not be loaded")]
     SessionCreation,
+    #[error("invalid profile value in database")]
+    InvalidProfile(#[from] InvalidProfileValue),
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -31,8 +36,8 @@ pub struct User {
     pub id: String,
     pub username: String,
     pub has_agreed_to_terms: bool,
-    pub weight: Option<String>,
-    pub gender: Option<String>,
+    pub weight: Option<Weight>,
+    pub gender: Option<Gender>,
     pub created_at: Option<i64>,
 }
 
@@ -141,8 +146,8 @@ impl AuthService {
                 id: record.user_id,
                 username: record.username,
                 has_agreed_to_terms: record.has_agreed_to_terms,
-                weight: record.weight,
-                gender: record.gender,
+                weight: record.weight.as_deref().map(Weight::parse).transpose()?,
+                gender: record.gender.as_deref().map(Gender::parse).transpose()?,
                 created_at: record.created_at,
             },
         }))
@@ -150,6 +155,22 @@ impl AuthService {
 
     pub async fn logout(&self, session_id: &str) -> Result<(), AuthError> {
         self.repository.delete_session(session_id).await?;
+        Ok(())
+    }
+
+    pub async fn update_profile(
+        &self,
+        user_id: &str,
+        weight: Option<Weight>,
+        gender: Option<Gender>,
+    ) -> Result<(), AuthError> {
+        self.repository
+            .update_profile(
+                user_id,
+                weight.map(Weight::as_str),
+                gender.map(Gender::as_str),
+            )
+            .await?;
         Ok(())
     }
 
@@ -213,7 +234,10 @@ mod tests {
         hash_session_token,
     };
     use crate::{
-        domain::credentials::{Password, Username},
+        domain::{
+            credentials::{Password, Username},
+            profile::{Gender, Weight},
+        },
         repositories::AuthRepository,
     };
 
@@ -269,5 +293,32 @@ mod tests {
             service.register(&username, &password).await.unwrap(),
             RegistrationResult::UsernameTaken
         ));
+    }
+
+    #[tokio::test]
+    async fn updates_a_user_profile() {
+        let database = SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect("sqlite::memory:")
+            .await
+            .unwrap();
+        sqlx::migrate!("./migrations").run(&database).await.unwrap();
+        let service = AuthService::new(AuthRepository::new(database));
+        let username = Username::parse("ProfileUser".into()).unwrap();
+        let password = Password::parse("secret".into()).unwrap();
+        let RegistrationResult::Registered(session) =
+            service.register(&username, &password).await.unwrap()
+        else {
+            panic!("expected registration to succeed");
+        };
+
+        service
+            .update_profile(&session.user.id, Some(Weight::Medium), Some(Gender::Other))
+            .await
+            .unwrap();
+
+        let authenticated = service.authenticate(&session.token).await.unwrap().unwrap();
+        assert_eq!(authenticated.user.weight, Some(Weight::Medium));
+        assert_eq!(authenticated.user.gender, Some(Gender::Other));
     }
 }

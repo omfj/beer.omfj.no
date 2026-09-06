@@ -128,4 +128,21 @@ impl AuthRepository {
             .await?;
         Ok(())
     }
+
+    pub async fn update_profile(
+        &self,
+        user_id: &str,
+        weight: Option<&str>,
+        gender: Option<&str>,
+    ) -> Result<(), sqlx::Error> {
+        sqlx::query!(
+            "UPDATE user SET weight = ?, gender = ? WHERE id = ?",
+            weight,
+            gender,
+            user_id
+        )
+        .execute(&self.database)
+        .await?;
+        Ok(())
+    }
 }

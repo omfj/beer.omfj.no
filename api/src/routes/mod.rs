@@ -21,7 +21,7 @@ pub fn router() -> Router<AppState> {
         .route("/auth/login", post(auth::login))
         .route("/auth/register", post(auth::register))
         .route("/auth/logout", post(auth::logout))
-        .route("/auth/me", get(auth::me))
+        .route("/auth/me", get(auth::me).patch(auth::update_me))
         .route("/events", get(events::list).post(events::create))
         .route("/event/{id}", get(events::get))
         .route("/event/{id}/unlock", post(events::unlock))

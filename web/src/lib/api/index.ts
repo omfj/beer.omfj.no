@@ -1,6 +1,7 @@
 import type {
 	LoginRequest,
 	RegisterRequest,
+	UpdateProfileRequest,
 	UserResponse,
 	CreateEventRequest,
 	UnlockEventRequest,
@@ -61,6 +62,16 @@ export class ApiClient {
 
 	async me(options?: RequestOptions): Promise<UserResponse> {
 		return this.get('/auth/me', options);
+	}
+
+	async updateMe(input: UpdateProfileRequest, options?: RequestOptions): Promise<UserResponse> {
+		const response = await this.request('/auth/me', {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(input),
+			...options
+		});
+		return response.json();
 	}
 
 	async listEvents(options?: RequestOptions): Promise<Events> {

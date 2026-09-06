@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE user SET weight = ?, gender = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "ece4ae513686f4c19b7b83b22b9b9e4006c67591afef7ce4381eb7e62d9f15ec"
+}

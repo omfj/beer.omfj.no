@@ -20,6 +20,11 @@ export interface UserResponse {
 	user: User;
 }
 
+export interface UpdateProfileRequest {
+	weight: 'light' | 'medium' | 'heavy' | null;
+	gender: 'male' | 'female' | 'other' | null;
+}
+
 export interface CreateEventRequest {
 	name: string;
 	password?: string | null;

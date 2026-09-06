@@ -65,6 +65,14 @@ impl ApiError {
         }
     }
 
+    pub fn invalid_profile() -> Self {
+        Self::Client {
+            status: StatusCode::BAD_REQUEST,
+            code: "invalid_profile",
+            message: "invalid weight or gender",
+        }
+    }
+
     pub fn event_not_found() -> Self {
         Self::Client {
             status: StatusCode::NOT_FOUND,
