@@ -1,12 +1,10 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "beer-counter",
-	"main": ".svelte-kit/cloudflare/_worker.js",
 	"compatibility_date": "2025-11-07",
-	"compatibility_flags": ["nodejs_compat", "nodejs_als"],
 	"assets": {
-		"binding": "ASSETS",
-		"directory": ".svelte-kit/cloudflare"
+		"directory": "build",
+		"not_found_handling": "single-page-application"
 	},
 	"routes": [
 		{
@@ -16,21 +14,5 @@
 	],
 	"observability": {
 		"enabled": true
-	},
-	"vars": {
-		"PASSKEY_RP_ID": "beer.omfj.no"
-	},
-	"d1_databases": [
-		{
-			"binding": "DB",
-			"database_name": "beer-counter-db",
-			"database_id": "ecb89388-293a-4546-88bf-f8edf248e2bd"
-		}
-	],
-	"r2_buckets": [
-		{
-			"binding": "BUCKET",
-			"bucket_name": "beer-bucket"
-		}
-	]
+	}
 }

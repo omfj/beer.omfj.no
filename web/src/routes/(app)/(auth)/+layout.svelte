@@ -1,11 +1,22 @@
 <script lang="ts">
-	import { onNavigate } from '$app/navigation';
+	import { goto, onNavigate } from '$app/navigation';
+	import { page } from '$app/state';
 	import { browser } from '$app/environment';
 	import Header from '$lib/components/header.svelte';
+	import { getUser } from '$lib/context/user.svelte';
 
 	let { children } = $props();
 
 	let isOpen = $state(false);
+	const auth = getUser();
+
+	$effect(() => {
+		if (auth.state.status === 'anonymous') {
+			const eventId = page.params.id;
+			const destination = eventId ? `/logg-inn?event=${encodeURIComponent(eventId)}` : '/logg-inn';
+			void goto(destination, { replaceState: true });
+		}
+	});
 
 	function toggleMenu() {
 		isOpen = !isOpen;
@@ -27,6 +38,7 @@
 	});
 </script>
 
-<Header isMenuOpen={isOpen} onMenuToggle={toggleMenu} />
-
-{@render children()}
+{#if auth.state.status === 'authenticated'}
+	<Header isMenuOpen={isOpen} onMenuToggle={toggleMenu} />
+	{@render children()}
+{/if}

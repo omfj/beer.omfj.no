@@ -1,23 +1,15 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import SEO from '$lib/components/seo.svelte';
 	import Select from '$lib/components/select.svelte';
-	import { Trophy, Medal, TrendingUp } from '@lucide/svelte';
-	import { goto } from '$app/navigation';
+	import { Medal, TrendingUp, Trophy } from '@lucide/svelte';
+	import type { PageProps } from './$types';
 
-	let { data } = $props();
-	let leaderboard = $derived(data.leaderboard);
-	let selectedYear = $derived(data.selectedYear);
-	let selectedYearValue = $derived(data.selectedYearValue);
-	let availableYears = $derived(data.availableYears);
+	let { data }: PageProps = $props();
 
 	function handleYearChange(event: Event) {
-		const select = event.target as HTMLSelectElement;
-		const year = select.value;
-		if (year === 'all') {
-			goto('/toppliste');
-		} else {
-			goto(`/toppliste?year=${year}`);
-		}
+		const year = (event.target as HTMLSelectElement).value;
+		void goto(`/toppliste?year=${year}`);
 	}
 
 	function getRankIcon(position: number) {
@@ -43,8 +35,7 @@
 	<h1 class="mb-3 text-3xl font-medium">Toppliste</h1>
 
 	<p class="mb-4 text-xl font-light">
-		Her finner du de 10 beste drikkerne rangert etter poeng. Filtrer etter år eller se totalen for
-		alle tider.
+		Her finner du de 10 beste drikkerne rangert etter poeng. Filtrer topplisten etter år.
 	</p>
 
 	<div class="flex items-center gap-4">
@@ -52,11 +43,10 @@
 		<Select
 			id="year-filter"
 			class="text-foreground w-44"
-			value={selectedYearValue}
+			value={data.year.toString()}
 			onchange={handleYearChange}
 		>
-			<option value="all">Alle tider</option>
-			{#each availableYears as year (year)}
+			{#each data.availableYears as year (year)}
 				<option value={year.toString()}>{year}</option>
 			{/each}
 		</Select>
@@ -64,13 +54,11 @@
 </div>
 
 <section>
-	<h2 class="mb-4 text-xl font-medium">
-		{selectedYear ? `Topp 10 - ${selectedYear}` : 'Topp 10 - Alle tider'}
-	</h2>
+	<h2 class="mb-4 text-xl font-medium">Topp 10 - {data.year}</h2>
 
-	{#if leaderboard.length > 0}
+	{#if data.leaderboard.length > 0}
 		<ol class="flex flex-col gap-3">
-			{#each leaderboard as entry, index (entry.userId)}
+			{#each data.leaderboard as entry, index (entry.userId)}
 				{@const position = index + 1}
 				{@const RankIcon = getRankIcon(position)}
 				{@const rankColor = getRankColor(position)}
@@ -84,9 +72,9 @@
 							</div>
 							<div class="flex flex-col gap-1">
 								<span class="text-xl font-medium">{entry.username}</span>
-								<span class="text-foreground-muted text-sm"
-									>{entry.drinkCount} enheter registrert</span
-								>
+								<span class="text-foreground-muted text-sm">
+									{entry.drinkCount} enheter registrert
+								</span>
 							</div>
 						</div>
 						<div class="flex flex-col items-end gap-1">
@@ -99,11 +87,7 @@
 		</ol>
 	{:else}
 		<div class="bg-background-dark flex h-32 items-center justify-center p-4">
-			<p class="text-foreground-muted">
-				{selectedYear
-					? `Ingen registreringer funnet for ${selectedYear}.`
-					: 'Ingen registreringer funnet enda.'}
-			</p>
+			<p class="text-foreground-muted">Ingen registreringer funnet for {data.year}.</p>
 		</div>
 	{/if}
 </section>

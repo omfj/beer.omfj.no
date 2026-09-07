@@ -20,7 +20,7 @@ export type * from './types';
 export interface ApiClientOptions {
 	/** Backend origin, optionally including a path prefix. */
 	baseUrl: string;
-	/** Pass the fetch supplied by SvelteKit in load functions or server handlers. */
+	/** Override fetch for tests or alternate runtimes. */
 	fetch?: typeof globalThis.fetch;
 }
 
@@ -137,6 +137,10 @@ export class ApiClient {
 
 	async getHealth(options?: RequestOptions): Promise<Health> {
 		return this.get('/health', options);
+	}
+
+	imageUrl(id: string): string {
+		return `${this.baseUrl}/images/${encodeURIComponent(id)}`;
 	}
 
 	private async get<T>(path: string, options?: RequestOptions): Promise<T> {

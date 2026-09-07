@@ -1,9 +1,13 @@
+type Weight = 'light' | 'medium' | 'heavy';
+
+type Gender = 'male' | 'female' | 'other';
+
 export interface User {
 	id: string;
 	username: string;
 	hasAgreedToTerms: boolean;
-	weight: string | null;
-	gender: string | null;
+	weight: Weight | null;
+	gender: Gender | null;
 	createdAt: number | null;
 }
 
@@ -21,8 +25,8 @@ export interface UserResponse {
 }
 
 export interface UpdateProfileRequest {
-	weight: 'light' | 'medium' | 'heavy' | null;
-	gender: 'male' | 'female' | 'other' | null;
+	weight: Weight | null;
+	gender: Gender | null;
 }
 
 export interface CreateEventRequest {

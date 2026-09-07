@@ -1,10 +1,8 @@
 <script lang="ts">
 	import '../app.css';
 
-	import { writable } from 'svelte/store';
 	import NProgress from 'nprogress';
-	import { setUserContext } from '$lib/context/user';
-	import type { UserContext } from '$lib/context/user';
+	import { createUserContext, setUserContext } from '$lib/context/user.svelte';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { pwaInfo } from 'virtual:pwa-info';
 	import { createThemeContext } from '$lib/theme.svelte';
@@ -16,11 +14,12 @@
 
 	const { data, children } = $props();
 
-	const user: UserContext = writable(null);
-	$effect.pre(() => {
-		user.set(data.user);
+	const auth = createUserContext();
+	setUserContext(auth);
+
+	$effect(() => {
+		auth.state = data.authState;
 	});
-	setUserContext(user);
 
 	NProgress.configure({
 		showSpinner: false,

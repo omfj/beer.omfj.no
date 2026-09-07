@@ -1,13 +1,11 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
-	import { ChevronRight, ExternalLink, TriangleAlert } from '@lucide/svelte';
-	import Button from '$lib/components/button.svelte';
+	import { ChevronRight, ExternalLink } from '@lucide/svelte';
 	import ButtonLink from '$lib/components/button-link.svelte';
 	import SEO from '$lib/components/seo.svelte';
 	import { resolve } from '$app/paths';
+	import type { PageProps } from './$types';
 
-	let { data } = $props();
-	let joinedEvents = $derived(data.joinedEvents);
+	let { data }: PageProps = $props();
 </script>
 
 <SEO
@@ -39,73 +37,38 @@
 	<h2 class="mb-2 text-xl font-medium">Dine arrangementer</h2>
 
 	<ul class="flex flex-col gap-5">
-		{#each joinedEvents as event (event.id)}
+		{#if data.events.length === 0}
 			<li>
-				<a
-					class="bg-background-dark hover:bg-background-darker group flex h-24 items-center justify-between p-4 transition-colors"
-					href={resolve('/arrangement/[id]', {
-						id: event.id
-					})}
-				>
-					<div class="flex flex-col gap-2">
-						<span class="text-3xl group-hover:underline">{event.name}</span>
-						<ul class="text-foreground-muted flex items-center gap-4 text-xs">
-							<li>{event.distinctUsers} deltakere</li>
-							<li>
-								{event.totalAttendees} enheter registrert ({event.distinctUsers > 0
-									? (event.totalAttendees / event.distinctUsers).toFixed(1)
-									: '0.0'})
-							</li>
-						</ul>
-					</div>
-					<div>
-						<ChevronRight
-							class="text-foreground-muted group-hover:text-primary h-6 w-6 transition-colors"
-						/>
-					</div>
-				</a>
-			</li>
-		{:else}
-			<li>
-				<p class="bg-background-dark flex items-center justify-center h-20 p-4 transition-colors">
+				<p class="bg-background-dark flex h-20 items-center justify-center p-4 transition-colors">
 					Du har ikke meldt deg på noen arrangementer enda.
 				</p>
 			</li>
-		{/each}
+		{:else}
+			{#each data.events as event (event.id)}
+				<li>
+					<a
+						class="bg-background-dark hover:bg-background-darker group flex h-24 items-center justify-between p-4 transition-colors"
+						href={`/arrangement/${encodeURIComponent(event.id)}`}
+					>
+						<div class="flex flex-col gap-2">
+							<span class="text-3xl group-hover:underline">{event.name}</span>
+							<ul class="text-foreground-muted flex items-center gap-4 text-xs">
+								<li>{event.distinctUsers} deltakere</li>
+								<li>
+									{event.totalAttendees} enheter registrert ({event.distinctUsers > 0
+										? (event.totalAttendees / event.distinctUsers).toFixed(1)
+										: '0.0'})
+								</li>
+							</ul>
+						</div>
+						<div>
+							<ChevronRight
+								class="text-foreground-muted group-hover:text-primary h-6 w-6 transition-colors"
+							/>
+						</div>
+					</a>
+				</li>
+			{/each}
+		{/if}
 	</ul>
 </section>
-
-{#if data.showTermsPopup}
-	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-		<div class="bg-background mx-4 max-w-lg rounded-lg p-6 shadow-2xl">
-			<div class="mb-6 flex items-center gap-3">
-				<TriangleAlert class="h-8 w-8 text-orange-500" />
-				<h2 class="text-2xl font-medium">Godta vilkår</h2>
-			</div>
-
-			<div class="mb-6 space-y-4">
-				<p class="text-gray-700">
-					Du må godta våre vilkår for å fortsette å bruke Beer Counter. Vilkårene beskriver hvordan
-					vi håndterer opplastede filer og deling av innhold. <a
-						class="text-primary hover:underline"
-						href={resolve('/vilkar')}>Les vilkårene her</a
-					>.
-				</p>
-
-				<p class="text-sm text-gray-700">
-					Om du ikke godtar vilkårene, kan du ikke bruke Beer Counter.
-				</p>
-			</div>
-
-			<div class="flex flex-col gap-3 sm:flex-row">
-				<form method="post" action="?/acceptTerms" use:enhance class="flex-1">
-					<Button class="w-full bg-green-600 text-white hover:bg-green-700">Godta vilkår</Button>
-				</form>
-
-				<form method="post" action="?/deleteAccount" use:enhance>
-					<Button class="w-full bg-red-600 px-4 text-white hover:bg-red-700">Slett konto</Button>
-				</form>
-			</div>
-		</div>
-	</div>
-{/if}

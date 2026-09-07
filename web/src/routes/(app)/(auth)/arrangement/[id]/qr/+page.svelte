@@ -1,11 +1,10 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
 	import Button from '$lib/components/button.svelte';
 	import { ArrowLeft, Download, Copy, Check } from '@lucide/svelte';
 	import qrcode from 'qrcode-generator';
+	import type { PageProps } from './$types';
 
-	let { data } = $props();
-
+	let { data }: PageProps = $props();
 	let event = $derived(data.event);
 	let qrCanvas: HTMLCanvasElement;
 	let copySuccess = $state(false);
@@ -13,7 +12,7 @@
 	const eventUrl = $derived.by(() => {
 		if (typeof window !== 'undefined') {
 			const baseUrl = window.location.origin;
-			return `${baseUrl}/arrangement/${event.id}`;
+			return event ? `${baseUrl}/arrangement/${event.id}` : '';
 		}
 		return '';
 	});
@@ -66,7 +65,7 @@
 	};
 
 	const downloadQR = () => {
-		if (qrCanvas) {
+		if (qrCanvas && event) {
 			const link = document.createElement('a');
 			link.download = `${event.name}-qr.png`;
 			link.href = qrCanvas.toDataURL();
@@ -76,24 +75,24 @@
 </script>
 
 <svelte:head>
-	<title>QR-kode for {event.name} - Beer Counter</title>
+	<title>QR-kode{event ? ` for ${event.name}` : ''} - Beer Counter</title>
 </svelte:head>
 
-<a
-	href={resolve('/arrangement/[id]', {
-		id: event.id
-	})}
-	class="my-4 flex items-center gap-4 text-2xl font-light hover:underline"
->
-	<ArrowLeft class="h-6 w-6" /> Tilbake til arrangement
-</a>
+{#if event}
+	<a
+		href={`/arrangement/${event.id}`}
+		class="my-4 flex items-center gap-4 text-2xl font-light hover:underline"
+	>
+		<ArrowLeft class="h-6 w-6" /> Tilbake til arrangement
+	</a>
 
-<div class="mb-8">
-	<h1 class="mb-3 text-3xl font-medium">QR-kode for {event.name}</h1>
-	<p class="text-xl font-light text-gray-600">
-		Del denne QR-koden for enkel tilgang til arrangementet
-	</p>
-</div>
+	<div class="mb-8">
+		<h1 class="mb-3 text-3xl font-medium">QR-kode for {event.name}</h1>
+		<p class="text-xl font-light text-gray-600">
+			Del denne QR-koden for enkel tilgang til arrangementet
+		</p>
+	</div>
+{/if}
 
 <div class="mx-auto max-w-md space-y-6">
 	<!-- QR Code Container -->

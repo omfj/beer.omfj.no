@@ -1,7 +1,10 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { Menu, Moon, Sun, X } from '@lucide/svelte';
+	import { ApiError } from '$lib/api';
+	import { api } from '$lib/api/client';
+	import { getUser } from '$lib/context/user.svelte';
 	import { getThemeContext } from '$lib/theme.svelte';
 
 	type Props = {
@@ -12,6 +15,29 @@
 	let { isMenuOpen = false, onMenuToggle }: Props = $props();
 
 	let theme = getThemeContext();
+	const auth = getUser();
+	let isLoggingOut = $state(false);
+	let logoutError = $state<string | null>(null);
+
+	async function logout() {
+		isLoggingOut = true;
+		logoutError = null;
+
+		try {
+			await api.logout();
+			auth.clear();
+			await goto('/logg-inn', { replaceState: true });
+		} catch (error) {
+			if (error instanceof ApiError && error.status === 401) {
+				auth.clear();
+				await goto('/logg-inn', { replaceState: true });
+				return;
+			}
+			logoutError = error instanceof ApiError ? error.message : 'Kunne ikke logge ut. Prøv igjen.';
+		} finally {
+			isLoggingOut = false;
+		}
+	}
 </script>
 
 <header class="mb-6 flex items-center justify-between border-b-2 pb-4">
@@ -86,10 +112,16 @@
 						>
 					</li>
 					<li>
-						<form action={resolve('/logg-ut')} method="post" use:enhance>
-							<button class="text-2xl font-light hover:underline">Logg ut</button>
-						</form>
+						<button
+							type="button"
+							class="text-2xl font-light hover:underline disabled:opacity-50"
+							disabled={isLoggingOut}
+							onclick={logout}>{isLoggingOut ? 'Logger ut...' : 'Logg ut'}</button
+						>
 					</li>
+					{#if logoutError}
+						<li><p class="text-red-500">{logoutError}</p></li>
+					{/if}
 				</menu>
 			</nav>
 		</div>

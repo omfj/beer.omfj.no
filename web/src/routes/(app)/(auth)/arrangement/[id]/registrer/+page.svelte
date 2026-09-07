@@ -1,11 +1,20 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { ArrowLeft, Camera, Upload, X, Loader, SwitchCamera } from '@lucide/svelte';
 	import Select from '$lib/components/select.svelte';
 	import { calculateDrinkPoints } from '$lib/scoring';
-	import { resolve } from '$app/paths';
+	import { ApiError } from '$lib/api';
+	import { api } from '$lib/api/client';
+	import { getUser } from '$lib/context/user.svelte';
+	import type { PageProps } from './$types';
 
-	let { data, form } = $props();
+	let { data }: PageProps = $props();
+	const auth = getUser();
+	const eventId = page.params.id!;
+	let event = $derived(data.event);
+	let drinkOptions = $derived(data.drinkOptions);
+	let formError = $state<string | null>(null);
 	let files = $state<FileList | null>(null);
 	let fileInput = $state<HTMLInputElement | null>(null);
 	let isDragOver = $state(false);
@@ -26,9 +35,9 @@
 	// Computed available sizes based on selected drink type
 	let availableSizes = $derived.by(() => {
 		if (!selectedDrinkType) return [];
-		return data.drinkTypeSizes
+		return drinkOptions.drinkTypeSizes
 			.filter((combo) => combo.drinkTypeId === selectedDrinkType)
-			.map((combo) => data.drinkSizes.find((size) => size.id === combo.drinkSizeId)!)
+			.map((combo) => drinkOptions.drinkSizes.find((size) => size.id === combo.drinkSizeId)!)
 			.sort((a, b) => {
 				if (!a.volumeML || !b.volumeML) return 0;
 				return a.volumeML - b.volumeML;
@@ -46,7 +55,7 @@
 			) {
 				selectedDrinkSize = '';
 			}
-			const typeData = data.drinkTypes.find((t) => t.id === selectedDrinkType);
+			const typeData = drinkOptions.drinkTypes.find((t) => t.id === selectedDrinkType);
 			if (typeData?.abv != null) {
 				abvInput = typeData.abv;
 			}
@@ -62,7 +71,7 @@
 		}
 		const selectedSize = availableSizes.find((size) => size?.id === selectedDrinkSize);
 		if (!selectedSize) return 0.5;
-		const typeData = data.drinkTypes.find((t) => t.id === selectedDrinkType);
+		const typeData = drinkOptions.drinkTypes.find((t) => t.id === selectedDrinkType);
 		return calculateDrinkPoints(selectedSize.volumeML, abvInput, typeData?.multiplier);
 	});
 
@@ -224,7 +233,7 @@
 		fileInput?.click();
 	};
 
-	const handleFileSelect = (e: Event) => {
+	const handleFileSelect = (e: globalThis.Event) => {
 		const target = e.target as HTMLInputElement;
 		if (target.files && target.files.length > 0) {
 			const file = target.files[0];
@@ -244,264 +253,293 @@
 			fileInput.value = '';
 		}
 	};
+
+	function handleApiError(error: unknown) {
+		if (error instanceof ApiError && error.status === 401) {
+			auth.clear();
+			return;
+		}
+		if (error instanceof ApiError && error.status === 403) {
+			void goto(`/arrangement/${eventId}/unlock`, { replaceState: true });
+			return;
+		}
+		throw error;
+	}
+
+	async function submitDrink(event: SubmitEvent) {
+		event.preventDefault();
+		if (!files?.[0] || isUploading) return;
+
+		isUploading = true;
+		formError = null;
+		try {
+			await api.createDrink(eventId, {
+				image: files[0],
+				drinkTypeId: selectedDrinkType || null,
+				drinkSizeId: selectedDrinkSize || null,
+				abv: abvInput
+			});
+			await goto(`/arrangement/${eventId}`);
+		} catch (error) {
+			try {
+				handleApiError(error);
+			} catch {
+				formError = error instanceof Error ? error.message : 'Kunne ikke registrere drinken';
+			}
+		} finally {
+			isUploading = false;
+		}
+	}
 </script>
 
 <svelte:head>
-	<title>Registrer drink - {data.event.name} - Beer Counter</title>
+	<title>Registrer drink{event ? ` - ${event.name}` : ''} - Beer Counter</title>
 </svelte:head>
 
-<a
-	href={resolve('/arrangement/[id]', { id: data.event.id })}
-	class="my-4 flex items-center gap-4 text-2xl font-light hover:underline"
->
-	<ArrowLeft class="h-6 w-6" /> Tilbake til arrangement
-</a>
+{#if event}
+	<a
+		href={`/arrangement/${event.id}`}
+		class="my-4 flex items-center gap-4 text-2xl font-light hover:underline"
+	>
+		<ArrowLeft class="h-6 w-6" /> Tilbake til arrangement
+	</a>
 
-<div class="mb-8">
-	<h1 class="mb-3 text-3xl font-medium">Registrer ny drink</h1>
-	<p class="text-xl font-light">Velg type, størrelse og last opp et bilde.</p>
-</div>
-
-{#if form?.message}
-	<div class="mb-6 border-l-4 border-red-500 bg-red-50 p-4 text-red-700">
-		<p class="font-medium">{form.message}</p>
+	<div class="mb-8">
+		<h1 class="mb-3 text-3xl font-medium">Registrer ny drink</h1>
+		<p class="text-xl font-light">Velg type, størrelse og last opp et bilde.</p>
 	</div>
-{/if}
 
-{#if fileError}
-	<div class="mb-6 border-l-4 border-red-500 bg-red-50 p-4 text-red-700">
-		<p class="font-medium">{fileError}</p>
-	</div>
-{/if}
-
-<form
-	method="post"
-	enctype="multipart/form-data"
-	use:enhance={() => {
-		isUploading = true;
-		return async ({ update }) => {
-			await update();
-			isUploading = false;
-		};
-	}}
-	class="space-y-6"
->
-	<!-- Drink Type and Size Selection -->
-	<div class="space-y-4">
-		<div>
-			<label for="drinkTypeId" class="mb-2 block text-lg font-medium"
-				>Drikketype <span class="text-sm text-gray-500">(valgfritt)</span></label
-			>
-			<Select
-				bind:value={selectedDrinkType}
-				id="drinkTypeId"
-				name="drinkTypeId"
-				class="text-foreground"
-			>
-				<option value="">Ikke oppgitt</option>
-				{#each data.drinkTypes as drinkType (drinkType.id)}
-					<option value={drinkType.id}>{drinkType.name} ×{drinkType.multiplier}</option>
-				{/each}
-			</Select>
+	{#if formError}
+		<div class="mb-6 border-l-4 border-red-500 bg-red-50 p-4 text-red-700">
+			<p class="font-medium">{formError}</p>
 		</div>
+	{/if}
 
-		{#if selectedDrinkType}
+	{#if fileError}
+		<div class="mb-6 border-l-4 border-red-500 bg-red-50 p-4 text-red-700">
+			<p class="font-medium">{fileError}</p>
+		</div>
+	{/if}
+
+	<form enctype="multipart/form-data" onsubmit={submitDrink} class="space-y-6">
+		<!-- Drink Type and Size Selection -->
+		<div class="space-y-4">
 			<div>
-				<label for="drinkSizeId" class="mb-2 block text-lg font-medium"
-					>Størrelse <span class="text-sm text-gray-500">(valgfritt)</span></label
+				<label for="drinkTypeId" class="mb-2 block text-lg font-medium"
+					>Drikketype <span class="text-sm text-gray-500">(valgfritt)</span></label
 				>
 				<Select
-					bind:value={selectedDrinkSize}
-					id="drinkSizeId"
-					name="drinkSizeId"
+					bind:value={selectedDrinkType}
+					id="drinkTypeId"
+					name="drinkTypeId"
 					class="text-foreground"
 				>
 					<option value="">Ikke oppgitt</option>
-					{#each availableSizes as size (size.id)}
-						<option value={size.id}>{size.name} ({size.volumeML}ml)</option>
+					{#each drinkOptions.drinkTypes as drinkType (drinkType.id)}
+						<option value={drinkType.id}>{drinkType.name} ×{drinkType.multiplier}</option>
 					{/each}
 				</Select>
 			</div>
 
-			<div>
-				<label for="abv" class="mb-2 block text-lg font-medium">
-					Alkoholprosent (%) <span class="text-sm text-gray-500">(alkoholinnhold på enheten)</span>
-				</label>
-				<input
-					type="number"
-					id="abv"
-					name="abv"
-					min="0"
-					max="100"
-					step="0.1"
-					bind:value={abvInput}
-					placeholder="f.eks. 5.2"
-					class="border-background-darker bg-background w-full border p-3 text-lg focus:outline-none"
-				/>
-			</div>
-		{/if}
+			{#if selectedDrinkType}
+				<div>
+					<label for="drinkSizeId" class="mb-2 block text-lg font-medium"
+						>Størrelse <span class="text-sm text-gray-500">(valgfritt)</span></label
+					>
+					<Select
+						bind:value={selectedDrinkSize}
+						id="drinkSizeId"
+						name="drinkSizeId"
+						class="text-foreground"
+					>
+						<option value="">Ikke oppgitt</option>
+						{#each availableSizes as size (size.id)}
+							<option value={size.id}>{size.name} ({size.volumeML}ml)</option>
+						{/each}
+					</Select>
+				</div>
 
-		<div class="bg-primary/10 border-primary/20 border p-4">
-			<div class="flex items-center justify-between">
-				<span class="text-lg font-medium">Forventet poengsum:</span>
-				<span class="text-primary text-2xl font-bold">{previewPoints} poeng</span>
+				<div>
+					<label for="abv" class="mb-2 block text-lg font-medium">
+						Alkoholprosent (%) <span class="text-sm text-gray-500">(alkoholinnhold på enheten)</span
+						>
+					</label>
+					<input
+						type="number"
+						id="abv"
+						name="abv"
+						min="0"
+						max="100"
+						step="0.1"
+						bind:value={abvInput}
+						placeholder="f.eks. 5.2"
+						class="border-background-darker bg-background w-full border p-3 text-lg focus:outline-none"
+					/>
+				</div>
+			{/if}
+
+			<div class="bg-primary/10 border-primary/20 border p-4">
+				<div class="flex items-center justify-between">
+					<span class="text-lg font-medium">Forventet poengsum:</span>
+					<span class="text-primary text-2xl font-bold">{previewPoints} poeng</span>
+				</div>
+				<p class="mt-1 text-sm text-gray-600">
+					{#if !selectedDrinkSize || abvInput == null}
+						Standard poeng (mangler størrelse eller prosent)
+					{:else}
+						Basert på størrelse og alkoholprosent
+					{/if}
+				</p>
 			</div>
-			<p class="mt-1 text-sm text-gray-600">
-				{#if !selectedDrinkSize || abvInput == null}
-					Standard poeng (mangler størrelse eller prosent)
-				{:else}
-					Basert på størrelse og alkoholprosent
-				{/if}
-			</p>
 		</div>
-	</div>
 
-	<!-- Hidden file input - always present for form submission -->
-	<input
-		bind:this={fileInput}
-		type="file"
-		id="image"
-		name="image"
-		accept="image/*"
-		onchange={handleFileSelect}
-		class="sr-only"
-		required
-	/>
+		<!-- Hidden file input - always present for form submission -->
+		<input
+			bind:this={fileInput}
+			type="file"
+			id="image"
+			name="image"
+			accept="image/*"
+			onchange={handleFileSelect}
+			class="sr-only"
+			required
+		/>
 
-	<div class="space-y-4">
-		{#if showCamera}
-			<!-- Camera Interface -->
-			<div class="space-y-4">
-				<div class="relative">
-					<video bind:this={videoElement} autoplay playsinline class="w-full rounded"></video>
+		<div class="space-y-4">
+			{#if showCamera}
+				<!-- Camera Interface -->
+				<div class="space-y-4">
+					<div class="relative">
+						<video bind:this={videoElement} autoplay playsinline class="w-full rounded"></video>
 
-					<!-- Camera Flip Button -->
-					{#if hasMultipleCameras}
+						<!-- Camera Flip Button -->
+						{#if hasMultipleCameras}
+							<button
+								type="button"
+								onclick={flipCamera}
+								class="absolute top-2 right-2 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70"
+								aria-label="Bytt kamera"
+								title="Bytt mellom front- og bakkamera"
+							>
+								<SwitchCamera class="h-5 w-5" />
+							</button>
+						{/if}
+					</div>
+
+					<div class="flex gap-4">
 						<button
 							type="button"
-							onclick={flipCamera}
-							class="absolute top-2 right-2 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70"
-							aria-label="Bytt kamera"
-							title="Bytt mellom front- og bakkamera"
+							onclick={capturePhoto}
+							class="bg-primary hover:bg-primary/90 flex-1 p-3 font-medium text-white"
 						>
-							<SwitchCamera class="h-5 w-5" />
+							Ta bilde
 						</button>
-					{/if}
-				</div>
-
-				<div class="flex gap-4">
-					<button
-						type="button"
-						onclick={capturePhoto}
-						class="bg-primary hover:bg-primary/90 flex-1 p-3 font-medium text-white"
-					>
-						Ta bilde
-					</button>
-					<button
-						type="button"
-						onclick={stopCamera}
-						class="bg-background-darker hover:bg-background-darkest flex-1 p-3 font-medium"
-					>
-						Avbryt
-					</button>
-				</div>
-			</div>
-		{:else if files && files.length > 0}
-			<!-- File Preview -->
-			<div class="bg-background-dark border-primary space-y-4 border-2 border-dashed p-6">
-				<div class="relative">
-					<button
-						type="button"
-						onclick={removeFile}
-						class="bg-background-darkest hover:bg-background-darker absolute top-2 right-2 z-10 rounded-full p-2 transition-colors"
-						aria-label="Fjern fil"
-					>
-						<X class="h-4 w-4" />
-					</button>
-
-					{#each Array.from(files) as file (file.name)}
-						{#if file.type.startsWith('image/')}
-							<div class="space-y-4">
-								<img
-									src={URL.createObjectURL(file)}
-									alt="Forhåndsvisning av øl"
-									class="max-h-64 w-full rounded object-contain"
-								/>
-							</div>
-						{/if}
-					{/each}
-				</div>
-			</div>
-		{:else}
-			<!-- File Upload Area -->
-			<div
-				class="relative border-2 border-dashed transition-all duration-300 {isDragOver
-					? 'border-primary bg-primary/5 scale-[1.02]'
-					: 'border-background-darker hover:border-background-darkest hover:bg-background-dark/50'}"
-				class:cursor-pointer={true}
-				ondrop={handleDrop}
-				ondragover={handleDragOver}
-				ondragleave={handleDragLeave}
-				onclick={openFileDialog}
-				role="button"
-				tabindex="0"
-				onkeydown={(e) => {
-					if (e.key === 'Enter' || e.key === ' ') {
-						e.preventDefault();
-						openFileDialog();
-					}
-				}}
-			>
-				<!-- Empty State -->
-				<div class="flex min-h-48 flex-col items-center justify-center p-8 text-center">
-					<div
-						class="bg-background-darker mb-4 flex h-16 w-16 items-center justify-center rounded-full"
-					>
-						<Upload class="h-8 w-8 text-gray-500" />
-					</div>
-					<div class="space-y-2">
-						<p class="text-lg font-medium">
-							{isDragOver ? 'Slipp filen her' : 'Last opp bilde av øl'}
-						</p>
-						<p class="text-sm text-gray-600">Dra og slipp fil her, eller klikk for å velge</p>
-						<p class="text-xs text-gray-500">PNG, JPG eller WEBP (maks 10MB)</p>
-						<p class="text-xs text-gray-500 italic md:hidden">
-							Tips: For best resultat, klikk opplastingsboksen og velg "Ta bilde"
-						</p>
+						<button
+							type="button"
+							onclick={stopCamera}
+							class="bg-background-darker hover:bg-background-darkest flex-1 p-3 font-medium"
+						>
+							Avbryt
+						</button>
 					</div>
 				</div>
-			</div>
-		{/if}
+			{:else if files && files.length > 0}
+				<!-- File Preview -->
+				<div class="bg-background-dark border-primary space-y-4 border-2 border-dashed p-6">
+					<div class="relative">
+						<button
+							type="button"
+							onclick={removeFile}
+							class="bg-background-darkest hover:bg-background-darker absolute top-2 right-2 z-10 rounded-full p-2 transition-colors"
+							aria-label="Fjern fil"
+						>
+							<X class="h-4 w-4" />
+						</button>
 
-		<!-- Camera Button -->
-		{#if !showCamera}
-			<button
-				type="button"
-				onclick={startCamera}
-				class="bg-background-dark hover:bg-background-darker flex w-full items-center justify-center gap-3 p-4 text-lg font-medium transition-colors"
-			>
-				<Camera class="h-6 w-6" />
-				Ta bilde
-			</button>
-		{/if}
-
-		<!-- Hidden canvas for photo capture -->
-		<canvas bind:this={canvasElement} class="hidden"></canvas>
-
-		<!-- Submit Button -->
-		<button
-			type="submit"
-			disabled={!files || isUploading}
-			class="bg-primary hover:bg-primary/90 disabled:bg-background-darker flex w-full items-center justify-center gap-2 p-4 text-lg font-medium text-white transition-colors disabled:text-gray-500"
-		>
-			{#if isUploading}
-				<Loader class="h-5 w-5 animate-spin" />
-				Laster opp...
-			{:else if !files}
-				Velg et bilde først
+						{#each Array.from(files) as file (file.name)}
+							{#if file.type.startsWith('image/')}
+								<div class="space-y-4">
+									<img
+										src={URL.createObjectURL(file)}
+										alt="Forhåndsvisning av øl"
+										class="max-h-64 w-full rounded object-contain"
+									/>
+								</div>
+							{/if}
+						{/each}
+					</div>
+				</div>
 			{:else}
-				Registrer drink
+				<!-- File Upload Area -->
+				<div
+					class="relative border-2 border-dashed transition-all duration-300 {isDragOver
+						? 'border-primary bg-primary/5 scale-[1.02]'
+						: 'border-background-darker hover:border-background-darkest hover:bg-background-dark/50'}"
+					class:cursor-pointer={true}
+					ondrop={handleDrop}
+					ondragover={handleDragOver}
+					ondragleave={handleDragLeave}
+					onclick={openFileDialog}
+					role="button"
+					tabindex="0"
+					onkeydown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							openFileDialog();
+						}
+					}}
+				>
+					<!-- Empty State -->
+					<div class="flex min-h-48 flex-col items-center justify-center p-8 text-center">
+						<div
+							class="bg-background-darker mb-4 flex h-16 w-16 items-center justify-center rounded-full"
+						>
+							<Upload class="h-8 w-8 text-gray-500" />
+						</div>
+						<div class="space-y-2">
+							<p class="text-lg font-medium">
+								{isDragOver ? 'Slipp filen her' : 'Last opp bilde av øl'}
+							</p>
+							<p class="text-sm text-gray-600">Dra og slipp fil her, eller klikk for å velge</p>
+							<p class="text-xs text-gray-500">PNG, JPG eller WEBP (maks 10MB)</p>
+							<p class="text-xs text-gray-500 italic md:hidden">
+								Tips: For best resultat, klikk opplastingsboksen og velg "Ta bilde"
+							</p>
+						</div>
+					</div>
+				</div>
 			{/if}
-		</button>
-	</div>
-</form>
+
+			<!-- Camera Button -->
+			{#if !showCamera}
+				<button
+					type="button"
+					onclick={startCamera}
+					class="bg-background-dark hover:bg-background-darker flex w-full items-center justify-center gap-3 p-4 text-lg font-medium transition-colors"
+				>
+					<Camera class="h-6 w-6" />
+					Ta bilde
+				</button>
+			{/if}
+
+			<!-- Hidden canvas for photo capture -->
+			<canvas bind:this={canvasElement} class="hidden"></canvas>
+
+			<!-- Submit Button -->
+			<button
+				type="submit"
+				disabled={!files || isUploading}
+				class="bg-primary hover:bg-primary/90 disabled:bg-background-darker flex w-full items-center justify-center gap-2 p-4 text-lg font-medium text-white transition-colors disabled:text-gray-500"
+			>
+				{#if isUploading}
+					<Loader class="h-5 w-5 animate-spin" />
+					Laster opp...
+				{:else if !files}
+					Velg et bilde først
+				{:else}
+					Registrer drink
+				{/if}
+			</button>
+		</div>
+	</form>
+{/if}

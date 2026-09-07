@@ -1,22 +1,10 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 declare global {
-	namespace App {
-		interface Platform {
-			env: Env;
-			cf: CfProperties;
-			ctx: ExecutionContext;
-		}
+	namespace App {}
 
-		interface Locals {
-			db: import('$lib/db').Database;
-			bucket: R2Bucket;
-
-			sessionService: import('$lib/auth').SessionService;
-
-			user: import('$lib/auth').SessionValidationResult['user'];
-			session: import('$lib/auth').SessionValidationResult['session'];
-		}
+	interface ImportMetaEnv {
+		readonly PUBLIC_API_BASE_URL?: string;
 	}
 }
 

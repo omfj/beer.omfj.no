@@ -13,12 +13,6 @@
 		"format:check": "pnpm --recursive format:check",
 		"lint": "pnpm --recursive lint",
 		"test": "pnpm --recursive test",
-		"db:push": "pnpm --filter @beer/web db:push",
-		"db:studio": "pnpm --filter @beer/web db:studio",
-		"db:generate": "pnpm --filter @beer/web db:generate",
-		"db:migrate": "pnpm --filter @beer/web db:migrate",
-		"db:migrate:local": "pnpm --filter @beer/web db:migrate:local",
-		"db:migrate:remote": "pnpm --filter @beer/web db:migrate:remote",
 		"sqlx:prepare": "cargo sqlx prepare --workspace --database-url sqlite://$PWD/api/dev.db",
 		"deploy": "pnpm --filter @beer/web deploy"
 	}
