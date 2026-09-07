@@ -1,13 +1,15 @@
 import type { AuthState } from '$lib/context/user.svelte';
-import { api } from '$lib/api/client';
+import { createApiClient } from '$lib/api/client';
+import type { LayoutLoad } from './$types';
 
 export const ssr = false;
 
-export async function load(): Promise<{ authState: AuthState }> {
+export const load: LayoutLoad = async ({ fetch }): Promise<{ authState: AuthState }> => {
 	try {
+		const api = createApiClient(fetch);
 		const { user } = await api.me();
 		return { authState: { status: 'authenticated', user } };
 	} catch {
 		return { authState: { status: 'anonymous', user: null } };
 	}
-}
+};
