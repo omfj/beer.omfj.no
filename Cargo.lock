@@ -216,7 +216,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "beer-counter-api"
+name = "beer-api"
 version = "0.1.0"
 dependencies = [
  "axum",
