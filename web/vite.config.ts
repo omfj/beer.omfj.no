@@ -14,6 +14,15 @@ export default defineConfig({
 		mkcert(),
 		SvelteKitPWA({
 			registerType: 'autoUpdate',
+			kit: {
+				spa: true,
+				adapterFallback: 'index.html'
+			},
+			workbox: {
+				// SPA builds have only client assets; the adapter creates the fallback later.
+				globPatterns: ['client/**/*.{js,css,ico,png,svg,webp,webmanifest}'],
+				modifyURLPrefix: { 'client/': '' }
+			},
 			devOptions: {
 				enabled: false
 			},

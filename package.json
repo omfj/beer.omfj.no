@@ -14,6 +14,6 @@
 		"lint": "pnpm --recursive lint",
 		"test": "pnpm --recursive test",
 		"sqlx:prepare": "cargo sqlx prepare --workspace --database-url sqlite://$PWD/api/dev.db",
-		"deploy": "pnpm --filter @beer/web deploy"
+		"deploy": "pnpm --filter @beer/web run deploy"
 	}
 }
