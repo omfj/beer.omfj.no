@@ -7,6 +7,7 @@ import devtoolsJson from 'vite-plugin-devtools-json';
 import mkcert from 'vite-plugin-mkcert';
 
 export default defineConfig({
+	envPrefix: ['VITE_', 'PUBLIC_'],
 	plugins: [
 		sveltekit(),
 		tailwindcss(),
