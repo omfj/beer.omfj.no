@@ -9,6 +9,7 @@ axum-extra = { version = "0.12", features = ["cookie", "multipart"] }
 base64 = "0.23.1"
 bcrypt = "0.19.3"
 cookie = "0.18"
+dotenvy = "0.15"
 rand = "0.10.2"
 rust-s3 = { version = "0.37", default-features = false, features = [
   "tokio-rustls-tls",

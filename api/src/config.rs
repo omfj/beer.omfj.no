@@ -18,6 +18,8 @@ pub struct Config {
 
 impl Config {
     pub fn from_env() -> Result<Self, Box<dyn std::error::Error>> {
+        dotenvy::dotenv().ok();
+
         let port = env::var("PORT")
             .map(|value| value.parse())
             .unwrap_or(Ok(DEFAULT_PORT))?;

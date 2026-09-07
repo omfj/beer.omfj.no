@@ -3,7 +3,7 @@
 	"private": true,
 	"version": "0.0.1",
 	"scripts": {
-		"dev": "cargo watch -x run",
+		"dev": "cargo watch --quiet -x 'run --quiet'",
 		"build": "cargo build",
 		"check": "cargo check",
 		"format": "cargo fmt",
