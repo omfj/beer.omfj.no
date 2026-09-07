@@ -5,7 +5,7 @@
 	import { createUserContext, setUserContext } from '$lib/context/user.svelte';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { pwaInfo } from 'virtual:pwa-info';
-	import { createThemeContext } from '$lib/theme.svelte';
+	import { createThemeContext } from '$lib/context/theme.svelte';
 
 	let webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
 

@@ -5,7 +5,7 @@
 	import { ApiError } from '$lib/api';
 	import { api } from '$lib/api/client';
 	import { getUser } from '$lib/context/user.svelte';
-	import { getThemeContext } from '$lib/theme.svelte';
+	import { getThemeContext } from '$lib/context/theme.svelte';
 
 	type Props = {
 		isMenuOpen?: boolean;
