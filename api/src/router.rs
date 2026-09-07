@@ -33,7 +33,7 @@ pub fn create(
 
 fn trace() -> TraceLayer<SharedClassifier<ServerErrorsAsFailures>> {
     TraceLayer::new_for_http()
-        .make_span_with(DefaultMakeSpan::new().include_headers(true))
+        .make_span_with(DefaultMakeSpan::new())
         .on_response(DefaultOnResponse::new().level(Level::INFO))
 }
 
