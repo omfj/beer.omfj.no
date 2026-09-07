@@ -5,6 +5,8 @@ WORKDIR /build
 ARG DATABASE_URL
 
 COPY Cargo.toml Cargo.lock ./
+COPY .sqlx ./.sqlx/
+COPY .cargo ./.cargo/
 COPY api/Cargo.toml api/build.rs ./api/
 COPY api/migrations ./api/migrations
 COPY api/src ./api/src
