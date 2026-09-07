@@ -18,6 +18,7 @@ pub(crate) use error::ApiError;
 
 pub fn router() -> Router<AppState> {
     Router::new()
+        .route("/", get(health::get))
         .route("/auth/login", post(auth::login))
         .route("/auth/register", post(auth::register))
         .route("/auth/logout", post(auth::logout))
