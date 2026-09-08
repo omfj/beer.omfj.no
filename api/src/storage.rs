@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::config::Config;
+use crate::config::{Config, S3Config};
 
 use s3::{Bucket, Region, creds::Credentials};
 use thiserror::Error;
@@ -20,31 +20,34 @@ pub struct StoredImage {
     pub content_type: String,
 }
 
+impl TryFrom<&S3Config> for Credentials {
+    type Error = s3::creds::error::CredentialsError;
+
+    fn try_from(config: &S3Config) -> Result<Self, Self::Error> {
+        Self::new(
+            Some(&config.access_key_id),
+            Some(&config.secret_access_key),
+            None,
+            None,
+            None,
+        )
+    }
+}
+
 #[derive(Clone, Default)]
 pub struct ImageStorage(Option<Arc<Bucket>>);
 
 impl ImageStorage {
     pub fn new(config: &Config) -> Result<Self, Box<dyn std::error::Error>> {
-        let (Some(endpoint), Some(bucket), Some(access_key_id), Some(secret_access_key)) = (
-            &config.s3_endpoint,
-            &config.s3_bucket,
-            &config.s3_access_key_id,
-            &config.s3_secret_access_key,
-        ) else {
+        let Some(config) = &config.s3 else {
             return Ok(Self::default());
         };
-        let credentials = Credentials::new(
-            Some(access_key_id),
-            Some(secret_access_key),
-            None,
-            None,
-            None,
-        )?;
+        let credentials = Credentials::try_from(config)?;
         let mut bucket = Bucket::new(
-            bucket,
+            &config.bucket,
             Region::Custom {
                 region: "auto".into(),
-                endpoint: endpoint.clone(),
+                endpoint: config.endpoint.clone(),
             },
             credentials,
         )?
