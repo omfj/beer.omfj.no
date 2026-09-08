@@ -34,3 +34,5 @@ jobs:
 
       - name: 🚀 Deploy
         run: pnpm run deploy
+        env:
+          PUBLIC_API_BASE_URL: https://api.beer.omfj.no
