@@ -1,10 +1,8 @@
 use std::sync::Arc;
 
-use crate::{
-    config::{Config, S3Config},
-    domain::drinks::ImageType,
-};
+use crate::config::{Config, S3Config};
 
+use beer_image::ImageType;
 use s3::{Bucket, Region, creds::Credentials};
 use thiserror::Error;
 

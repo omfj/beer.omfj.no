@@ -1,5 +1,6 @@
 const FALLBACK_POINTS: f64 = 0.5;
 
+#[must_use]
 pub fn calculate_drink_points(volume_ml: Option<f64>, abv: Option<f64>, multiplier: f64) -> f64 {
     let (Some(volume_ml), Some(abv)) = (volume_ml, abv) else {
         return FALLBACK_POINTS;
@@ -23,6 +24,7 @@ pub fn calculate_drink_points(volume_ml: Option<f64>, abv: Option<f64>, multipli
     }
 }
 
+#[must_use]
 pub fn round_to_one_decimal(value: f64) -> f64 {
     (value * 10.0).round() / 10.0
 }

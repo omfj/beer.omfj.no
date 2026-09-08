@@ -1,13 +1,11 @@
 use crate::domain::time::LeaderboardYear;
+use beer_score::{calculate_drink_points, round_to_one_decimal};
 use std::{cmp::Ordering, collections::HashMap};
 
 use serde::Serialize;
 use thiserror::Error;
 
-use crate::{
-    domain::scoring::{calculate_drink_points, round_to_one_decimal},
-    repositories::LeaderboardRepository,
-};
+use crate::repositories::LeaderboardRepository;
 
 #[derive(Debug, Error)]
 pub enum LeaderboardError {

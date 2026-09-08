@@ -223,6 +223,8 @@ dependencies = [
  "axum-extra",
  "base64 0.23.1",
  "bcrypt",
+ "beer-image",
+ "beer-score",
  "cookie",
  "dotenvy",
  "rand",
@@ -237,6 +239,17 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
 ]
+
+[[package]]
+name = "beer-image"
+version = "0.1.0"
+dependencies = [
+ "thiserror",
+]
+
+[[package]]
+name = "beer-score"
+version = "0.1.0"
 
 [[package]]
 name = "bitflags"

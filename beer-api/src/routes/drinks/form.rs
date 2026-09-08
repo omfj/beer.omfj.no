@@ -5,12 +5,9 @@ use axum_extra::extract::{
     Multipart,
     multipart::{Field, MultipartError},
 };
+use beer_image::{DrinkImage, MAX_IMAGE_SIZE};
 
-use crate::{
-    domain::drinks::{Abv, DrinkImage, MAX_IMAGE_SIZE},
-    routes::ApiError,
-    services::drinks::NewDrink,
-};
+use crate::{domain::drinks::Abv, routes::ApiError, services::drinks::NewDrink};
 
 const MAX_TEXT_LENGTH: usize = 256;
 

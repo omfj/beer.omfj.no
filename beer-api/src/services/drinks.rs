@@ -1,11 +1,12 @@
 use crate::domain::time::UnixSeconds;
 use crate::{
     database::Database,
-    domain::drinks::{Abv, DrinkImage},
+    domain::drinks::Abv,
     repositories::{EventsRepository, drinks::DrinksRepository},
     storage::{ImageStorage, StorageError},
     utils::time::now,
 };
+use beer_image::DrinkImage;
 use serde::Serialize;
 use thiserror::Error;
 
