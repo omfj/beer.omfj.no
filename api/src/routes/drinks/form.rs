@@ -21,7 +21,11 @@ pub(super) async fn parse(mut multipart: Multipart) -> Result<NewDrink, ApiError
     let mut abv = None;
     let mut seen = HashSet::new();
 
-    while let Some(field) = multipart.next_field().await.map_err(multipart_error)? {
+    while let Some(field) = multipart
+        .next_field()
+        .await
+        .map_err(|error| multipart_error(&error))?
+    {
         let name = field.name().unwrap_or_default().to_owned();
         if !seen.insert(name.clone()) {
             return Err(invalid("duplicate form field"));
@@ -53,11 +57,14 @@ async fn read_image(mut field: Field) -> Result<DrinkImage, ApiError> {
     let extension = field
         .file_name()
         .and_then(|name| name.rsplit_once('.'))
-        .map(|(_, extension)| extension.to_owned())
-        .unwrap_or_else(|| "jpg".into());
+        .map_or_else(|| "jpg".into(), |(_, extension)| extension.to_owned());
 
     let mut bytes = Vec::new();
-    while let Some(chunk) = field.chunk().await.map_err(multipart_error)? {
+    while let Some(chunk) = field
+        .chunk()
+        .await
+        .map_err(|error| multipart_error(&error))?
+    {
         if bytes.len() + chunk.len() > MAX_IMAGE_SIZE {
             return Err(ApiError::Client {
                 status: StatusCode::PAYLOAD_TOO_LARGE,
@@ -72,7 +79,10 @@ async fn read_image(mut field: Field) -> Result<DrinkImage, ApiError> {
 }
 
 async fn read_text(field: Field) -> Result<Option<String>, ApiError> {
-    let value = field.text().await.map_err(multipart_error)?;
+    let value = field
+        .text()
+        .await
+        .map_err(|error| multipart_error(&error))?;
     if value.len() > MAX_TEXT_LENGTH {
         return Err(invalid("form field is too long"));
     }
@@ -98,7 +108,7 @@ fn invalid(message: &'static str) -> ApiError {
     }
 }
 
-fn multipart_error(error: MultipartError) -> ApiError {
+fn multipart_error(error: &MultipartError) -> ApiError {
     ApiError::Client {
         status: error.status(),
         code: "invalid_multipart",

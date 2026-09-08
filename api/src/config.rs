@@ -18,12 +18,9 @@ impl Config {
     pub fn from_env() -> Result<Self, Box<dyn std::error::Error>> {
         dotenvy::dotenv().ok();
 
-        let port = env::var("PORT")
-            .map(|value| value.parse())
-            .unwrap_or(Ok(DEFAULT_PORT))?;
-        let development = env::var("DEVELOPMENT")
-            .map(|value| value.parse())
-            .unwrap_or(Ok(DEFAULT_DEVELOPMENT))?;
+        let port = env::var("PORT").map_or(Ok(DEFAULT_PORT), |value| value.parse())?;
+        let development =
+            env::var("DEVELOPMENT").map_or(Ok(DEFAULT_DEVELOPMENT), |value| value.parse())?;
         let web_app_url = env::var("WEB_APP_URL").unwrap_or_else(|_| DEFAULT_WEB_APP_URL.into());
         let database_url = env::var("DATABASE_URL").unwrap_or_else(|_| DEFAULT_DATABASE_URL.into());
 

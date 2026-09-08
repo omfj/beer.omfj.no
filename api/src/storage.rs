@@ -71,8 +71,7 @@ impl ImageStorage {
             .headers()
             .into_iter()
             .find(|(name, _)| name.eq_ignore_ascii_case("content-type"))
-            .map(|(_, value)| value)
-            .unwrap_or_else(|| "image/jpeg".into());
+            .map_or_else(|| "image/jpeg".into(), |(_, value)| value);
         Ok(Some(StoredImage {
             bytes: response.to_vec(),
             content_type,

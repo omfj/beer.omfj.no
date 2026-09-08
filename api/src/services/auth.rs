@@ -102,7 +102,7 @@ impl AuthService {
         {
             if error
                 .as_database_error()
-                .is_some_and(|error| error.is_unique_violation())
+                .is_some_and(sqlx::error::DatabaseError::is_unique_violation)
             {
                 return Ok(RegistrationResult::UsernameTaken);
             }

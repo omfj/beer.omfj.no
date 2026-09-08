@@ -3,6 +3,9 @@ name = "beer-api"
 version = "0.1.0"
 edition = "2024"
 
+[lints]
+workspace = true
+
 [dependencies]
 axum = "0.8"
 axum-extra = { version = "0.12", features = ["cookie", "multipart"] }

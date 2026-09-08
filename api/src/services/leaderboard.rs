@@ -26,6 +26,7 @@ pub struct LeaderboardEntry {
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(clippy::struct_field_names)]
 pub struct Leaderboard {
     pub leaderboard: Vec<LeaderboardEntry>,
     pub selected_year: LeaderboardYear,
@@ -48,6 +49,7 @@ impl LeaderboardService {
         let mut users = HashMap::<String, LeaderboardEntry>::new();
 
         for record in records {
+            #[allow(clippy::cast_precision_loss)]
             let points = calculate_drink_points(
                 record.volume_ml.map(|value| value as f64),
                 record.abv.or(record.fallback_abv.map(|value| value as f64)),

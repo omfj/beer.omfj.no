@@ -31,21 +31,25 @@ pub fn round_to_one_decimal(value: f64) -> f64 {
 mod tests {
     use super::calculate_drink_points;
 
+    fn assert_points(actual: f64, expected: f64) {
+        assert!((actual - expected).abs() < f64::EPSILON);
+    }
+
     #[test]
     fn calculates_points_for_a_half_liter_beer() {
-        assert_eq!(calculate_drink_points(Some(500.0), Some(5.0), 1.0), 2.0);
+        assert_points(calculate_drink_points(Some(500.0), Some(5.0), 1.0), 2.0);
     }
 
     #[test]
     fn applies_the_drink_type_multiplier() {
-        assert_eq!(calculate_drink_points(Some(40.0), Some(40.0), 2.0), 2.5);
+        assert_points(calculate_drink_points(Some(40.0), Some(40.0), 2.0), 2.5);
     }
 
     #[test]
     fn uses_fallback_points_for_missing_or_invalid_values() {
-        assert_eq!(calculate_drink_points(None, Some(5.0), 1.0), 0.5);
-        assert_eq!(calculate_drink_points(Some(500.0), None, 1.0), 0.5);
-        assert_eq!(calculate_drink_points(Some(0.0), Some(5.0), 1.0), 0.5);
-        assert_eq!(calculate_drink_points(Some(f64::NAN), Some(5.0), 1.0), 0.5);
+        assert_points(calculate_drink_points(None, Some(5.0), 1.0), 0.5);
+        assert_points(calculate_drink_points(Some(500.0), None, 1.0), 0.5);
+        assert_points(calculate_drink_points(Some(0.0), Some(5.0), 1.0), 0.5);
+        assert_points(calculate_drink_points(Some(f64::NAN), Some(5.0), 1.0), 0.5);
     }
 }

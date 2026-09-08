@@ -227,7 +227,9 @@ impl From<crate::services::drinks::DrinksError> for ApiError {
                 "image storage unavailable",
                 error,
             ),
-            error => Self::internal("drinks_unavailable", "drink operation failed", error),
+            error @ DrinksError::Database(_) => {
+                Self::internal("drinks_unavailable", "drink operation failed", error)
+            }
         }
     }
 }

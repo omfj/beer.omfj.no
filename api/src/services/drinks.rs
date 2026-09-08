@@ -56,6 +56,7 @@ pub struct DrinkTypeSize {
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(clippy::struct_field_names)]
 pub struct DrinkOptions {
     pub drink_types: Vec<DrinkType>,
     pub drink_sizes: Vec<DrinkSize>,
