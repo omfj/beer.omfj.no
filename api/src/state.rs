@@ -19,7 +19,7 @@ pub struct AppState {
 
 impl AppState {
     pub fn new(database: Database, config: &Config, images: crate::storage::ImageStorage) -> Self {
-        let drinks = crate::services::drinks::DrinksService::new(database.clone(), images);
+        let drinks = DrinksService::new(database.clone(), images);
         let auth = AuthService::new(AuthRepository::new(database.clone()));
         let events = EventsService::new(EventsRepository::new(database.clone()));
         let health = HealthService::new(HealthRepository::new(database.clone()));
