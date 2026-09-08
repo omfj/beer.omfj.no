@@ -26,7 +26,7 @@ RUN apt-get update \
 	&& useradd --system --uid 10001 --create-home api \
 	&& install --directory --owner api --group api /data
 
-COPY --from=builder /build/beer-api /usr/local/bin/beer-api
+COPY --from=builder /build/beer-api/beer-api /usr/local/bin/beer-api
 
 ENV PORT=3000 \
 	DEVELOPMENT=false \
