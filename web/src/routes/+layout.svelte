@@ -39,6 +39,4 @@
 	{@html webManifestLink}
 </svelte:head>
 
-<div class="pt-12">
-	{@render children()}
-</div>
+{@render children()}
