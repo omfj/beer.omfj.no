@@ -40,7 +40,7 @@
 	}
 </script>
 
-<header class="mb-6 flex items-center justify-between border-b-2 pb-4">
+<header class="relative z-50 mb-6 flex items-center justify-between border-b-2 pb-4">
 	<h1 class="text-2xl font-medium">
 		<a href={resolve('/')} class="hover:underline">Beer Counter</a>
 	</h1>
@@ -67,63 +67,37 @@
 </header>
 
 {#if isMenuOpen && onMenuToggle}
-	<div class="bg-background fixed top-0 left-0 z-50 h-full w-full">
-		<div class="mx-auto flex h-full max-w-2xl flex-col p-8">
-			<header class="mb-6 flex items-center justify-between border-b-2 pb-4">
-				<h1 class="text-2xl font-medium">
-					<a href={resolve('/')} class="hover:underline">Beer Counter</a>
-				</h1>
-
-				<div class="flex items-center">
-					<button onclick={() => theme.toggle()} class="mr-4">
-						{#if theme.current === 'dark'}
-							<Sun class="size-7" />
-						{:else}
-							<Moon class="size-7" />
-						{/if}
-					</button>
-
-					<button onclick={onMenuToggle} class="relative z-50">
-						<X class="size-8" />
-					</button>
-				</div>
-			</header>
-
-			<nav>
-				<menu class="flex flex-col gap-4">
-					<li>
-						<a href={resolve('/')} class="text-2xl font-light hover:underline">Hjem</a>
-					</li>
-					<li>
-						<a href={resolve('/toppliste')} class="text-2xl font-light hover:underline">Toppliste</a
-						>
-					</li>
-					<li>
-						<a href={resolve('/endringer')} class="text-2xl font-light hover:underline"
-							>Endringslogg</a
-						>
-					</li>
-					<li>
-						<a href={resolve('/profil')} class="text-2xl font-light hover:underline">Profil</a>
-					</li>
-					<li>
-						<a href={resolve('/arrangementer/ny')} class="text-2xl font-light hover:underline"
-							>Nytt arrangement</a
-						>
-					</li>
-					<li>
-						<button
-							type="button"
-							class="text-2xl font-light hover:underline disabled:opacity-50"
-							disabled={isLoggingOut}
-							onclick={logout}>{isLoggingOut ? 'Logger ut...' : 'Logg ut'}</button
-						>
-					</li>
-					{#if logoutError}
-						<li><p class="text-red-500">{logoutError}</p></li>
-					{/if}
-				</menu>
-			</nav>
-		</div>
-	</div>
+	<div class="bg-background fixed inset-0 z-40 min-h-dvh" aria-hidden="true"></div>
+	<nav class="relative z-50">
+		<menu class="flex flex-col gap-4">
+			<li>
+				<a href={resolve('/')} class="text-2xl font-light hover:underline">Hjem</a>
+			</li>
+			<li>
+				<a href={resolve('/toppliste')} class="text-2xl font-light hover:underline">Toppliste</a>
+			</li>
+			<li>
+				<a href={resolve('/endringer')} class="text-2xl font-light hover:underline">Endringslogg</a>
+			</li>
+			<li>
+				<a href={resolve('/profil')} class="text-2xl font-light hover:underline">Profil</a>
+			</li>
+			<li>
+				<a href={resolve('/arrangementer/ny')} class="text-2xl font-light hover:underline"
+					>Nytt arrangement</a
+				>
+			</li>
+			<li>
+				<button
+					type="button"
+					class="text-2xl font-light hover:underline disabled:opacity-50"
+					disabled={isLoggingOut}
+					onclick={logout}>{isLoggingOut ? 'Logger ut...' : 'Logg ut'}</button
+				>
+			</li>
+			{#if logoutError}
+				<li><p class="text-red-500">{logoutError}</p></li>
+			{/if}
+		</menu>
+	</nav>
 {/if}
