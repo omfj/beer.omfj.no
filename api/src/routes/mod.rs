@@ -16,6 +16,8 @@ use crate::state::AppState;
 
 pub(crate) use error::ApiError;
 
+const BODY_LIMIT: usize = 10 * 1024 * 1024;
+
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/", get(health::get))
@@ -29,7 +31,7 @@ pub fn router() -> Router<AppState> {
         .route("/drinks/options", get(drinks::options))
         .route(
             "/event/{id}/drinks",
-            post(drinks::create).layer(DefaultBodyLimit::max(11 * 1024 * 1024)),
+            post(drinks::create).layer(DefaultBodyLimit::max(BODY_LIMIT)),
         )
         .route("/event/{id}/drinks/{drinkId}", delete(drinks::delete))
         .route("/images/{id}", get(images::get))
