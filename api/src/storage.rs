@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use crate::config::{Config, S3Config};
+use crate::{
+    config::{Config, S3Config},
+    domain::drinks::ImageType,
+};
 
 use s3::{Bucket, Region, creds::Credentials};
 use thiserror::Error;
@@ -13,6 +16,8 @@ pub enum StorageError {
     Request(#[from] s3::error::S3Error),
     #[error("image storage returned status {0}")]
     Status(u16),
+    #[error("image storage returned invalid image content")]
+    InvalidImage,
 }
 
 pub struct StoredImage {
@@ -67,13 +72,13 @@ impl ImageStorage {
             return Ok(None);
         }
         check_status(response.status_code())?;
-        let content_type = response
-            .headers()
-            .into_iter()
-            .find(|(name, _)| name.eq_ignore_ascii_case("content-type"))
-            .map_or_else(|| "image/jpeg".into(), |(_, value)| value);
+        let bytes = response.to_vec();
+        let content_type = ImageType::detect(&bytes)
+            .ok_or(StorageError::InvalidImage)?
+            .content_type()
+            .into();
         Ok(Some(StoredImage {
-            bytes: response.to_vec(),
+            bytes,
             content_type,
         }))
     }

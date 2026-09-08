@@ -49,16 +49,6 @@ pub(super) async fn parse(mut multipart: Multipart) -> Result<NewDrink, ApiError
 }
 
 async fn read_image(mut field: Field) -> Result<DrinkImage, ApiError> {
-    let content_type = field.content_type().unwrap_or_default().to_owned();
-    if !content_type.starts_with("image/") {
-        return Err(invalid("only image files are allowed"));
-    }
-
-    let extension = field
-        .file_name()
-        .and_then(|name| name.rsplit_once('.'))
-        .map_or_else(|| "jpg".into(), |(_, extension)| extension.to_owned());
-
     let mut bytes = Vec::new();
     while let Some(chunk) = field
         .chunk()
@@ -75,7 +65,7 @@ async fn read_image(mut field: Field) -> Result<DrinkImage, ApiError> {
         bytes.extend_from_slice(&chunk);
     }
 
-    DrinkImage::parse(bytes, content_type, extension).map_err(|_| invalid("invalid image"))
+    DrinkImage::parse(bytes).map_err(|_| invalid("invalid image"))
 }
 
 async fn read_text(field: Field) -> Result<Option<String>, ApiError> {
