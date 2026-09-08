@@ -1,3 +1,4 @@
+use crate::{domain::time::SessionExpiry, utils::time::now};
 use axum::http::HeaderMap;
 use axum_extra::extract::cookie::CookieJar;
 use cookie::{Cookie, SameSite, time::Duration};
@@ -10,8 +11,12 @@ pub(crate) fn session_token(headers: &HeaderMap) -> Option<String> {
         .map(|cookie| cookie.value().to_owned())
 }
 
-pub(crate) fn session_cookie(token: String, expires_at: i64, secure: bool) -> Cookie<'static> {
-    let max_age = (expires_at - unix_timestamp()).max(0);
+pub(crate) fn session_cookie(
+    token: String,
+    expires_at: SessionExpiry,
+    secure: bool,
+) -> Cookie<'static> {
+    let max_age = expires_at.remaining_seconds(now());
     Cookie::build((SESSION_COOKIE_NAME, token))
         .path("/")
         .http_only(true)
@@ -36,11 +41,4 @@ fn same_site(secure: bool) -> SameSite {
     } else {
         SameSite::Lax
     }
-}
-
-fn unix_timestamp() -> i64 {
-    std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|duration| duration.as_secs() as i64)
-        .unwrap_or_default()
 }

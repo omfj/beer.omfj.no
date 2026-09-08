@@ -104,7 +104,7 @@ impl DrinksRepository {
             drink.event_id,
             drink.user_id,
             drink.image_id,
-            drink.created_at,
+            drink.created_at.as_seconds(),
             drink.drink_type_id,
             drink.drink_size_id,
             drink.abv,

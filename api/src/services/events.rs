@@ -1,3 +1,4 @@
+use crate::domain::time::UnixSeconds;
 use crate::{
     repositories::EventsRepository,
     utils::{password, time::now},
@@ -32,7 +33,7 @@ pub struct Event {
     pub id: String,
     pub name: String,
     pub color: String,
-    pub created_at: i64,
+    pub created_at: UnixSeconds,
     pub created_by: Option<String>,
 }
 #[derive(Debug, Serialize)]
@@ -62,7 +63,7 @@ pub struct Attendee {
     pub id: String,
     pub user_id: String,
     pub username: String,
-    pub created_at: i64,
+    pub created_at: UnixSeconds,
     pub image_id: Option<String>,
     pub abv: Option<f64>,
     pub drink_type: Option<DrinkType>,
@@ -153,7 +154,7 @@ impl EventsService {
                 id: record.id,
                 name: record.name,
                 color: record.color,
-                created_at: record.created_at,
+                created_at: UnixSeconds::from_seconds(record.created_at),
                 created_by: record.created_by,
             },
         })
@@ -179,7 +180,7 @@ impl EventsService {
                 id: r.id,
                 user_id: r.user_id,
                 username: r.username,
-                created_at: r.created_at,
+                created_at: UnixSeconds::from_seconds(r.created_at),
                 image_id: r.image_id,
                 abv: r.abv,
                 drink_type: r.drink_type_id.map(|id| DrinkType {
@@ -218,7 +219,7 @@ impl EventsService {
                 id: record.id,
                 name: record.name,
                 color: record.color,
-                created_at: record.created_at,
+                created_at: UnixSeconds::from_seconds(record.created_at),
                 created_by: record.created_by,
             },
             attendees,

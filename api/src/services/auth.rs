@@ -10,13 +10,11 @@ use crate::{
     domain::{
         credentials::{Password, Username},
         profile::{Gender, InvalidProfileValue, Weight},
+        time::{SessionExpiry, UnixSeconds},
     },
     repositories::AuthRepository,
     utils::{password, time::now},
 };
-
-const SESSION_LIFETIME_SECONDS: i64 = 60 * 60 * 24 * 30;
-const SESSION_RENEWAL_WINDOW_SECONDS: i64 = 60 * 60 * 24 * 15;
 
 #[derive(Debug, Error)]
 pub enum AuthError {
@@ -38,14 +36,14 @@ pub struct User {
     pub has_agreed_to_terms: bool,
     pub weight: Option<Weight>,
     pub gender: Option<Gender>,
-    pub created_at: Option<i64>,
+    pub created_at: Option<UnixSeconds>,
 }
 
 #[derive(Clone, Debug)]
 pub struct AuthenticatedSession {
     pub id: String,
     pub token: String,
-    pub expires_at: i64,
+    pub expires_at: SessionExpiry,
     pub user: User,
 }
 
@@ -124,18 +122,19 @@ impl AuthService {
             return Ok(None);
         };
         let current_time = now();
+        let expiry = SessionExpiry::from_timestamp(UnixSeconds::from_seconds(record.expires_at));
 
-        if current_time >= record.expires_at {
+        if expiry.is_expired(current_time) {
             self.repository.delete_session(&id).await?;
             return Ok(None);
         }
 
-        let expires_at = if current_time >= record.expires_at - SESSION_RENEWAL_WINDOW_SECONDS {
-            let renewed_expiry = current_time + SESSION_LIFETIME_SECONDS;
+        let expires_at = if expiry.should_renew(current_time) {
+            let renewed_expiry = SessionExpiry::new(current_time);
             self.repository.renew_session(&id, renewed_expiry).await?;
             renewed_expiry
         } else {
-            record.expires_at
+            expiry
         };
 
         Ok(Some(AuthenticatedSession {
@@ -148,7 +147,7 @@ impl AuthService {
                 has_agreed_to_terms: record.has_agreed_to_terms,
                 weight: record.weight.as_deref().map(Weight::parse).transpose()?,
                 gender: record.gender.as_deref().map(Gender::parse).transpose()?,
-                created_at: record.created_at,
+                created_at: record.created_at.map(UnixSeconds::from_seconds),
             },
         }))
     }
@@ -180,7 +179,7 @@ impl AuthService {
     ) -> Result<AuthenticatedSession, AuthError> {
         let token = generate_session_token();
         let id = hash_session_token(&token);
-        let expires_at = now() + SESSION_LIFETIME_SECONDS;
+        let expires_at = SessionExpiry::new(now());
         self.repository
             .create_session(&id, user_id, expires_at)
             .await?;

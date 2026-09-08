@@ -1,4 +1,5 @@
 use crate::database::Database;
+use crate::domain::time::UnixSeconds;
 
 #[derive(Debug)]
 pub struct EventSummaryRecord {
@@ -82,7 +83,7 @@ impl EventsRepository {
         id: &str,
         name: &str,
         color: &str,
-        created_at: i64,
+        created_at: UnixSeconds,
         created_by: &str,
         password: Option<&str>,
     ) -> Result<EventRecord, sqlx::Error> {
@@ -96,7 +97,7 @@ impl EventsRepository {
             id,
             name,
             color,
-            created_at,
+            created_at.as_seconds(),
             created_by,
             password,
         )
@@ -118,7 +119,7 @@ impl EventsRepository {
         &self,
         event_id: &str,
         user_id: &str,
-        granted_at: i64,
+        granted_at: UnixSeconds,
     ) -> Result<(), sqlx::Error> {
         sqlx::query!(
             r#"
@@ -128,7 +129,7 @@ impl EventsRepository {
             "#,
             event_id,
             user_id,
-            granted_at,
+            granted_at.as_seconds(),
         )
         .execute(&self.database)
         .await?;

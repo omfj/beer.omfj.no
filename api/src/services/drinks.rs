@@ -1,3 +1,4 @@
+use crate::domain::time::UnixSeconds;
 use crate::{
     database::Database,
     domain::drinks::{Abv, DrinkImage},
@@ -68,7 +69,7 @@ pub struct CreatedDrink {
     pub event_id: String,
     pub user_id: String,
     pub image_id: String,
-    pub created_at: i64,
+    pub created_at: UnixSeconds,
     pub drink_type_id: Option<String>,
     pub drink_size_id: Option<String>,
     pub abv: Option<f64>,

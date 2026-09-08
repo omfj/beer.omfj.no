@@ -1,3 +1,4 @@
+use crate::domain::time::LeaderboardYear;
 use axum::{
     Json,
     extract::{Query, State},
@@ -8,7 +9,7 @@ use crate::{routes::ApiError, state::AppState};
 
 #[derive(Deserialize)]
 pub struct LeaderboardQuery {
-    year: i64,
+    year: LeaderboardYear,
 }
 
 pub async fn get(

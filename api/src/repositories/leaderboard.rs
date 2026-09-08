@@ -1,4 +1,5 @@
 use crate::database::Database;
+use crate::domain::time::LeaderboardYear;
 
 #[derive(Debug)]
 pub struct LeaderboardRecord {
@@ -20,7 +21,10 @@ impl LeaderboardRepository {
         Self { database }
     }
 
-    pub async fn records(&self, year: i64) -> Result<Vec<LeaderboardRecord>, sqlx::Error> {
+    pub async fn records(
+        &self,
+        year: LeaderboardYear,
+    ) -> Result<Vec<LeaderboardRecord>, sqlx::Error> {
         sqlx::query_as!(
             LeaderboardRecord,
             r#"
@@ -39,13 +43,13 @@ impl LeaderboardRepository {
             WHERE event.password IS NULL
               AND CAST(strftime('%Y', attendee.created_at, 'unixepoch') AS INTEGER) = ?
             "#,
-            year,
+            year.value(),
         )
         .fetch_all(&self.database)
         .await
     }
 
-    pub async fn available_years(&self) -> Result<Vec<i64>, sqlx::Error> {
+    pub async fn available_years(&self) -> Result<Vec<LeaderboardYear>, sqlx::Error> {
         let records = sqlx::query!(
             r#"
             SELECT DISTINCT CAST(strftime('%Y', attendee.created_at, 'unixepoch') AS INTEGER) AS "year!: i64"
@@ -59,6 +63,9 @@ impl LeaderboardRepository {
         .await
         ?;
 
-        Ok(records.into_iter().map(|record| record.year).collect())
+        Ok(records
+            .into_iter()
+            .map(|record| LeaderboardYear::new(record.year))
+            .collect())
     }
 }

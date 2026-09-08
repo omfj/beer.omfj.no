@@ -1,4 +1,5 @@
 use crate::database::Database;
+use crate::domain::time::SessionExpiry;
 
 #[derive(Debug)]
 pub struct LoginRecord {
@@ -47,13 +48,13 @@ impl AuthRepository {
         &self,
         id: &str,
         user_id: &str,
-        expires_at: i64,
+        expires_at: SessionExpiry,
     ) -> Result<(), sqlx::Error> {
         sqlx::query!(
             "INSERT INTO session (id, user_id, expires_at) VALUES (?, ?, ?)",
             id,
             user_id,
-            expires_at
+            expires_at.timestamp().as_seconds()
         )
         .execute(&self.database)
         .await?;
@@ -111,10 +112,14 @@ impl AuthRepository {
         .await
     }
 
-    pub async fn renew_session(&self, id: &str, expires_at: i64) -> Result<(), sqlx::Error> {
+    pub async fn renew_session(
+        &self,
+        id: &str,
+        expires_at: SessionExpiry,
+    ) -> Result<(), sqlx::Error> {
         sqlx::query!(
             "UPDATE session SET expires_at = ? WHERE id = ?",
-            expires_at,
+            expires_at.timestamp().as_seconds(),
             id
         )
         .execute(&self.database)

@@ -1,3 +1,4 @@
+use crate::domain::time::LeaderboardYear;
 use std::{cmp::Ordering, collections::HashMap};
 
 use serde::Serialize;
@@ -27,8 +28,8 @@ pub struct LeaderboardEntry {
 #[serde(rename_all = "camelCase")]
 pub struct Leaderboard {
     pub leaderboard: Vec<LeaderboardEntry>,
-    pub selected_year: i64,
-    pub available_years: Vec<i64>,
+    pub selected_year: LeaderboardYear,
+    pub available_years: Vec<LeaderboardYear>,
 }
 
 #[derive(Clone)]
@@ -41,7 +42,7 @@ impl LeaderboardService {
         Self { repository }
     }
 
-    pub async fn get(&self, year: i64) -> Result<Leaderboard, LeaderboardError> {
+    pub async fn get(&self, year: LeaderboardYear) -> Result<Leaderboard, LeaderboardError> {
         let records = self.repository.records(year).await?;
         let available_years = self.repository.available_years().await?;
         let mut users = HashMap::<String, LeaderboardEntry>::new();

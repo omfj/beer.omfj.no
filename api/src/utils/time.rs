@@ -1,8 +1,12 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
-pub fn now() -> i64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs() as i64
+use crate::domain::time::UnixSeconds;
+
+pub fn now() -> UnixSeconds {
+    UnixSeconds::from_seconds(
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs() as i64,
+    )
 }
