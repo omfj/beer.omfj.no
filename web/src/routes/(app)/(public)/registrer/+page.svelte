@@ -40,7 +40,9 @@
 				termsAccepted: hasAgreedToTerms
 			});
 			auth.setUser(user);
-			await goto(event ? `/arrangement/${encodeURIComponent(event)}` : '/');
+			await goto(event ? `/arrangement/${encodeURIComponent(event)}` : '/', {
+				invalidateAll: true
+			});
 		} catch (error) {
 			errorMessage =
 				error instanceof ApiError ? error.message : 'Kunne ikke registrere brukeren. Prøv igjen.';

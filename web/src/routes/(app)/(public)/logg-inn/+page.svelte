@@ -26,7 +26,9 @@
 		try {
 			const { user } = await api.login({ username, password });
 			auth.setUser(user);
-			await goto(event ? `/arrangement/${encodeURIComponent(event)}` : '/');
+			await goto(event ? `/arrangement/${encodeURIComponent(event)}` : '/', {
+				invalidateAll: true
+			});
 		} catch (error) {
 			errorMessage =
 				error instanceof ApiError ? error.message : 'Kunne ikke logge inn. Prøv igjen.';
