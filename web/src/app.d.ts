@@ -4,7 +4,7 @@ declare global {
 	namespace App {}
 
 	interface ImportMetaEnv {
-		readonly PUBLIC_API_BASE_URL?: string;
+		readonly VITE_API_BASE_URL?: string;
 	}
 }
 

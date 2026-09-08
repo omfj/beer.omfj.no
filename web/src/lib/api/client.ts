@@ -1,6 +1,6 @@
 import { ApiClient } from '.';
 
-const baseUrl = import.meta.env.PUBLIC_API_BASE_URL || '/api';
+const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export const api = new ApiClient({ baseUrl });
 
