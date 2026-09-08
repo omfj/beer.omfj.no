@@ -8,9 +8,9 @@ importers:
 
   .: {}
 
-  api: {}
+  beer-api: {}
 
-  web:
+  beer-web:
     dependencies:
       '@lucide/svelte':
         specifier: 1.14.0

@@ -1,6 +1,6 @@
 packages:
-  - api
-  - web
+  - beer-api
+  - beer-web
 
 allowBuilds:
   esbuild: true

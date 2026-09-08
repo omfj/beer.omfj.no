@@ -7,9 +7,9 @@ ARG DATABASE_URL
 COPY Cargo.toml Cargo.lock ./
 COPY .sqlx ./.sqlx/
 COPY .cargo ./.cargo/
-COPY api/Cargo.toml api/build.rs ./api/
-COPY api/migrations ./api/migrations
-COPY api/src ./api/src
+COPY beer-api/Cargo.toml beer-api/build.rs ./beer-api/
+COPY beer-api/migrations ./beer-api/migrations
+COPY beer-api/src ./beer-api/src
 
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
 	--mount=type=cache,target=/build/target \

@@ -4,7 +4,7 @@
 
 node_modules
 target
-web
+beer-web
 
 .env
 .env.*
