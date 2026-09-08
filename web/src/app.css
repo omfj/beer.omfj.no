@@ -66,6 +66,8 @@
 }
 
 @theme {
+	--breakpoint-xs: 30rem;
+
 	--color-background: var(--background);
 	--color-background-dark: var(--background-dark);
 	--color-background-darker: var(--background-darker);

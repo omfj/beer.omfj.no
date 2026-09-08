@@ -21,7 +21,7 @@
 		informasjon og melde deg på.
 	</p>
 
-	<div class="flex items-center justify-between">
+	<div class="xs:flex-row xs:items-center flex flex-col justify-between gap-4">
 		<ButtonLink href={resolve('/arrangementer/ny')}>Lag nytt arrangement</ButtonLink>
 		<a
 			href={resolve('/endringer')}
