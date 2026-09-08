@@ -7,32 +7,20 @@ edition = "2024"
 workspace = true
 
 [dependencies]
-axum = "0.8"
-axum-extra = { version = "0.12", features = ["cookie", "multipart"] }
-base64 = "0.23.1"
-bcrypt = "0.19.3"
-cookie = "0.18"
-dotenvy = "0.15"
-rand = "0.10.2"
-rust-s3 = { version = "0.37", default-features = false, features = [
-  "tokio-rustls-tls",
-] }
-serde = { version = "1", features = ["derive"] }
-sha2 = "0.11.0"
-sqlx = { version = "0.9", features = [
-  "runtime-tokio",
-  "sqlite",
-  "macros",
-  "migrate",
-] }
-thiserror = "2"
-tokio = { version = "1", features = [
-  "macros",
-  "net",
-  "rt-multi-thread",
-  "signal",
-] }
-tower = "0.5"
-tower-http = { version = "0.7.1", features = ["cors", "trace"] }
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+axum = { workspace = true }
+axum-extra = { workspace = true }
+base64 = { workspace = true }
+bcrypt = { workspace = true }
+cookie = { workspace = true }
+dotenvy = { workspace = true }
+rand = { workspace = true }
+rust-s3 = { workspace = true }
+serde = { workspace = true }
+sha2 = { workspace = true }
+sqlx = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
