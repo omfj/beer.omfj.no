@@ -226,10 +226,10 @@ dependencies = [
  "beer-domain",
  "beer-image",
  "beer-score",
+ "beer-storage",
  "cookie",
  "dotenvy",
  "rand",
- "rust-s3",
  "serde",
  "sha2 0.11.0",
  "sqlx",
@@ -260,6 +260,16 @@ dependencies = [
 [[package]]
 name = "beer-score"
 version = "0.1.0"
+
+[[package]]
+name = "beer-storage"
+version = "0.1.0"
+dependencies = [
+ "beer-image",
+ "rust-s3",
+ "thiserror",
+ "tokio",
+]
 
 [[package]]
 name = "bitflags"

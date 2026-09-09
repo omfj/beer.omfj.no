@@ -6,11 +6,11 @@ mod router;
 mod routes;
 mod services;
 mod state;
-mod storage;
 mod utils;
 
 use std::net::Ipv4Addr;
 
+use beer_storage::ImageStorage;
 use config::Config;
 use state::AppState;
 
@@ -20,7 +20,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = Config::from_env()?;
     let database = database::connect(&config.database_url).await?;
-    let state = AppState::new(database, &config, storage::ImageStorage::new(&config)?);
+    let state = AppState::new(database, &config, ImageStorage::new(config.s3.as_ref())?);
     let app = router::create(state, &config.web_app_url)?;
 
     let address = (get_host(config.development), config.port);

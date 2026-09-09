@@ -1,0 +1,15 @@
+[package]
+name = "beer-storage"
+version = "0.1.0"
+edition = "2024"
+
+[lints]
+workspace = true
+
+[dependencies]
+beer-image = { workspace = true }
+rust-s3 = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }

@@ -1,11 +1,11 @@
 use crate::{
     database::Database,
     repositories::{EventsRepository, drinks::DrinksRepository},
-    storage::{ImageStorage, StorageError},
 };
 use beer_domain::drinks::{Abv, CreatedDrink, DrinkSize, DrinkType, DrinkTypeSize};
 use beer_domain::time::UnixSeconds;
 use beer_image::DrinkImage;
+use beer_storage::{ImageStorage, StorageError, StoredImage};
 use serde::Serialize;
 use thiserror::Error;
 
@@ -57,11 +57,7 @@ impl DrinksService {
             images,
         }
     }
-    pub async fn image(
-        &self,
-        image_id: &str,
-        user_id: &str,
-    ) -> Result<crate::storage::StoredImage, DrinksError> {
+    pub async fn image(&self, image_id: &str, user_id: &str) -> Result<StoredImage, DrinksError> {
         let event_id = self
             .repository
             .image_event(image_id)

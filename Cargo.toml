@@ -1,5 +1,5 @@
 [workspace]
-members = ["beer-api", "beer-domain", "beer-image", "beer-score"]
+members = ["beer-api", "beer-domain", "beer-image", "beer-score", "beer-storage"]
 resolver = "2"
 
 [workspace.dependencies]
@@ -9,6 +9,7 @@ base64 = "0.23.1"
 beer-domain = { path = "beer-domain" }
 beer-image = { path = "beer-image" }
 beer-score = { path = "beer-score" }
+beer-storage = { path = "beer-storage" }
 bcrypt = "0.19.3"
 cookie = "0.18"
 dotenvy = "0.15"

@@ -1,3 +1,5 @@
+use beer_storage::ImageStorage;
+
 use crate::{
     config::Config,
     database::Database,
@@ -18,7 +20,7 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn new(database: Database, config: &Config, images: crate::storage::ImageStorage) -> Self {
+    pub fn new(database: Database, config: &Config, images: ImageStorage) -> Self {
         let drinks = DrinksService::new(database.clone(), images);
         let auth = AuthService::new(AuthRepository::new(database.clone()));
         let events = EventsService::new(EventsRepository::new(database.clone()));
