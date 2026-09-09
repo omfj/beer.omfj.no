@@ -7,6 +7,14 @@ ARG DATABASE_URL
 COPY Cargo.toml Cargo.lock ./
 COPY .sqlx ./.sqlx/
 COPY .cargo ./.cargo/
+COPY beer-domain/Cargo.toml ./beer-domain/
+COPY beer-domain/src ./beer-domain/src
+COPY beer-image/Cargo.toml ./beer-image/
+COPY beer-image/src ./beer-image/src
+COPY beer-score/Cargo.toml ./beer-score/
+COPY beer-score/src ./beer-score/src
+COPY beer-storage/Cargo.toml ./beer-storage/
+COPY beer-storage/src ./beer-storage/src
 COPY beer-api/Cargo.toml beer-api/build.rs ./beer-api/
 COPY beer-api/migrations ./beer-api/migrations
 COPY beer-api/src ./beer-api/src
