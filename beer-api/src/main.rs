@@ -13,10 +13,13 @@ use std::net::Ipv4Addr;
 use beer_storage::ImageStorage;
 use config::Config;
 use state::AppState;
+use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
+
+const DEFAULT_FILTER: &str = "beer_counter_api=debug,tower_http=debug";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    utils::telemetry::init();
+    telemetry_init();
 
     let config = Config::from_env()?;
     let database = database::connect(&config.database_url).await?;
@@ -50,4 +53,11 @@ async fn shutdown_signal() {
     if let Err(error) = tokio::signal::ctrl_c().await {
         tracing::error!(%error, "failed to install shutdown signal handler");
     }
+}
+
+pub fn telemetry_init() {
+    tracing_subscriber::registry()
+        .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(DEFAULT_FILTER)))
+        .with(tracing_subscriber::fmt::layer())
+        .init();
 }
