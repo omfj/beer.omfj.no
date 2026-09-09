@@ -3,13 +3,14 @@ use axum::{
     http::header,
     response::{IntoResponse, Response},
 };
+use beer_domain::id::ImageId;
 
 use crate::{auth::CurrentUser, routes::ApiError, state::AppState};
 
 pub async fn get(
     State(state): State<AppState>,
     CurrentUser(session): CurrentUser,
-    Path(id): Path<String>,
+    Path(id): Path<ImageId>,
 ) -> Result<Response, ApiError> {
     let image = state.drinks.image(&id, &session.user.id).await?;
     Ok((

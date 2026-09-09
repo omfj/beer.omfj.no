@@ -1,3 +1,4 @@
+use crate::id::{DrinkId, EventId, ImageId, UserId};
 use crate::time::UnixSeconds;
 use serde::Serialize;
 use thiserror::Error;
@@ -59,10 +60,10 @@ pub struct DrinkTypeSize {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreatedDrink {
-    pub id: String,
-    pub event_id: String,
-    pub user_id: String,
-    pub image_id: String,
+    pub id: DrinkId,
+    pub event_id: EventId,
+    pub user_id: UserId,
+    pub image_id: ImageId,
     pub created_at: UnixSeconds,
     pub drink_type_id: Option<String>,
     pub drink_size_id: Option<String>,

@@ -51,3 +51,22 @@ fn alcohol_percentage_validation_preserves_boundaries() {
         assert!(Abv::parse(value).is_err());
     }
 }
+
+#[test]
+fn identifiers_round_trip_as_plain_strings_including_legacy_values() {
+    use beer_domain::id::{DrinkId, EventId, ImageId, UserId};
+    use serde::{Serialize, de::DeserializeOwned};
+    use std::fmt::Debug;
+
+    fn round_trip<T: From<String> + Serialize + DeserializeOwned + PartialEq + Debug>(value: &str) {
+        let id = T::from(value.to_owned());
+        let serialized = serde_json::to_value(&id).unwrap();
+        assert_eq!(serialized, json!(value));
+        assert_eq!(serde_json::from_value::<T>(serialized).unwrap(), id);
+    }
+
+    round_trip::<UserId>("legacy-user");
+    round_trip::<EventId>("open");
+    round_trip::<DrinkId>("drink");
+    round_trip::<ImageId>("drink.png");
+}

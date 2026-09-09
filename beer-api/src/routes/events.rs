@@ -9,6 +9,7 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
 };
+use beer_domain::id::EventId;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -51,7 +52,7 @@ pub async fn create(
 pub async fn get(
     State(state): State<AppState>,
     CurrentUser(session): CurrentUser,
-    Path(id): Path<String>,
+    Path(id): Path<EventId>,
 ) -> Result<Json<crate::services::EventDetail>, ApiError> {
     match state.events.get(&id, &session.user.id).await? {
         EventLookup::Found(event) => Ok(Json(event)),
@@ -63,7 +64,7 @@ pub async fn get(
 pub async fn unlock(
     State(state): State<AppState>,
     CurrentUser(session): CurrentUser,
-    Path(id): Path<String>,
+    Path(id): Path<EventId>,
     Json(request): Json<UnlockEventRequest>,
 ) -> Result<StatusCode, ApiError> {
     match state

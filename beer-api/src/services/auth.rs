@@ -1,3 +1,5 @@
+use crate::utils::id;
+use beer_domain::id::UserId;
 use std::fmt::Write as _;
 
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
@@ -28,7 +30,7 @@ pub enum AuthError {
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct User {
-    pub id: String,
+    pub id: UserId,
     pub username: String,
     pub has_agreed_to_terms: bool,
     pub weight: Option<Weight>,
@@ -80,7 +82,7 @@ impl AuthService {
             return Ok(LoginResult::InvalidCredentials);
         }
 
-        let session = self.create_authenticated_session(&user.id).await?;
+        let session = self.create_authenticated_session(&user.id.into()).await?;
         Ok(LoginResult::Authenticated(session))
     }
 
@@ -90,7 +92,7 @@ impl AuthService {
         password: &Password,
     ) -> Result<RegistrationResult, AuthError> {
         let password_hash = password::hash(password.as_str()).await?;
-        let user_id = generate_user_id();
+        let user_id = id::user_id();
 
         if let Err(error) = self
             .repository
@@ -139,7 +141,7 @@ impl AuthService {
             token: token.to_owned(),
             expires_at,
             user: User {
-                id: record.user_id,
+                id: record.user_id.into(),
                 username: record.username,
                 has_agreed_to_terms: record.has_agreed_to_terms,
                 weight: record.weight.as_deref().map(Weight::parse).transpose()?,
@@ -156,7 +158,7 @@ impl AuthService {
 
     pub async fn update_profile(
         &self,
-        user_id: &str,
+        user_id: &UserId,
         weight: Option<Weight>,
         gender: Option<Gender>,
     ) -> Result<(), AuthError> {
@@ -172,7 +174,7 @@ impl AuthService {
 
     async fn create_authenticated_session(
         &self,
-        user_id: &str,
+        user_id: &UserId,
     ) -> Result<AuthenticatedSession, AuthError> {
         let token = generate_session_token();
         let id = hash_session_token(&token);
@@ -192,26 +194,6 @@ fn generate_session_token() -> String {
     URL_SAFE_NO_PAD.encode(bytes)
 }
 
-fn generate_user_id() -> String {
-    const ALPHABET: &[u8; 32] = b"abcdefghijklmnopqrstuvwxyz234567";
-    let mut bytes = [0_u8; 15];
-    rand::rng().fill_bytes(&mut bytes);
-    let mut id = String::with_capacity(24);
-    let mut buffer = 0_u32;
-    let mut bits = 0_u8;
-
-    for byte in bytes {
-        buffer = (buffer << 8) | u32::from(byte);
-        bits += 8;
-        while bits >= 5 {
-            bits -= 5;
-            id.push(ALPHABET[((buffer >> bits) & 31) as usize] as char);
-        }
-    }
-
-    id
-}
-
 fn hash_session_token(token: &str) -> String {
     Sha256::digest(token.as_bytes())
         .iter()
@@ -225,10 +207,7 @@ fn hash_session_token(token: &str) -> String {
 mod tests {
     use sqlx::sqlite::SqlitePoolOptions;
 
-    use super::{
-        AuthService, RegistrationResult, generate_session_token, generate_user_id,
-        hash_session_token,
-    };
+    use super::{AuthService, RegistrationResult, generate_session_token, hash_session_token};
     use crate::repositories::AuthRepository;
     use beer_domain::{
         credentials::{Password, Username},
@@ -248,13 +227,6 @@ mod tests {
             hash_session_token("test"),
             "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
         );
-    }
-
-    #[test]
-    fn generates_svelte_compatible_user_ids() {
-        let id = generate_user_id();
-        assert_eq!(id.len(), 24);
-        assert!(id.chars().all(|character| character.is_ascii_lowercase() || ('2'..='7').contains(&character)));
     }
 
     #[tokio::test]

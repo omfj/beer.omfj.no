@@ -1,4 +1,5 @@
 use crate::database::Database;
+use beer_domain::id::{EventId, UserId};
 use beer_domain::time::UnixSeconds;
 
 #[derive(Debug)]
@@ -55,7 +56,8 @@ impl EventsRepository {
         Self { database }
     }
 
-    pub async fn for_user(&self, user_id: &str) -> Result<Vec<EventSummaryRecord>, sqlx::Error> {
+    pub async fn for_user(&self, user_id: &UserId) -> Result<Vec<EventSummaryRecord>, sqlx::Error> {
+        let user_id = user_id.as_str();
         sqlx::query_as!(EventSummaryRecord, r#"
             SELECT event.id, event.name,
                    COUNT(attendee.id) AS "total_attendees!: i64",
@@ -68,7 +70,8 @@ impl EventsRepository {
         "#, user_id, user_id, user_id).fetch_all(&self.database).await
     }
 
-    pub async fn event(&self, id: &str) -> Result<Option<EventRecord>, sqlx::Error> {
+    pub async fn event(&self, id: &EventId) -> Result<Option<EventRecord>, sqlx::Error> {
+        let id = id.as_str();
         sqlx::query_as!(
             EventRecord,
             "SELECT id, name, color, created_at, created_by, password FROM event WHERE id = ?",
@@ -80,13 +83,15 @@ impl EventsRepository {
 
     pub async fn create(
         &self,
-        id: &str,
+        id: &EventId,
         name: &str,
         color: &str,
         created_at: UnixSeconds,
-        created_by: &str,
+        created_by: &UserId,
         password: Option<&str>,
     ) -> Result<EventRecord, sqlx::Error> {
+        let created_by = created_by.as_str();
+        let id = id.as_str();
         sqlx::query_as!(
             EventRecord,
             r#"
@@ -105,7 +110,13 @@ impl EventsRepository {
         .await
     }
 
-    pub async fn has_access(&self, event_id: &str, user_id: &str) -> Result<bool, sqlx::Error> {
+    pub async fn has_access(
+        &self,
+        event_id: &EventId,
+        user_id: &UserId,
+    ) -> Result<bool, sqlx::Error> {
+        let user_id = user_id.as_str();
+        let event_id = event_id.as_str();
         sqlx::query_scalar!(
             "SELECT EXISTS(SELECT 1 FROM event_access WHERE event_id = ? AND user_id = ?) AS \"has_access!: bool\"",
             event_id,
@@ -117,10 +128,12 @@ impl EventsRepository {
 
     pub async fn grant_access(
         &self,
-        event_id: &str,
-        user_id: &str,
+        event_id: &EventId,
+        user_id: &UserId,
         granted_at: UnixSeconds,
     ) -> Result<(), sqlx::Error> {
+        let user_id = user_id.as_str();
+        let event_id = event_id.as_str();
         sqlx::query!(
             r#"
             INSERT INTO event_access (event_id, user_id, granted_at)
@@ -136,7 +149,8 @@ impl EventsRepository {
         Ok(())
     }
 
-    pub async fn attendees(&self, event_id: &str) -> Result<Vec<AttendeeRecord>, sqlx::Error> {
+    pub async fn attendees(&self, event_id: &EventId) -> Result<Vec<AttendeeRecord>, sqlx::Error> {
+        let event_id = event_id.as_str();
         sqlx::query_as!(AttendeeRecord, r#"
             SELECT attendee.id, attendee.user_id, user.username, attendee.created_at,
                    CASE WHEN user.has_agreed_to_terms THEN attendee.image_id ELSE NULL END AS "image_id?",
@@ -154,7 +168,11 @@ impl EventsRepository {
         "#, event_id).fetch_all(&self.database).await
     }
 
-    pub async fn access_users(&self, event_id: &str) -> Result<Vec<EventUserRecord>, sqlx::Error> {
+    pub async fn access_users(
+        &self,
+        event_id: &EventId,
+    ) -> Result<Vec<EventUserRecord>, sqlx::Error> {
+        let event_id = event_id.as_str();
         sqlx::query_as!(
             EventUserRecord,
             r#"

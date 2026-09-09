@@ -1,3 +1,4 @@
+use beer_domain::id::UserId;
 use beer_domain::time::LeaderboardYear;
 use beer_score::{calculate_drink_points, round_to_one_decimal};
 use std::{cmp::Ordering, collections::HashMap};
@@ -16,7 +17,7 @@ pub enum LeaderboardError {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LeaderboardEntry {
-    pub user_id: String,
+    pub user_id: UserId,
     pub username: String,
     pub points: f64,
     pub drink_count: u32,
@@ -44,9 +45,10 @@ impl LeaderboardService {
     pub async fn get(&self, year: LeaderboardYear) -> Result<Leaderboard, LeaderboardError> {
         let records = self.repository.records(year).await?;
         let available_years = self.repository.available_years().await?;
-        let mut users = HashMap::<String, LeaderboardEntry>::new();
+        let mut users = HashMap::<UserId, LeaderboardEntry>::new();
 
         for record in records {
+            let user_id = UserId::from(record.user_id);
             #[allow(clippy::cast_precision_loss)]
             let points = calculate_drink_points(
                 record.volume_ml.map(|value| value as f64),
@@ -54,9 +56,9 @@ impl LeaderboardService {
                 record.multiplier,
             );
             let entry = users
-                .entry(record.user_id.clone())
+                .entry(user_id.clone())
                 .or_insert_with(|| LeaderboardEntry {
-                    user_id: record.user_id,
+                    user_id,
                     username: record.username,
                     points: 0.0,
                     drink_count: 0,

@@ -1,4 +1,5 @@
 use crate::database::Database;
+use beer_domain::id::UserId;
 use beer_domain::time::SessionExpiry;
 
 #[derive(Debug)]
@@ -47,9 +48,10 @@ impl AuthRepository {
     pub async fn create_session(
         &self,
         id: &str,
-        user_id: &str,
+        user_id: &UserId,
         expires_at: SessionExpiry,
     ) -> Result<(), sqlx::Error> {
+        let user_id = user_id.as_str();
         sqlx::query!(
             "INSERT INTO session (id, user_id, expires_at) VALUES (?, ?, ?)",
             id,
@@ -63,10 +65,11 @@ impl AuthRepository {
 
     pub async fn create_user(
         &self,
-        id: &str,
+        id: &UserId,
         username: &str,
         password_hash: &str,
     ) -> Result<(), sqlx::Error> {
+        let id = id.as_str();
         let mut transaction = self.database.begin().await?;
 
         sqlx::query!(
@@ -136,10 +139,11 @@ impl AuthRepository {
 
     pub async fn update_profile(
         &self,
-        user_id: &str,
+        user_id: &UserId,
         weight: Option<&str>,
         gender: Option<&str>,
     ) -> Result<(), sqlx::Error> {
+        let user_id = user_id.as_str();
         sqlx::query!(
             "UPDATE user SET weight = ?, gender = ? WHERE id = ?",
             weight,

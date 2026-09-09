@@ -2,5 +2,6 @@
 
 pub mod credentials;
 pub mod drinks;
+pub mod id;
 pub mod profile;
 pub mod time;

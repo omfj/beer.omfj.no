@@ -1,5 +1,6 @@
 use crate::database::Database;
 use beer_domain::drinks::{CreatedDrink, DrinkSize, DrinkType, DrinkTypeSize};
+use beer_domain::id::{DrinkId, EventId, ImageId, UserId};
 
 pub struct DrinkOptionsRecord {
     pub types: Vec<DrinkType>,
@@ -15,7 +16,8 @@ pub struct DeletedDrink {
 pub struct DrinksRepository(pub Database);
 
 impl DrinksRepository {
-    pub async fn image_event(&self, image_id: &str) -> Result<Option<String>, sqlx::Error> {
+    pub async fn image_event(&self, image_id: &ImageId) -> Result<Option<String>, sqlx::Error> {
+        let image_id = image_id.as_str();
         sqlx::query_scalar!(
             "SELECT attendee.event_id
             FROM attendee
@@ -79,10 +81,13 @@ impl DrinksRepository {
 
     pub async fn delete(
         &self,
-        event_id: &str,
-        drink_id: &str,
-        user_id: &str,
+        event_id: &EventId,
+        drink_id: &DrinkId,
+        user_id: &UserId,
     ) -> Result<Option<DeletedDrink>, sqlx::Error> {
+        let user_id = user_id.as_str();
+        let event_id = event_id.as_str();
+        let drink_id = drink_id.as_str();
         sqlx::query_as!(
             DeletedDrink,
             r#"
@@ -104,10 +109,10 @@ impl DrinksRepository {
             INSERT INTO attendee (id, event_id, user_id, image_id, created_at, drink_type_id, drink_size_id, abv)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             "#,
-            drink.id,
-            drink.event_id,
-            drink.user_id,
-            drink.image_id,
+            drink.id.as_str(),
+            drink.event_id.as_str(),
+            drink.user_id.as_str(),
+            drink.image_id.as_str(),
             drink.created_at.as_seconds(),
             drink.drink_type_id,
             drink.drink_size_id,

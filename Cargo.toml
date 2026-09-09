@@ -13,6 +13,7 @@ beer-storage = { path = "beer-storage" }
 bcrypt = "0.19.3"
 cookie = "0.18"
 dotenvy = "0.15"
+nanoid = "0.5"
 rand = "0.10.2"
 rust-s3 = { version = "0.37", default-features = false, features = [
   "tokio-rustls-tls",

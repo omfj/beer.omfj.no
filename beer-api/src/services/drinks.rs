@@ -1,8 +1,10 @@
+use crate::utils::id;
 use crate::{
     database::Database,
     repositories::{EventsRepository, drinks::DrinksRepository},
 };
 use beer_domain::drinks::{Abv, CreatedDrink, DrinkSize, DrinkType, DrinkTypeSize};
+use beer_domain::id::{DrinkId, EventId, ImageId, UserId};
 use beer_domain::time::UnixSeconds;
 use beer_image::DrinkImage;
 use beer_storage::{ImageStorage, StorageError, StoredImage};
@@ -57,15 +59,19 @@ impl DrinksService {
             images,
         }
     }
-    pub async fn image(&self, image_id: &str, user_id: &str) -> Result<StoredImage, DrinksError> {
+    pub async fn image(
+        &self,
+        image_id: &ImageId,
+        user_id: &UserId,
+    ) -> Result<StoredImage, DrinksError> {
         let event_id = self
             .repository
             .image_event(image_id)
             .await?
             .ok_or(DrinksError::ImageNotFound)?;
-        self.authorize(&event_id, user_id).await?;
+        self.authorize(&event_id.into(), user_id).await?;
         self.images
-            .get(image_id)
+            .get(image_id.as_str())
             .await?
             .ok_or(DrinksError::ImageNotFound)
     }
@@ -79,14 +85,14 @@ impl DrinksService {
         })
     }
 
-    pub async fn authorize(&self, event_id: &str, user_id: &str) -> Result<(), DrinksError> {
+    pub async fn authorize(&self, event_id: &EventId, user_id: &UserId) -> Result<(), DrinksError> {
         let event = self
             .events
             .event(event_id)
             .await?
             .ok_or(DrinksError::NotFound)?;
         if event.password.is_some()
-            && event.created_by.as_deref() != Some(user_id)
+            && event.created_by.as_deref() != Some(user_id.as_str())
             && !self.events.has_access(event_id, user_id).await?
         {
             return Err(DrinksError::Forbidden);
@@ -96,9 +102,9 @@ impl DrinksService {
 
     pub async fn delete(
         &self,
-        event_id: &str,
-        drink_id: &str,
-        user_id: &str,
+        event_id: &EventId,
+        drink_id: &DrinkId,
+        user_id: &UserId,
     ) -> Result<(), DrinksError> {
         let drink = self
             .repository
@@ -117,8 +123,8 @@ impl DrinksService {
 
     pub async fn create(
         &self,
-        event_id: &str,
-        user_id: &str,
+        event_id: &EventId,
+        user_id: &UserId,
         input: NewDrink,
     ) -> Result<CreatedDrink, DrinksError> {
         self.authorize(event_id, user_id).await?;
@@ -134,12 +140,12 @@ impl DrinksService {
             return Err(DrinksError::InvalidSelection);
         }
 
-        let id = format!("{:032x}", rand::random::<u128>());
+        let id = id::drink_id();
         let drink = CreatedDrink {
-            image_id: format!("{id}.{}", input.image.extension()),
+            image_id: format!("{id}.{}", input.image.extension()).into(),
             id,
-            event_id: event_id.into(),
-            user_id: user_id.into(),
+            event_id: event_id.clone(),
+            user_id: user_id.clone(),
             created_at: UnixSeconds::now(),
             drink_type_id: input.drink_type_id,
             drink_size_id: input.drink_size_id,
@@ -147,13 +153,13 @@ impl DrinksService {
         };
         self.images
             .put(
-                &drink.image_id,
+                drink.image_id.as_str(),
                 input.image.bytes(),
                 input.image.content_type(),
             )
             .await?;
         if let Err(error) = self.repository.insert(&drink).await {
-            if let Err(cleanup_error) = self.images.delete(&drink.image_id).await {
+            if let Err(cleanup_error) = self.images.delete(drink.image_id.as_str()).await {
                 tracing::error!(image_id = %drink.image_id, error = ?cleanup_error, "failed to clean up image after drink insert failure");
             }
             return Err(error.into());

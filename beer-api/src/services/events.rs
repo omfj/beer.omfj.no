@@ -1,8 +1,9 @@
 use crate::utils::color::generate_soft_color;
+use crate::utils::id;
 use crate::{repositories::EventsRepository, utils::password};
 use beer_domain::drinks::{DrinkSize, DrinkType};
+use beer_domain::id::{DrinkId, EventId, ImageId, UserId};
 use beer_domain::time::UnixSeconds;
-use rand::RngExt;
 use serde::Serialize;
 use thiserror::Error;
 
@@ -17,7 +18,7 @@ pub enum EventsError {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EventSummary {
-    pub id: String,
+    pub id: EventId,
     pub name: String,
     pub total_attendees: i64,
     pub distinct_users: i64,
@@ -29,11 +30,11 @@ pub struct Events {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Event {
-    pub id: String,
+    pub id: EventId,
     pub name: String,
     pub color: String,
     pub created_at: UnixSeconds,
-    pub created_by: Option<String>,
+    pub created_by: Option<UserId>,
 }
 #[derive(Debug, Serialize)]
 pub struct CreatedEvent {
@@ -42,11 +43,11 @@ pub struct CreatedEvent {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Attendee {
-    pub id: String,
-    pub user_id: String,
+    pub id: DrinkId,
+    pub user_id: UserId,
     pub username: String,
     pub created_at: UnixSeconds,
-    pub image_id: Option<String>,
+    pub image_id: Option<ImageId>,
     pub abv: Option<f64>,
     pub drink_type: Option<DrinkType>,
     pub drink_size: Option<DrinkSize>,
@@ -55,7 +56,7 @@ pub struct Attendee {
 }
 #[derive(Debug, Serialize)]
 pub struct EventUser {
-    pub id: String,
+    pub id: UserId,
     pub username: String,
     pub weight: Option<String>,
     pub gender: Option<String>,
@@ -90,14 +91,14 @@ impl EventsService {
         Self { repository }
     }
 
-    pub async fn list(&self, user_id: &str) -> Result<Events, EventsError> {
+    pub async fn list(&self, user_id: &UserId) -> Result<Events, EventsError> {
         let events = self
             .repository
             .for_user(user_id)
             .await?
             .into_iter()
             .map(|r| EventSummary {
-                id: r.id,
+                id: r.id.into(),
                 name: r.name,
                 total_attendees: r.total_attendees,
                 distinct_users: r.distinct_users,
@@ -110,14 +111,14 @@ impl EventsService {
         &self,
         name: &str,
         event_password: Option<&str>,
-        user_id: &str,
+        user_id: &UserId,
     ) -> Result<CreatedEvent, EventsError> {
         let password_hash = match event_password {
             Some(password) => Some(password::hash(password).await?),
             None => None,
         };
         let created_at = UnixSeconds::now();
-        let id = generate_event_id();
+        let id = id::event_id();
         let color = generate_soft_color();
         let record = self
             .repository
@@ -133,21 +134,21 @@ impl EventsService {
 
         Ok(CreatedEvent {
             event: Event {
-                id: record.id,
+                id: record.id.into(),
                 name: record.name,
                 color: record.color,
                 created_at: UnixSeconds::from_seconds(record.created_at),
-                created_by: record.created_by,
+                created_by: record.created_by.map(Into::into),
             },
         })
     }
 
-    pub async fn get(&self, id: &str, user_id: &str) -> Result<EventLookup, EventsError> {
+    pub async fn get(&self, id: &EventId, user_id: &UserId) -> Result<EventLookup, EventsError> {
         let Some(record) = self.repository.event(id).await? else {
             return Ok(EventLookup::NotFound);
         };
         if record.password.is_some()
-            && record.created_by.as_deref() != Some(user_id)
+            && record.created_by.as_deref() != Some(user_id.as_str())
             && !self.repository.has_access(id, user_id).await?
         {
             return Ok(EventLookup::Forbidden);
@@ -159,11 +160,11 @@ impl EventsService {
             .await?
             .into_iter()
             .map(|r| Attendee {
-                id: r.id,
-                user_id: r.user_id,
+                id: r.id.into(),
+                user_id: r.user_id.into(),
                 username: r.username,
                 created_at: UnixSeconds::from_seconds(r.created_at),
-                image_id: r.image_id,
+                image_id: r.image_id.map(Into::into),
                 abv: r.abv,
                 drink_type: r.drink_type_id.map(|id| DrinkType {
                     id,
@@ -190,7 +191,7 @@ impl EventsService {
             .await?
             .into_iter()
             .map(|r| EventUser {
-                id: r.id,
+                id: r.id.into(),
                 username: r.username,
                 weight: r.weight,
                 gender: r.gender,
@@ -198,11 +199,11 @@ impl EventsService {
             .collect();
         Ok(EventLookup::Found(EventDetail {
             event: Event {
-                id: record.id,
+                id: record.id.into(),
                 name: record.name,
                 color: record.color,
                 created_at: UnixSeconds::from_seconds(record.created_at),
-                created_by: record.created_by,
+                created_by: record.created_by.map(Into::into),
             },
             attendees,
             access_users,
@@ -211,8 +212,8 @@ impl EventsService {
 
     pub async fn unlock(
         &self,
-        id: &str,
-        user_id: &str,
+        id: &EventId,
+        user_id: &UserId,
         supplied_password: &str,
     ) -> Result<UnlockResult, EventsError> {
         let Some(event) = self.repository.event(id).await? else {
@@ -222,7 +223,7 @@ impl EventsService {
         let Some(password_hash) = event.password else {
             return Ok(UnlockResult::Unlocked);
         };
-        if event.created_by.as_deref() == Some(user_id)
+        if event.created_by.as_deref() == Some(user_id.as_str())
             || self.repository.has_access(id, user_id).await?
         {
             return Ok(UnlockResult::Unlocked);
@@ -238,25 +239,13 @@ impl EventsService {
     }
 }
 
-fn generate_event_id() -> String {
-    const LETTERS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    let mut rng = rand::rng();
-    let mut id = String::with_capacity(7);
-    for _ in 0..2 {
-        id.push(LETTERS[rng.random_range(0..LETTERS.len())] as char);
-    }
-    for _ in 0..5 {
-        id.push(char::from(b'0' + rng.random_range(0..10)));
-    }
-    id
-}
-
 #[cfg(test)]
 mod tests {
     use sqlx::sqlite::SqlitePoolOptions;
 
-    use super::{EventLookup, EventsService, UnlockResult, generate_event_id};
+    use super::{EventLookup, EventsService, UnlockResult};
     use crate::repositories::EventsRepository;
+    use beer_domain::id::UserId;
 
     async fn service() -> EventsService {
         let database = SqlitePoolOptions::new()
@@ -277,9 +266,9 @@ mod tests {
 
     #[tokio::test]
     async fn lists_events_the_user_created_or_participated_in() {
-        let events = service().await.list("guest").await.unwrap().events;
+        let events = service().await.list(&"guest".into()).await.unwrap().events;
         assert_eq!(events.len(), 1);
-        assert_eq!(events[0].id, "open");
+        assert_eq!(events[0].id.as_str(), "open");
         assert_eq!(events[0].total_attendees, 1);
         assert_eq!(events[0].distinct_users, 1);
     }
@@ -288,29 +277,36 @@ mod tests {
     async fn protects_password_events_but_allows_the_creator() {
         let service = service().await;
         assert!(matches!(
-            service.get("private", "guest").await.unwrap(),
+            service
+                .get(&"private".into(), &"guest".into())
+                .await
+                .unwrap(),
             EventLookup::Forbidden
         ));
-        let EventLookup::Found(detail) = service.get("private", "owner").await.unwrap() else {
+        let EventLookup::Found(detail) = service
+            .get(&"private".into(), &"owner".into())
+            .await
+            .unwrap()
+        else {
             panic!("creator should have access");
         };
         assert_eq!(detail.event.name, "Private");
-        assert_eq!(detail.access_users[0].id, "owner");
+        assert_eq!(detail.access_users[0].id.as_str(), "owner");
     }
 
     #[tokio::test]
     async fn creates_an_event_owned_by_the_current_user() {
         let service = service().await;
         let event = service
-            .create("New event", None, "guest")
+            .create("New event", None, &"guest".into())
             .await
             .unwrap()
             .event;
         assert_eq!(event.name, "New event");
-        assert_eq!(event.created_by.as_deref(), Some("guest"));
+        assert_eq!(event.created_by.as_ref().map(UserId::as_str), Some("guest"));
         assert!(event.color.starts_with('#'));
         assert!(matches!(
-            service.get(&event.id, "guest").await.unwrap(),
+            service.get(&event.id, &"guest".into()).await.unwrap(),
             EventLookup::Found(_)
         ));
     }
@@ -319,25 +315,31 @@ mod tests {
     async fn unlocks_a_password_event_for_the_current_user() {
         let service = service().await;
         let event = service
-            .create("Protected", Some("secret"), "owner")
+            .create("Protected", Some("secret"), &"owner".into())
             .await
             .unwrap()
             .event;
 
         assert!(matches!(
-            service.unlock(&event.id, "guest", "wrong").await.unwrap(),
+            service
+                .unlock(&event.id, &"guest".into(), "wrong")
+                .await
+                .unwrap(),
             UnlockResult::InvalidPassword
         ));
         assert!(matches!(
-            service.get(&event.id, "guest").await.unwrap(),
+            service.get(&event.id, &"guest".into()).await.unwrap(),
             EventLookup::Forbidden
         ));
         assert!(matches!(
-            service.unlock(&event.id, "guest", "secret").await.unwrap(),
+            service
+                .unlock(&event.id, &"guest".into(), "secret")
+                .await
+                .unwrap(),
             UnlockResult::Unlocked
         ));
         assert!(matches!(
-            service.get(&event.id, "guest").await.unwrap(),
+            service.get(&event.id, &"guest".into()).await.unwrap(),
             EventLookup::Found(_)
         ));
     }
@@ -346,15 +348,24 @@ mod tests {
     async fn unlock_is_idempotent_for_accessible_events() {
         let service = service().await;
         assert!(matches!(
-            service.unlock("open", "guest", "").await.unwrap(),
+            service
+                .unlock(&"open".into(), &"guest".into(), "")
+                .await
+                .unwrap(),
             UnlockResult::Unlocked
         ));
         assert!(matches!(
-            service.unlock("private", "owner", "").await.unwrap(),
+            service
+                .unlock(&"private".into(), &"owner".into(), "")
+                .await
+                .unwrap(),
             UnlockResult::Unlocked
         ));
         assert!(matches!(
-            service.unlock("missing", "guest", "secret").await.unwrap(),
+            service
+                .unlock(&"missing".into(), &"guest".into(), "secret")
+                .await
+                .unwrap(),
             UnlockResult::NotFound
         ));
     }

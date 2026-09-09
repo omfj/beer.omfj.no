@@ -1,4 +1,5 @@
 use beer_domain::drinks::CreatedDrink;
+use beer_domain::id::{DrinkId, EventId};
 mod form;
 
 use crate::{auth::CurrentUser, routes::ApiError, services::drinks::DrinkOptions, state::AppState};
@@ -20,7 +21,7 @@ pub async fn options(
 pub async fn create(
     State(state): State<AppState>,
     CurrentUser(session): CurrentUser,
-    Path(id): Path<String>,
+    Path(id): Path<EventId>,
     multipart: Multipart,
 ) -> Result<(StatusCode, Json<CreatedDrink>), ApiError> {
     let user_id = &session.user.id;
@@ -35,7 +36,7 @@ pub async fn create(
 pub async fn delete(
     State(state): State<AppState>,
     CurrentUser(session): CurrentUser,
-    Path((event_id, drink_id)): Path<(String, String)>,
+    Path((event_id, drink_id)): Path<(EventId, DrinkId)>,
 ) -> Result<StatusCode, ApiError> {
     state
         .drinks
