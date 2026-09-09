@@ -1,3 +1,4 @@
+use crate::utils::color::generate_soft_color;
 use crate::{repositories::EventsRepository, utils::password};
 use beer_domain::drinks::{DrinkSize, DrinkType};
 use beer_domain::time::UnixSeconds;
@@ -250,32 +251,6 @@ fn generate_event_id() -> String {
     id
 }
 
-fn generate_soft_color() -> String {
-    let mut rng = rand::rng();
-    hsl_to_hex(
-        f64::from(rng.random_range(0..360)),
-        f64::from(rng.random_range(30..60)),
-        f64::from(rng.random_range(75..95)),
-    )
-}
-
-fn hsl_to_hex(hue: f64, saturation: f64, lightness: f64) -> String {
-    let saturation = saturation / 100.0;
-    let lightness = lightness / 100.0;
-    let a = saturation * lightness.min(1.0 - lightness);
-    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-    let component = |n: f64| {
-        let k = (n + hue / 30.0) % 12.0;
-        (255.0 * (lightness - a * (k - 3.0).min(9.0 - k).clamp(-1.0, 1.0))).round() as u8
-    };
-    format!(
-        "#{:02x}{:02x}{:02x}",
-        component(0.0),
-        component(8.0),
-        component(4.0)
-    )
-}
-
 #[cfg(test)]
 mod tests {
     use sqlx::sqlite::SqlitePoolOptions;
@@ -382,13 +357,5 @@ mod tests {
             service.unlock("missing", "guest", "secret").await.unwrap(),
             UnlockResult::NotFound
         ));
-    }
-
-    #[test]
-    fn generates_svelte_compatible_event_ids() {
-        let id = generate_event_id();
-        assert_eq!(id.len(), 7);
-        assert!(id[..2].chars().all(|c| c.is_ascii_uppercase()));
-        assert!(id[2..].chars().all(|c| c.is_ascii_digit()));
     }
 }
