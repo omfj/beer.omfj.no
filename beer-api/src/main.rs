@@ -1,7 +1,6 @@
 mod auth;
 mod config;
 mod database;
-mod domain;
 mod repositories;
 mod router;
 mod routes;

@@ -1,5 +1,5 @@
 use crate::database::Database;
-use crate::domain::time::LeaderboardYear;
+use beer_domain::time::LeaderboardYear;
 
 #[derive(Debug)]
 pub struct LeaderboardRecord {

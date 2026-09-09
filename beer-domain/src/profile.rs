@@ -18,6 +18,10 @@ pub enum Weight {
 }
 
 impl Weight {
+    /// Parses a weight category.
+    ///
+    /// # Errors
+    /// Returns an error unless the value is light, medium, or heavy.
     pub fn parse(value: &str) -> Result<Self, InvalidProfileValue> {
         match value {
             "light" => Ok(Self::Light),
@@ -27,6 +31,7 @@ impl Weight {
         }
     }
 
+    #[must_use]
     pub fn as_str(self) -> &'static str {
         match self {
             Self::Light => "light",
@@ -45,6 +50,10 @@ pub enum Gender {
 }
 
 impl Gender {
+    /// Parses a gender category.
+    ///
+    /// # Errors
+    /// Returns an error unless the value is male, female, or other.
     pub fn parse(value: &str) -> Result<Self, InvalidProfileValue> {
         match value {
             "male" => Ok(Self::Male),
@@ -54,6 +63,7 @@ impl Gender {
         }
     }
 
+    #[must_use]
     pub fn as_str(self) -> &'static str {
         match self {
             Self::Male => "male",

@@ -1,6 +1,6 @@
-use crate::{domain::time::SessionExpiry, utils::time::now};
 use axum::http::HeaderMap;
 use axum_extra::extract::cookie::CookieJar;
+use beer_domain::time::{SessionExpiry, UnixSeconds};
 use cookie::{Cookie, SameSite, time::Duration};
 
 const SESSION_COOKIE_NAME: &str = "auth-session";
@@ -16,7 +16,7 @@ pub(crate) fn session_cookie(
     expires_at: SessionExpiry,
     secure: bool,
 ) -> Cookie<'static> {
-    let max_age = expires_at.remaining_seconds(now());
+    let max_age = expires_at.remaining_seconds(UnixSeconds::now());
     Cookie::build((SESSION_COOKIE_NAME, token))
         .path("/")
         .http_only(true)

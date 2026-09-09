@@ -1,11 +1,7 @@
+use beer_domain::drinks::CreatedDrink;
 mod form;
 
-use crate::{
-    auth::CurrentUser,
-    routes::ApiError,
-    services::drinks::{CreatedDrink, DrinkOptions},
-    state::AppState,
-};
+use crate::{auth::CurrentUser, routes::ApiError, services::drinks::DrinkOptions, state::AppState};
 use axum::{
     Json,
     extract::{Path, State},

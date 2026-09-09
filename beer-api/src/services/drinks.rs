@@ -1,11 +1,10 @@
-use crate::domain::time::UnixSeconds;
 use crate::{
     database::Database,
-    domain::drinks::Abv,
     repositories::{EventsRepository, drinks::DrinksRepository},
     storage::{ImageStorage, StorageError},
-    utils::time::now,
 };
+use beer_domain::drinks::{Abv, CreatedDrink, DrinkSize, DrinkType, DrinkTypeSize};
+use beer_domain::time::UnixSeconds;
 use beer_image::DrinkImage;
 use serde::Serialize;
 use thiserror::Error;
@@ -29,52 +28,12 @@ pub enum DrinksError {
 }
 
 #[derive(Serialize)]
-pub struct DrinkType {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
-    pub abv: Option<i64>,
-    pub multiplier: f64,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DrinkSize {
-    pub id: String,
-    pub name: String,
-    #[serde(rename = "volumeML")]
-    pub volume_ml: i64,
-    pub description: Option<String>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DrinkTypeSize {
-    pub id: String,
-    pub drink_type_id: String,
-    pub drink_size_id: String,
-}
-
-#[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 #[allow(clippy::struct_field_names)]
 pub struct DrinkOptions {
     pub drink_types: Vec<DrinkType>,
     pub drink_sizes: Vec<DrinkSize>,
     pub drink_type_sizes: Vec<DrinkTypeSize>,
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CreatedDrink {
-    pub id: String,
-    pub event_id: String,
-    pub user_id: String,
-    pub image_id: String,
-    pub created_at: UnixSeconds,
-    pub drink_type_id: Option<String>,
-    pub drink_size_id: Option<String>,
-    pub abv: Option<f64>,
 }
 
 pub struct NewDrink {
@@ -116,7 +75,12 @@ impl DrinksService {
     }
 
     pub async fn options(&self) -> Result<DrinkOptions, DrinksError> {
-        Ok(self.repository.options().await?)
+        let options = self.repository.options().await?;
+        Ok(DrinkOptions {
+            drink_types: options.types,
+            drink_sizes: options.sizes,
+            drink_type_sizes: options.type_sizes,
+        })
     }
 
     pub async fn authorize(&self, event_id: &str, user_id: &str) -> Result<(), DrinksError> {
@@ -180,7 +144,7 @@ impl DrinksService {
             id,
             event_id: event_id.into(),
             user_id: user_id.into(),
-            created_at: now(),
+            created_at: UnixSeconds::now(),
             drink_type_id: input.drink_type_id,
             drink_size_id: input.drink_size_id,
             abv: input.abv.map(|abv| abv.value()),

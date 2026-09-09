@@ -1,5 +1,5 @@
 use crate::database::Database;
-use crate::domain::time::UnixSeconds;
+use beer_domain::time::UnixSeconds;
 
 #[derive(Debug)]
 pub struct EventSummaryRecord {

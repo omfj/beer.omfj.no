@@ -1,7 +1,11 @@
-use crate::{
-    database::Database,
-    services::drinks::{CreatedDrink, DrinkOptions, DrinkSize, DrinkType, DrinkTypeSize},
-};
+use crate::database::Database;
+use beer_domain::drinks::{CreatedDrink, DrinkSize, DrinkType, DrinkTypeSize};
+
+pub struct DrinkOptionsRecord {
+    pub types: Vec<DrinkType>,
+    pub sizes: Vec<DrinkSize>,
+    pub type_sizes: Vec<DrinkTypeSize>,
+}
 
 pub struct DeletedDrink {
     pub image_id: Option<String>,
@@ -23,21 +27,21 @@ impl DrinksRepository {
         .await
     }
 
-    pub async fn options(&self) -> Result<DrinkOptions, sqlx::Error> {
-        Ok(DrinkOptions {
-            drink_types: sqlx::query_as!(
+    pub async fn options(&self) -> Result<DrinkOptionsRecord, sqlx::Error> {
+        Ok(DrinkOptionsRecord {
+            types: sqlx::query_as!(
                 DrinkType,
                 "SELECT id, name, description, abv, multiplier FROM drink_type ORDER BY name",
             )
             .fetch_all(&self.0)
             .await?,
-            drink_sizes: sqlx::query_as!(
+            sizes: sqlx::query_as!(
                 DrinkSize,
                 "SELECT id, name, volume_ml, description FROM drink_size ORDER BY volume_ml",
             )
             .fetch_all(&self.0)
             .await?,
-            drink_type_sizes: sqlx::query_as!(
+            type_sizes: sqlx::query_as!(
                 DrinkTypeSize,
                 "SELECT id, drink_type_id, drink_size_id FROM drink_type_size ORDER BY id",
             )

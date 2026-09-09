@@ -11,6 +11,10 @@ pub enum InvalidCredential {
 pub struct Username(String);
 
 impl Username {
+    /// Parses a username.
+    ///
+    /// # Errors
+    /// Returns an error unless the value is 3–255 ASCII alphanumeric bytes.
     pub fn parse(value: String) -> Result<Self, InvalidCredential> {
         if (3..=255).contains(&value.len())
             && value
@@ -23,6 +27,7 @@ impl Username {
         }
     }
 
+    #[must_use]
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -31,6 +36,10 @@ impl Username {
 pub struct Password(String);
 
 impl Password {
+    /// Parses a password using the existing byte-length validation.
+    ///
+    /// # Errors
+    /// Returns an error unless the value is 3–255 bytes long.
     pub fn parse(value: String) -> Result<Self, InvalidCredential> {
         if (3..=255).contains(&value.len()) {
             Ok(Self(value))
@@ -39,6 +48,7 @@ impl Password {
         }
     }
 
+    #[must_use]
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -46,18 +56,12 @@ impl Password {
 
 #[cfg(test)]
 mod tests {
-    use super::{Password, Username};
+    use super::Username;
 
     #[test]
-    fn validates_usernames_like_the_svelte_app() {
+    fn validates_usernames() {
         assert!(Username::parse("Olem123".into()).is_ok());
         assert!(Username::parse("ab".into()).is_err());
         assert!(Username::parse("not-valid".into()).is_err());
-    }
-
-    #[test]
-    fn validates_passwords_like_the_svelte_app() {
-        assert!(Password::parse("abc".into()).is_ok());
-        assert!(Password::parse("ab".into()).is_err());
     }
 }

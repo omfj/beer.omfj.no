@@ -1,3 +1,5 @@
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use serde::{Deserialize, Serialize};
 
 /// An instant measured in whole seconds since the Unix epoch.
@@ -6,10 +8,24 @@ use serde::{Deserialize, Serialize};
 pub struct UnixSeconds(i64);
 
 impl UnixSeconds {
+    /// Returns the current system time in whole Unix seconds.
+    ///
+    /// Times before the Unix epoch become zero; values above `i64::MAX` saturate.
+    #[must_use]
+    pub fn now() -> Self {
+        let seconds = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs();
+        Self(i64::try_from(seconds).unwrap_or(i64::MAX))
+    }
+
+    #[must_use]
     pub fn from_seconds(seconds: i64) -> Self {
         Self(seconds)
     }
 
+    #[must_use]
     pub fn as_seconds(self) -> i64 {
         self.0
     }
@@ -23,26 +39,32 @@ impl SessionExpiry {
     const LIFETIME_SECONDS: i64 = 60 * 60 * 24 * 30;
     const RENEWAL_WINDOW_SECONDS: i64 = 60 * 60 * 24 * 15;
 
+    #[must_use]
     pub fn from_timestamp(timestamp: UnixSeconds) -> Self {
         Self(timestamp)
     }
 
+    #[must_use]
     pub fn new(now: UnixSeconds) -> Self {
         Self(UnixSeconds(now.0.saturating_add(Self::LIFETIME_SECONDS)))
     }
 
+    #[must_use]
     pub fn timestamp(self) -> UnixSeconds {
         self.0
     }
 
+    #[must_use]
     pub fn is_expired(self, now: UnixSeconds) -> bool {
         now >= self.0
     }
 
+    #[must_use]
     pub fn should_renew(self, now: UnixSeconds) -> bool {
         !self.is_expired(now) && now.0 >= self.0.0.saturating_sub(Self::RENEWAL_WINDOW_SECONDS)
     }
 
+    #[must_use]
     pub fn remaining_seconds(self, now: UnixSeconds) -> i64 {
         self.0.0.saturating_sub(now.0).max(0)
     }
@@ -55,10 +77,12 @@ impl SessionExpiry {
 pub struct LeaderboardYear(i64);
 
 impl LeaderboardYear {
+    #[must_use]
     pub fn new(year: i64) -> Self {
         Self(year)
     }
 
+    #[must_use]
     pub fn value(self) -> i64 {
         self.0
     }

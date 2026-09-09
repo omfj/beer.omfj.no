@@ -1,5 +1,5 @@
 use crate::database::Database;
-use crate::domain::time::SessionExpiry;
+use beer_domain::time::SessionExpiry;
 
 #[derive(Debug)]
 pub struct LoginRecord {

@@ -6,14 +6,11 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 use thiserror::Error;
 
-use crate::{
-    domain::{
-        credentials::{Password, Username},
-        profile::{Gender, InvalidProfileValue, Weight},
-        time::{SessionExpiry, UnixSeconds},
-    },
-    repositories::AuthRepository,
-    utils::{password, time::now},
+use crate::{repositories::AuthRepository, utils::password};
+use beer_domain::{
+    credentials::{Password, Username},
+    profile::{Gender, InvalidProfileValue, Weight},
+    time::{SessionExpiry, UnixSeconds},
 };
 
 #[derive(Debug, Error)]
@@ -121,7 +118,7 @@ impl AuthService {
         let Some(record) = self.repository.session(&id).await? else {
             return Ok(None);
         };
-        let current_time = now();
+        let current_time = UnixSeconds::now();
         let expiry = SessionExpiry::from_timestamp(UnixSeconds::from_seconds(record.expires_at));
 
         if expiry.is_expired(current_time) {
@@ -179,7 +176,7 @@ impl AuthService {
     ) -> Result<AuthenticatedSession, AuthError> {
         let token = generate_session_token();
         let id = hash_session_token(&token);
-        let expires_at = SessionExpiry::new(now());
+        let expires_at = SessionExpiry::new(UnixSeconds::now());
         self.repository
             .create_session(&id, user_id, expires_at)
             .await?;
@@ -232,12 +229,10 @@ mod tests {
         AuthService, RegistrationResult, generate_session_token, generate_user_id,
         hash_session_token,
     };
-    use crate::{
-        domain::{
-            credentials::{Password, Username},
-            profile::{Gender, Weight},
-        },
-        repositories::AuthRepository,
+    use crate::repositories::AuthRepository;
+    use beer_domain::{
+        credentials::{Password, Username},
+        profile::{Gender, Weight},
     };
 
     #[test]

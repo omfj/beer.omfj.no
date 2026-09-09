@@ -1,4 +1,4 @@
-use crate::domain::time::LeaderboardYear;
+use beer_domain::time::LeaderboardYear;
 use beer_score::{calculate_drink_points, round_to_one_decimal};
 use std::{cmp::Ordering, collections::HashMap};
 

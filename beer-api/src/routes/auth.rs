@@ -4,14 +4,14 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     auth::CurrentUser,
-    domain::{
-        credentials::{Password, Username},
-        profile::{Gender, Weight},
-    },
     routes::ApiError,
     services::{LoginResult, RegistrationResult, User},
     state::AppState,
     utils::cookie::{removal_cookie, session_cookie},
+};
+use beer_domain::{
+    credentials::{Password, Username},
+    profile::{Gender, Weight},
 };
 
 #[derive(Deserialize)]

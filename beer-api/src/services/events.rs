@@ -1,8 +1,6 @@
-use crate::domain::time::UnixSeconds;
-use crate::{
-    repositories::EventsRepository,
-    utils::{password, time::now},
-};
+use crate::{repositories::EventsRepository, utils::password};
+use beer_domain::drinks::{DrinkSize, DrinkType};
+use beer_domain::time::UnixSeconds;
 use rand::RngExt;
 use serde::Serialize;
 use thiserror::Error;
@@ -39,23 +37,6 @@ pub struct Event {
 #[derive(Debug, Serialize)]
 pub struct CreatedEvent {
     pub event: Event,
-}
-#[derive(Debug, Serialize)]
-pub struct DrinkType {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
-    pub abv: Option<i64>,
-    pub multiplier: f64,
-}
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DrinkSize {
-    pub id: String,
-    pub name: String,
-    #[serde(rename = "volumeML")]
-    pub volume_ml: i64,
-    pub description: Option<String>,
 }
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -134,7 +115,7 @@ impl EventsService {
             Some(password) => Some(password::hash(password).await?),
             None => None,
         };
-        let created_at = now();
+        let created_at = UnixSeconds::now();
         let id = generate_event_id();
         let color = generate_soft_color();
         let record = self
@@ -249,7 +230,9 @@ impl EventsService {
             return Ok(UnlockResult::InvalidPassword);
         }
 
-        self.repository.grant_access(id, user_id, now()).await?;
+        self.repository
+            .grant_access(id, user_id, UnixSeconds::now())
+            .await?;
         Ok(UnlockResult::Unlocked)
     }
 }

@@ -1,3 +1,4 @@
+use beer_domain::drinks::Abv;
 use std::collections::HashSet;
 
 use axum::http::StatusCode;
@@ -7,7 +8,7 @@ use axum_extra::extract::{
 };
 use beer_image::{DrinkImage, MAX_IMAGE_SIZE};
 
-use crate::{domain::drinks::Abv, routes::ApiError, services::drinks::NewDrink};
+use crate::{routes::ApiError, services::drinks::NewDrink};
 
 const MAX_TEXT_LENGTH: usize = 256;
 

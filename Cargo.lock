@@ -223,6 +223,7 @@ dependencies = [
  "axum-extra",
  "base64 0.23.1",
  "bcrypt",
+ "beer-domain",
  "beer-image",
  "beer-score",
  "cookie",
@@ -238,6 +239,15 @@ dependencies = [
  "tower-http 0.7.1",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "beer-domain"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror",
 ]
 
 [[package]]

@@ -1,8 +1,8 @@
-use crate::domain::time::LeaderboardYear;
 use axum::{
     Json,
     extract::{Query, State},
 };
+use beer_domain::time::LeaderboardYear;
 use serde::Deserialize;
 
 use crate::{routes::ApiError, state::AppState};
