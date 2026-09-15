@@ -14,7 +14,7 @@ pub enum LeaderboardError {
     Database(#[from] sqlx::Error),
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct LeaderboardEntry {
     pub user_id: UserId,
@@ -23,7 +23,7 @@ pub struct LeaderboardEntry {
     pub drink_count: u32,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[allow(clippy::struct_field_names)]
 pub struct Leaderboard {

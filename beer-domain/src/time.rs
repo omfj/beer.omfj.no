@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 /// An instant measured in whole seconds since the Unix epoch.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[serde(transparent)]
 pub struct UnixSeconds(i64);
 
@@ -73,6 +74,7 @@ impl SessionExpiry {
 /// The UTC calendar year used by the leaderboard's SQLite query.
 /// Any integer remains accepted, preserving existing query behavior.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[serde(transparent)]
 pub struct LeaderboardYear(i64);
 

@@ -6,7 +6,11 @@ edition = "2024"
 [lints]
 workspace = true
 
+[features]
+openapi = ["dep:utoipa"]
+
 [dependencies]
+utoipa = { workspace = true, optional = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
 

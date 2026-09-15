@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 macro_rules! make_id {
     ($name:ident) => {
         #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+        #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
         #[serde(transparent)]
         pub struct $name(String);
 

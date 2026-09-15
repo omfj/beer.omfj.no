@@ -12,6 +12,17 @@ pub struct LeaderboardQuery {
     year: LeaderboardYear,
 }
 
+#[utoipa::path(
+    get,
+    path = "/leaderboard",
+    operation_id = "leaderboard_get",
+    tag = "leaderboard",
+    params(("year" = i64, Query, description = "UTC calendar year")),
+    responses(
+        (status = 200, description = "Success", body = crate::services::Leaderboard),
+        (status = 500, description = "Internal server error", body = crate::routes::error::ErrorResponse)
+    )
+)]
 pub async fn get(
     State(state): State<AppState>,
     Query(query): Query<LeaderboardQuery>,

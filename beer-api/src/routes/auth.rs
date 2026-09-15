@@ -14,18 +14,18 @@ use beer_domain::{
     profile::{Gender, Weight},
 };
 
-#[derive(Deserialize)]
+#[derive(Deserialize, utoipa::ToSchema)]
 pub struct LoginRequest {
     username: String,
     password: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, utoipa::ToSchema)]
 struct UserResponse {
     user: User,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, utoipa::ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct RegisterRequest {
     username: String,
@@ -33,12 +33,25 @@ pub struct RegisterRequest {
     terms_accepted: bool,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, utoipa::ToSchema)]
 pub struct UpdateProfileRequest {
     weight: Option<String>,
     gender: Option<String>,
 }
 
+#[utoipa::path(
+    post,
+    path = "/auth/register",
+    operation_id = "auth_register",
+    tag = "auth",
+    request_body = RegisterRequest,
+    responses(
+        (status = 201, description = "Success", body = UserResponse),
+        (status = 400, description = "Invalid request", body = crate::routes::error::ErrorResponse),
+        (status = 409, description = "Username already taken", body = crate::routes::error::ErrorResponse),
+        (status = 500, description = "Internal server error", body = crate::routes::error::ErrorResponse)
+    )
+)]
 pub async fn register(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -69,6 +82,18 @@ pub async fn register(
     ))
 }
 
+#[utoipa::path(
+    post,
+    path = "/auth/login",
+    operation_id = "auth_login",
+    tag = "auth",
+    request_body = LoginRequest,
+    responses(
+        (status = 200, description = "Success", body = UserResponse),
+        (status = 400, description = "Invalid request", body = crate::routes::error::ErrorResponse),
+        (status = 500, description = "Internal server error", body = crate::routes::error::ErrorResponse)
+    )
+)]
 pub async fn login(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -91,6 +116,18 @@ pub async fn login(
     Ok((jar, Json(UserResponse { user: session.user })))
 }
 
+#[utoipa::path(
+    get,
+    path = "/auth/me",
+    operation_id = "auth_me",
+    tag = "auth",
+    responses(
+        (status = 200, description = "Success", body = UserResponse),
+        (status = 401, description = "Authentication required", body = crate::routes::error::ErrorResponse),
+        (status = 500, description = "Internal server error", body = crate::routes::error::ErrorResponse)
+    ),
+    security(("session" = []))
+)]
 pub async fn me(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -104,6 +141,20 @@ pub async fn me(
     (jar, Json(UserResponse { user: session.user }))
 }
 
+#[utoipa::path(
+    patch,
+    path = "/auth/me",
+    operation_id = "auth_update_me",
+    tag = "auth",
+    request_body = UpdateProfileRequest,
+    responses(
+        (status = 200, description = "Success", body = UserResponse),
+        (status = 400, description = "Invalid request", body = crate::routes::error::ErrorResponse),
+        (status = 401, description = "Authentication required", body = crate::routes::error::ErrorResponse),
+        (status = 500, description = "Internal server error", body = crate::routes::error::ErrorResponse)
+    ),
+    security(("session" = []))
+)]
 pub async fn update_me(
     State(state): State<AppState>,
     CurrentUser(mut session): CurrentUser,
@@ -132,6 +183,18 @@ pub async fn update_me(
     Ok(Json(UserResponse { user: session.user }))
 }
 
+#[utoipa::path(
+    post,
+    path = "/auth/logout",
+    operation_id = "auth_logout",
+    tag = "auth",
+    responses(
+        (status = 204, description = "Success"),
+        (status = 401, description = "Authentication required", body = crate::routes::error::ErrorResponse),
+        (status = 500, description = "Internal server error", body = crate::routes::error::ErrorResponse)
+    ),
+    security(("session" = []))
+)]
 pub async fn logout(
     State(state): State<AppState>,
     jar: CookieJar,

@@ -27,7 +27,7 @@ pub enum AuthError {
     InvalidProfile(#[from] InvalidProfileValue),
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, utoipa::ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct User {
     pub id: UserId,

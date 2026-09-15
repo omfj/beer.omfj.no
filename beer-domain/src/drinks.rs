@@ -31,6 +31,7 @@ impl Abv {
 }
 
 #[derive(Debug, Serialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 pub struct DrinkType {
     pub id: String,
     pub name: String,
@@ -40,6 +41,7 @@ pub struct DrinkType {
 }
 
 #[derive(Debug, Serialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct DrinkSize {
     pub id: String,
@@ -50,6 +52,7 @@ pub struct DrinkSize {
 }
 
 #[derive(Debug, Serialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct DrinkTypeSize {
     pub id: String,
@@ -58,6 +61,7 @@ pub struct DrinkTypeSize {
 }
 
 #[derive(Debug, Serialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct CreatedDrink {
     pub id: DrinkId,

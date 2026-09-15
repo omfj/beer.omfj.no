@@ -29,7 +29,7 @@ pub enum DrinksError {
     Storage(#[from] StorageError),
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, utoipa::ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[allow(clippy::struct_field_names)]
 pub struct DrinkOptions {

@@ -190,12 +190,12 @@ impl IntoResponse for ApiError {
     }
 }
 
-#[derive(Serialize)]
-struct ErrorResponse {
+#[derive(Serialize, utoipa::ToSchema)]
+pub(super) struct ErrorResponse {
     error: ErrorBody,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, utoipa::ToSchema)]
 struct ErrorBody {
     code: &'static str,
     message: &'static str,

@@ -15,7 +15,7 @@ pub enum EventsError {
     Password(#[from] password::PasswordError),
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct EventSummary {
     pub id: EventId,
@@ -23,11 +23,11 @@ pub struct EventSummary {
     pub total_attendees: i64,
     pub distinct_users: i64,
 }
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct Events {
     pub events: Vec<EventSummary>,
 }
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Event {
     pub id: EventId,
@@ -36,11 +36,11 @@ pub struct Event {
     pub created_at: UnixSeconds,
     pub created_by: Option<UserId>,
 }
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct CreatedEvent {
     pub event: Event,
 }
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Attendee {
     pub id: DrinkId,
@@ -54,14 +54,14 @@ pub struct Attendee {
     pub user_weight: Option<String>,
     pub user_gender: Option<String>,
 }
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct EventUser {
     pub id: UserId,
     pub username: String,
     pub weight: Option<String>,
     pub gender: Option<String>,
 }
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct EventDetail {
     pub event: Event,

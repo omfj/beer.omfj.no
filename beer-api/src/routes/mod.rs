@@ -5,6 +5,7 @@ mod events;
 mod health;
 mod images;
 mod leaderboard;
+mod openapi;
 
 use axum::{
     Router,
@@ -20,6 +21,7 @@ const BODY_LIMIT: usize = 10 * 1024 * 1024;
 
 pub fn router() -> Router<AppState> {
     Router::new()
+        .merge(openapi::router())
         .route("/", get(health::get))
         .route("/auth/login", post(auth::login))
         .route("/auth/register", post(auth::register))
