@@ -1,16 +1,14 @@
 import { error, redirect } from '@sveltejs/kit';
 import { ApiError } from '$lib/api';
-import { createApiClient } from '$lib/api/client';
 import type { PageLoad } from './$types';
 
-export const load: PageLoad = async ({ fetch, parent, params }) => {
-	const { authState } = await parent();
+export const load: PageLoad = async ({ parent, params }) => {
+	const { api, authState } = await parent();
 	if (authState.status === 'anonymous') {
 		redirect(303, `/logg-inn?event=${encodeURIComponent(params.id)}`);
 	}
 
 	try {
-		const api = createApiClient(fetch);
 		const { event } = await api.getEvent(params.id);
 		return { event };
 	} catch (cause) {

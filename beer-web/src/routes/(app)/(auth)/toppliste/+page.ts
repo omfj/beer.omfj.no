@@ -1,17 +1,15 @@
 import { redirect } from '@sveltejs/kit';
 import { ApiError } from '$lib/api';
-import { createApiClient } from '$lib/api/client';
 import type { PageLoad } from './$types';
 
-export const load: PageLoad = async ({ fetch, parent, url }) => {
-	const { authState } = await parent();
+export const load: PageLoad = async ({ parent, url }) => {
+	const { api, authState } = await parent();
 	if (authState.status === 'anonymous') redirect(303, '/logg-inn');
 
 	const currentYear = new Date().getFullYear();
 	const value = url.searchParams.get('year');
 	const year = value && /^\d{4}$/.test(value) && Number(value) > 0 ? Number(value) : currentYear;
 	try {
-		const api = createApiClient(fetch);
 		const result = await api.getLeaderboard(year);
 		return {
 			year,
