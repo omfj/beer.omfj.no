@@ -44,25 +44,30 @@
 			});
 	});
 
-	// Reset size when drink type changes; auto-fill promille from drink type default
-	$effect(() => {
-		if (selectedDrinkType) {
-			if (
-				availableSizes.length > 0 &&
-				!availableSizes
-					.filter((size) => size !== undefined)
-					.some((size) => size.id === selectedDrinkSize)
-			) {
-				selectedDrinkSize = '';
-			}
-			const typeData = drinkOptions.drinkTypes.find((t) => t.id === selectedDrinkType);
-			if (typeData?.abv != null) {
-				abvInput = typeData.abv;
-			}
-		} else {
-			abvInput = null;
+	function sizeIsAvailable(typeId: string, sizeId: string) {
+		return drinkOptions.drinkTypeSizes.some(
+			(combo) => combo.drinkTypeId === typeId && combo.drinkSizeId === sizeId
+		);
+	}
+
+	function changeDrinkType(event: globalThis.Event) {
+		selectedDrinkType = (event.currentTarget as HTMLSelectElement).value;
+		if (!sizeIsAvailable(selectedDrinkType, selectedDrinkSize)) {
+			selectedDrinkSize = '';
 		}
-	});
+		abvInput = drinkOptions.drinkTypes.find((type) => type.id === selectedDrinkType)?.abv ?? null;
+	}
+
+	function usePreviousDrink() {
+		const previous = data.previousDrink;
+		if (!previous?.drinkType) return;
+		selectedDrinkType = previous.drinkType.id;
+		selectedDrinkSize =
+			previous.drinkSize && sizeIsAvailable(selectedDrinkType, previous.drinkSize.id)
+				? previous.drinkSize.id
+				: '';
+		abvInput = previous.abv;
+	}
 
 	// Calculate preview points based on selected size and entered ABV
 	let previewPoints = $derived.by(() => {
@@ -322,6 +327,16 @@
 	{/if}
 
 	<form enctype="multipart/form-data" onsubmit={submitDrink} class="space-y-6">
+		{#if data.previousDrink?.drinkType && drinkOptions.drinkTypes.some((type) => type.id === data.previousDrink?.drinkType?.id)}
+			<button
+				type="button"
+				onclick={usePreviousDrink}
+				class="bg-background-dark hover:bg-background-darker w-full p-4 text-lg font-medium transition-colors"
+			>
+				Fyll inn med forrige drikke
+			</button>
+		{/if}
+
 		<!-- Drink Type and Size Selection -->
 		<div class="space-y-4">
 			<div>
@@ -330,6 +345,7 @@
 				>
 				<Select
 					bind:value={selectedDrinkType}
+					onchange={changeDrinkType}
 					id="drinkTypeId"
 					name="drinkTypeId"
 					class="text-foreground"
