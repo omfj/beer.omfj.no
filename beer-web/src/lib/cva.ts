@@ -7,7 +7,8 @@ export const buttonStyle = cva(
 			variant: {
 				default: 'bg-background-darker hover:bg-background-darkest text-foreground',
 				destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-				outline: 'border-2 border-input bg-background text-foreground hover:bg-background-dark',
+				outline:
+					'border-2 border-background-darkest bg-background text-foreground hover:bg-background-dark',
 				ghost: 'bg-transparent text-foreground hover:bg-background-dark'
 			},
 			size: {
@@ -16,7 +17,7 @@ export const buttonStyle = cva(
 				lg: 'h-18 px-8'
 			},
 			link: {
-				true: 'hover:underline',
+				true: 'hover:underline disabled:hover:no-underline',
 				false: ''
 			}
 		},

@@ -106,7 +106,7 @@
 		</div>
 	</div>
 
-	<Button disabled={isAllowedToSignUp} class="hover:underline"
+	<Button disabled={isAllowedToSignUp}
 		>{isLoading ? 'Registrerer...' : 'Registrer ny bruker'}</Button
 	>
 

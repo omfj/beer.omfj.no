@@ -6,6 +6,7 @@
 	import { ApiError } from '$lib/api';
 	import { api } from '$lib/api/client';
 	import { getUser } from '$lib/context/user.svelte';
+	import Input from '$lib/components/input.svelte';
 
 	const auth = getUser();
 	const eventId = page.params.id!;
@@ -62,13 +63,7 @@
 		<form class="flex flex-col gap-4" onsubmit={unlock}>
 			<label class="flex flex-col text-xl font-medium">
 				Passord
-				<input
-					class="bg-background-dark h-14 p-4 text-2xl"
-					name="password"
-					type="password"
-					bind:value={password}
-					required
-				/>
+				<Input class="text-2xl" name="password" type="password" bind:value={password} required />
 			</label>
 
 			<button

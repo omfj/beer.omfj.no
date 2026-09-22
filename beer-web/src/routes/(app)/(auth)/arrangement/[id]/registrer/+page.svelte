@@ -389,7 +389,7 @@
 						step="0.1"
 						bind:value={abvInput}
 						placeholder="f.eks. 5.2"
-						class="border-background-darker bg-background w-full border p-3 text-lg focus:outline-none"
+						class="bg-background-dark border-background-darkest focus:ring-primary focus:border-primary w-full border p-3 text-lg focus:ring-2 focus:outline-none"
 					/>
 				</div>
 			{/if}

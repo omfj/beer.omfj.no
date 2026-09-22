@@ -302,7 +302,7 @@
 	<div class="bg-background-darkest my-4 h-0.5"></div>
 
 	{#if deleteError}
-		<div class="mb-4 rounded border border-red-300 bg-red-50 p-3 text-red-700" role="alert">
+		<div class="mb-4 border-l-4 border-red-500 bg-red-50 p-4 text-red-700" role="alert">
 			{deleteError}
 		</div>
 	{/if}
@@ -441,7 +441,7 @@
 		<div class="space-y-4">
 			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 				{#each filteredAttendees.slice(0, imagesLimit) as attendee (attendee.id)}
-					<div class="bg-background-dark overflow-hidden border-2">
+					<div class="bg-background-dark overflow-hidden border">
 						{#if attendee.imageId}
 							<div class="aspect-square">
 								<a
@@ -535,11 +535,11 @@
 			{/if}
 		</div>
 	{:else if attendees.length > 0}
-		<div class="bg-background-dark flex h-32 items-center justify-center rounded-lg p-4">
+		<div class="bg-background-dark flex h-32 items-center justify-center p-4">
 			<p class="text-foreground-muted text-lg">Ingen drinker å vise for valgte brukere</p>
 		</div>
 	{:else}
-		<div class="bg-background-dark flex h-32 items-center justify-center rounded-lg p-4">
+		<div class="bg-background-dark flex h-32 items-center justify-center p-4">
 			<p class="text-foreground-muted text-lg">Ingen drinker registrert ennå</p>
 		</div>
 	{/if}
