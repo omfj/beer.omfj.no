@@ -100,8 +100,10 @@
 
 		<div>
 			<span class="text-sm text-gray-500">
-				Du må godta vilkårene for å opprette en konto. Dette er nødvendig for å sikre at alle
-				brukere er klar over reglene for deling av innhold.
+				Du må godta vilkårene for å opprette en konto. Les også
+				<a class="text-primary hover:underline" href={resolve('/personvern')}
+					>personvernerklæringen</a
+				> for å se hvordan opplysningene dine brukes.
 			</span>
 		</div>
 	</div>
