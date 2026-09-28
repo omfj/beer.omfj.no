@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use beer_image::ImageType;
-use s3::{Bucket, Region, creds::Credentials};
+use s3::{Bucket, Region, creds::Credentials, serde_types::ObjectIdentifier};
 use thiserror::Error;
 
 /// Connection settings supplied by the application.
@@ -24,6 +24,8 @@ pub enum StorageError {
     Status(u16),
     #[error("image storage returned invalid image content")]
     InvalidImage,
+    #[error("image storage failed to delete {} objects", .0.len())]
+    DeleteFailed(Vec<String>),
 }
 
 pub struct StoredImage {
@@ -123,6 +125,26 @@ impl ImageStorage {
         let response = bucket.delete_object(key).await?;
         check_status(response.status_code())
     }
+
+    /// Deletes image objects in batches.
+    ///
+    /// # Errors
+    /// Returns an error if storage is disabled, the S3 request fails, or any object is not deleted.
+    pub async fn delete_many(&self, keys: &[String]) -> Result<(), StorageError> {
+        if keys.is_empty() {
+            return Ok(());
+        }
+        let bucket = self.0.as_ref().ok_or(StorageError::NotConfigured)?;
+        let objects: Vec<_> = keys.iter().map(ObjectIdentifier::new).collect();
+        let result = bucket.delete_objects(objects).await?;
+        if result.errors.is_empty() {
+            Ok(())
+        } else {
+            Err(StorageError::DeleteFailed(
+                result.errors.into_iter().map(|error| error.key).collect(),
+            ))
+        }
+    }
 }
 
 fn check_status(status: u16) -> Result<(), StorageError> {
@@ -152,6 +174,11 @@ mod tests {
             storage.delete("image.png").await,
             Err(StorageError::NotConfigured)
         ));
+        assert!(matches!(
+            storage.delete_many(&["image.png".into()]).await,
+            Err(StorageError::NotConfigured)
+        ));
+        assert!(storage.delete_many(&[]).await.is_ok());
     }
 
     #[test]

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE event SET created_by = NULL WHERE created_by = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "7366102a88dbd8e97c3faa7313cb9f68f4f5591946d5905d79e229ad76d51b80"
+}

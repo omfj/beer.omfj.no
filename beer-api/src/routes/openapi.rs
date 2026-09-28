@@ -10,7 +10,7 @@ use super::{auth, drinks, events, health, images, leaderboard};
 #[openapi(
     info(title = "Beer"),
     paths(
-        auth::register, auth::login, auth::logout, auth::me, auth::update_me,
+        auth::register, auth::login, auth::logout, auth::me, auth::update_me, auth::delete_me,
         events::list, events::create, events::get, events::unlock,
         drinks::options, drinks::create, drinks::delete,
         images::get, health::get, leaderboard::get

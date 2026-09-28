@@ -21,8 +21,8 @@ pub struct AppState {
 
 impl AppState {
     pub fn new(database: Database, config: &Config, images: ImageStorage) -> Self {
+        let auth = AuthService::new(AuthRepository::new(database.clone()), images.clone());
         let drinks = DrinksService::new(database.clone(), images);
-        let auth = AuthService::new(AuthRepository::new(database.clone()));
         let events = EventsService::new(EventsRepository::new(database.clone()));
         let health = HealthService::new(HealthRepository::new(database.clone()));
         let leaderboard = LeaderboardService::new(LeaderboardRepository::new(database));

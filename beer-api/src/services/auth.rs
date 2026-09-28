@@ -3,6 +3,7 @@ use beer_domain::id::UserId;
 use std::fmt::Write as _;
 
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
+use beer_storage::ImageStorage;
 use rand::Rng;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -61,11 +62,12 @@ pub enum RegistrationResult {
 #[derive(Clone)]
 pub struct AuthService {
     repository: AuthRepository,
+    images: ImageStorage,
 }
 
 impl AuthService {
-    pub fn new(repository: AuthRepository) -> Self {
-        Self { repository }
+    pub fn new(repository: AuthRepository, images: ImageStorage) -> Self {
+        Self { repository, images }
     }
 
     pub async fn login(
@@ -172,6 +174,15 @@ impl AuthService {
         Ok(())
     }
 
+    pub async fn delete_user(&self, user_id: &UserId) -> Result<(), AuthError> {
+        let image_ids = self.repository.user_image_ids(user_id).await?;
+        self.repository.delete_user(user_id).await?;
+        if let Err(error) = self.images.delete_many(&image_ids).await {
+            tracing::error!(?error, "failed to delete images for deleted user");
+        }
+        Ok(())
+    }
+
     async fn create_authenticated_session(
         &self,
         user_id: &UserId,
@@ -213,6 +224,7 @@ mod tests {
         credentials::{Password, Username},
         profile::{Gender, Weight},
     };
+    use beer_storage::ImageStorage;
 
     #[test]
     fn generates_svelte_compatible_session_tokens() {
@@ -237,7 +249,7 @@ mod tests {
             .await
             .unwrap();
         sqlx::migrate!("./migrations").run(&database).await.unwrap();
-        let service = AuthService::new(AuthRepository::new(database));
+        let service = AuthService::new(AuthRepository::new(database), ImageStorage::default());
         let username = Username::parse("NewUser".into()).unwrap();
         let password = Password::parse("secret".into()).unwrap();
 
@@ -269,7 +281,7 @@ mod tests {
             .await
             .unwrap();
         sqlx::migrate!("./migrations").run(&database).await.unwrap();
-        let service = AuthService::new(AuthRepository::new(database));
+        let service = AuthService::new(AuthRepository::new(database), ImageStorage::default());
         let username = Username::parse("ProfileUser".into()).unwrap();
         let password = Password::parse("secret".into()).unwrap();
         let RegistrationResult::Registered(session) =

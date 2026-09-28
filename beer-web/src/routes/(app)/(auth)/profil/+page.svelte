@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { ApiError, type UpdateProfileRequest } from '$lib/api';
 	import { api } from '$lib/api/client';
 	import Button from '$lib/components/button.svelte';
+	import Input from '$lib/components/input.svelte';
 	import Select from '$lib/components/select.svelte';
 	import { getUser } from '$lib/context/user.svelte';
 
@@ -13,6 +15,11 @@
 	let weight = $state('');
 	let gender = $state('');
 	let initializedUserId = $state<string | null>(null);
+
+	let deleteDialog = $state<HTMLDialogElement>();
+	let deleteConfirmation = $state('');
+	let isDeleting = $state(false);
+	let deleteError = $state<string | null>(null);
 
 	let user = $derived(auth.state.status === 'authenticated' ? auth.state.user : null);
 
@@ -45,6 +52,34 @@
 			saveError = error instanceof Error ? error.message : 'Kunne ikke lagre profilen.';
 		} finally {
 			isSubmitting = false;
+		}
+	}
+
+	function openDeleteDialog() {
+		deleteConfirmation = '';
+		deleteError = null;
+		deleteDialog?.showModal();
+	}
+
+	async function deleteAccount(event: SubmitEvent) {
+		event.preventDefault();
+		if (!user || deleteConfirmation !== user.username) return;
+		isDeleting = true;
+		deleteError = null;
+
+		try {
+			await api.deleteMe();
+			deleteDialog?.close();
+			auth.clear();
+			await goto('/logg-inn', { replaceState: true });
+		} catch (error) {
+			if (error instanceof ApiError && error.status === 401) {
+				auth.clear();
+				return;
+			}
+			deleteError = error instanceof Error ? error.message : 'Kunne ikke slette kontoen.';
+		} finally {
+			isDeleting = false;
 		}
 	}
 </script>
@@ -103,4 +138,52 @@
 			</div>
 		</form>
 	</div>
+
+	<div class="border-danger border-2 p-4">
+		<h2 class="mb-1 text-lg font-medium">Slett konto</h2>
+		<p class="text-foreground-muted mb-4 text-sm">
+			Kontoen din og alle registreringene dine slettes permanent. Arrangementer du har opprettet
+			blir liggende. Dette kan ikke angres.
+		</p>
+		<Button variant="destructive" type="button" onclick={openDeleteDialog}>Slett konto</Button>
+	</div>
+
+	<dialog
+		bind:this={deleteDialog}
+		aria-labelledby="delete-account-title"
+		class="bg-background text-foreground m-auto w-[calc(100%-2rem)] max-w-md border-2 p-6 backdrop:bg-black/60"
+	>
+		<form onsubmit={deleteAccount} class="space-y-4">
+			<h2 id="delete-account-title" class="text-xl font-medium">Er du helt sikker?</h2>
+			<p class="text-foreground-muted text-sm">
+				Dette sletter kontoen <strong class="text-foreground">{user.username}</strong> og alle registreringene
+				dine for godt.
+			</p>
+			<div class="flex flex-col gap-1">
+				<label for="delete-confirmation" class="text-foreground-muted text-sm">
+					Skriv brukernavnet ditt for å bekrefte
+				</label>
+				<Input
+					id="delete-confirmation"
+					bind:value={deleteConfirmation}
+					autocomplete="off"
+					autocapitalize="off"
+					spellcheck="false"
+					class="text-xl"
+				/>
+			</div>
+
+			{#if deleteError}
+				<p class="text-sm text-red-500" role="alert">{deleteError}</p>
+			{/if}
+
+			<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+				<Button type="button" variant="outline" onclick={() => deleteDialog?.close()}>Avbryt</Button
+				>
+				<Button variant="destructive" disabled={isDeleting || deleteConfirmation !== user.username}>
+					{isDeleting ? 'Sletter…' : 'Slett kontoen min'}
+				</Button>
+			</div>
+		</form>
+	</dialog>
 {/if}

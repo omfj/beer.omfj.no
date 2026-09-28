@@ -184,6 +184,30 @@ pub async fn update_me(
 }
 
 #[utoipa::path(
+    delete,
+    path = "/auth/me",
+    operation_id = "auth_delete_me",
+    tag = "auth",
+    responses(
+        (status = 204, description = "Success"),
+        (status = 401, description = "Authentication required", body = crate::routes::error::ErrorResponse),
+        (status = 500, description = "Internal server error", body = crate::routes::error::ErrorResponse)
+    ),
+    security(("session" = []))
+)]
+pub async fn delete_me(
+    State(state): State<AppState>,
+    jar: CookieJar,
+    CurrentUser(session): CurrentUser,
+) -> Result<impl IntoResponse, ApiError> {
+    state.auth.delete_user(&session.user.id).await?;
+    Ok((
+        jar.remove(removal_cookie(state.secure_cookies)),
+        StatusCode::NO_CONTENT,
+    ))
+}
+
+#[utoipa::path(
     post,
     path = "/auth/logout",
     operation_id = "auth_logout",

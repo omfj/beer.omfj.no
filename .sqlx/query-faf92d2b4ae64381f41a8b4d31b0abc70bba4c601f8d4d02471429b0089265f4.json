@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT image_id FROM attendee WHERE user_id = ? AND image_id IS NOT NULL",
+  "describe": {
+    "columns": [
+      {
+        "name": "image_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "attendee",
+            "name": "image_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "faf92d2b4ae64381f41a8b4d31b0abc70bba4c601f8d4d02471429b0089265f4"
+}

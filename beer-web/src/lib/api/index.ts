@@ -74,6 +74,10 @@ export class ApiClient {
 		return response.json();
 	}
 
+	async deleteMe(options?: RequestOptions): Promise<void> {
+		await this.request('/auth/me', { method: 'DELETE', ...options });
+	}
+
 	async listEvents(options?: RequestOptions): Promise<Events> {
 		return this.get('/events', options);
 	}

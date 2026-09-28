@@ -154,4 +154,41 @@ impl AuthRepository {
         .await?;
         Ok(())
     }
+
+    pub async fn user_image_ids(&self, user_id: &UserId) -> Result<Vec<String>, sqlx::Error> {
+        let user_id = user_id.as_str();
+        Ok(sqlx::query_scalar!(
+            "SELECT image_id FROM attendee WHERE user_id = ? AND image_id IS NOT NULL",
+            user_id
+        )
+        .fetch_all(&self.database)
+        .await?
+        .into_iter()
+        .flatten()
+        .collect())
+    }
+
+    /// Passwords, passkeys, drinks and event access cascade; sessions and event ownership do not.
+    pub async fn delete_user(&self, user_id: &UserId) -> Result<(), sqlx::Error> {
+        let user_id = user_id.as_str();
+        let mut transaction = self.database.begin().await?;
+
+        // Keep events the user created so other attendees' registrations survive.
+        sqlx::query!(
+            "UPDATE event SET created_by = NULL WHERE created_by = ?",
+            user_id
+        )
+        .execute(&mut *transaction)
+        .await?;
+
+        sqlx::query!("DELETE FROM session WHERE user_id = ?", user_id)
+            .execute(&mut *transaction)
+            .await?;
+        sqlx::query!("DELETE FROM user WHERE id = ?", user_id)
+            .execute(&mut *transaction)
+            .await?;
+
+        transaction.commit().await?;
+        Ok(())
+    }
 }
