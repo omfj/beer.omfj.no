@@ -60,6 +60,7 @@ pub async fn create(
 
     let input = form::parse(multipart).await?;
     let drink = state.drinks.create(&id, user_id, input).await?;
+    tracing::info!(event = "drink_logged", event_id = %id, "drink logged");
 
     Ok((StatusCode::CREATED, Json(drink)))
 }
@@ -89,6 +90,7 @@ pub async fn delete(
         .drinks
         .delete(&event_id, &drink_id, &session.user.id)
         .await?;
+    tracing::info!(event = "drink_deleted", %event_id, "drink deleted");
     Ok(StatusCode::NO_CONTENT)
 }
 

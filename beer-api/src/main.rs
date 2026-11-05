@@ -15,24 +15,25 @@ use config::Config;
 use state::AppState;
 use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
 
-const DEFAULT_FILTER: &str = "beer_counter_api=debug,tower_http=debug";
+/// Used when `RUST_LOG` is unset.
+const DEFAULT_FILTER: &str = "info";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    telemetry_init();
-
     let config = Config::from_env()?;
+    telemetry_init(config.development);
+
     let database = database::connect(&config.database_url).await?;
     let state = AppState::new(database, &config, ImageStorage::new(config.s3.as_ref())?);
     let app = router::create(state, &config.web_app_url)?;
 
     let address = (get_host(config.development), config.port);
     let listener = tokio::net::TcpListener::bind(address).await?;
-    tracing::info!("🚀 Starting Beer API");
     tracing::info!(
-        "🚀 Running on http://{}:{}",
-        address.0.to_string(),
-        address.1
+        version = env!("CARGO_PKG_VERSION"),
+        address = %address.0,
+        port = address.1,
+        "starting beer api"
     );
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
@@ -55,9 +56,24 @@ async fn shutdown_signal() {
     }
 }
 
-pub fn telemetry_init() {
-    tracing_subscriber::registry()
-        .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(DEFAULT_FILTER)))
-        .with(tracing_subscriber::fmt::layer())
-        .init();
+/// Human-readable logs in development, one JSON object per line otherwise so
+/// Loki/Grafana can filter and aggregate on fields.
+pub fn telemetry_init(development: bool) {
+    let filter =
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(DEFAULT_FILTER));
+    let registry = tracing_subscriber::registry().with(filter);
+
+    if development {
+        registry.with(tracing_subscriber::fmt::layer()).init();
+    } else {
+        registry
+            .with(
+                tracing_subscriber::fmt::layer()
+                    .json()
+                    .flatten_event(true)
+                    .with_current_span(true)
+                    .with_span_list(false),
+            )
+            .init();
+    }
 }

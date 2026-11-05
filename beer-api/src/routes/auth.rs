@@ -69,6 +69,8 @@ pub async fn register(
         RegistrationResult::UsernameTaken => return Err(ApiError::username_taken()),
         RegistrationResult::Registered(session) => session,
     };
+    tracing::Span::current().record("user_id", tracing::field::display(&session.user.id));
+    tracing::info!(event = "user_registered", "user registered");
     let jar = jar.add(session_cookie(
         session.token,
         session.expires_at,
@@ -105,9 +107,14 @@ pub async fn login(
         Password::parse(request.password).map_err(|_| ApiError::invalid_credentials())?;
 
     let session = match state.auth.login(&username, &password).await? {
-        LoginResult::InvalidCredentials => return Err(ApiError::invalid_credentials()),
+        LoginResult::InvalidCredentials => {
+            tracing::info!(event = "login_failed", "login failed: invalid credentials");
+            return Err(ApiError::invalid_credentials());
+        }
         LoginResult::Authenticated(session) => session,
     };
+    tracing::Span::current().record("user_id", tracing::field::display(&session.user.id));
+    tracing::info!(event = "user_logged_in", "user logged in");
     let jar = jar.add(session_cookie(
         session.token,
         session.expires_at,
@@ -201,6 +208,7 @@ pub async fn delete_me(
     CurrentUser(session): CurrentUser,
 ) -> Result<impl IntoResponse, ApiError> {
     state.auth.delete_user(&session.user.id).await?;
+    tracing::info!(event = "user_deleted", "user deleted their account");
     Ok((
         jar.remove(removal_cookie(state.secure_cookies)),
         StatusCode::NO_CONTENT,

@@ -72,6 +72,12 @@ pub async fn create(
         .events
         .create(&request.name, password, &session.user.id)
         .await?;
+    tracing::info!(
+        event = "event_created",
+        event_id = %event.event.id,
+        has_password = password.is_some(),
+        "event created"
+    );
     Ok((StatusCode::CREATED, Json(event)))
 }
 

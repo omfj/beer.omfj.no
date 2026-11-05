@@ -13,11 +13,14 @@ impl FromRequestParts<AppState> for CurrentUser {
         state: &AppState,
     ) -> Result<Self, Self::Rejection> {
         let token = session_token(&parts.headers).ok_or_else(ApiError::unauthorized)?;
-        state
+        let session = state
             .auth
             .authenticate(&token)
             .await?
-            .map(Self)
-            .ok_or_else(ApiError::unauthorized)
+            .ok_or_else(ApiError::unauthorized)?;
+        // Attach the user to the request span, so every log line for this
+        // request (including "request finished") carries user_id.
+        tracing::Span::current().record("user_id", tracing::field::display(&session.user.id));
+        Ok(Self(session))
     }
 }
