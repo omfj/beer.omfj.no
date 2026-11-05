@@ -19,8 +19,8 @@ COPY beer-api/Cargo.toml beer-api/build.rs ./beer-api/
 COPY beer-api/migrations ./beer-api/migrations
 COPY beer-api/src ./beer-api/src
 
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-	--mount=type=cache,target=/build/target \
+RUN --mount=type=cache,id=beer-cargo-registry,target=/usr/local/cargo/registry,sharing=locked \
+	--mount=type=cache,id=beer-api-target-v2,target=/build/target,sharing=locked \
 	cargo build --locked --release --package beer-api \
 	&& cp /build/target/release/beer-api /build/beer-api
 
